@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Training Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ML Training Dashboard</h1>
+            <div class="header-actions">
+                <button id="refreshBtn" class="btn btn-primary">Actualizar</button>
+                <span id="lastUpdate" class="last-update"></span>
+            </div>
+        </header>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalStudies">-</div>
+                <div class="stat-label">Estudios</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalTrials">-</div>
+                <div class="stat-label">Trials Totales</div>
+            </div>
+            <div class="stat-card stat-success">
+                <div class="stat-value" id="completedTrials">-</div>
+                <div class="stat-label">Completados</div>
+            </div>
+            <div class="stat-card stat-warning">
+                <div class="stat-value" id="runningTrials">-</div>
+                <div class="stat-label">En Ejecución</div>
+            </div>
+            <div class="stat-card stat-danger">
+                <div class="stat-value" id="failedTrials">-</div>
+                <div class="stat-label">Fallidos</div>
+            </div>
+            <div class="stat-card stat-info">
+                <div class="stat-value" id="workerCount">-</div>
+                <div class="stat-label">Workers Online</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="studies">Estudios</button>
+            <button class="tab-btn" data-tab="workers">Workers</button>
+            <button class="tab-btn" data-tab="queues">Colas</button>
+            <button class="tab-btn" data-tab="tasks">Tareas Activas</button>
+        </div>
+
+        <div class="tab-content active" id="studies-tab">
+            <div class="section-header">
+                <h2>Estudios Optuna</h2>
+            </div>
+            <div id="studiesList" class="studies-list">
+                <div class="loading">Cargando estudios...</div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="workers-tab">
+            <div class="section-header">
+                <h2>Workers Celery</h2>
+            </div>
+            <div id="workersList" class="workers-list">
+                <div class="loading">Cargando workers...</div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="queues-tab">
+            <div class="section-header">
+                <h2>Colas Celery</h2>
+            </div>
+            <div id="queuesList" class="queues-list">
+                <div class="loading">Cargando colas...</div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tasks-tab">
+            <div class="section-header">
+                <h2>Tareas Activas</h2>
+            </div>
+            <div id="tasksList" class="tasks-list">
+                <div class="loading">Cargando tareas...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

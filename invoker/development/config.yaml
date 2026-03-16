@@ -1,0 +1,20 @@
+# Worker Config - Total Control
+redis:
+  host: "192.168.1.137"  # IP del Servidor Central
+  port: 6379
+  db: 0
+
+optuna:
+  # IP y Puerto del servidor central (Postgres distribuido)
+  storage_url: "postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice"
+
+celery:
+  concurrency: 1        # Cuántos contenedores executor lanzar a la vez (ej: 1 por GPU)
+  loglevel: "INFO"
+  queue: "gpus"
+
+worker:
+  executor_image: "wisrovi/train_service:worker_executor_v1.0.0"
+  host_temp_dir: "/tmp" # Carpeta en el HOST para volúmenes efímeros
+  cpu_limit_pct: 0.85   # % máximo de cores a usar (0.0 a 1.0)
+  mem_limit_pct: 0.60   # % máximo de RAM a usar (0.0 a 1.0)

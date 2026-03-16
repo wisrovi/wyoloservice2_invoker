@@ -1,0 +1,13 @@
+[Unit]
+Description=Worker Invoker Watchdog (%I)
+After=docker.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=/etc/default/worker_invoker
+ExecStart=/bin/bash /home/wisrovi/scripts/launcher_worker.sh -n ${WORKER_NAME} -r ${REDIS_HOST}
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
