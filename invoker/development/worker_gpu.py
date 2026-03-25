@@ -6,6 +6,7 @@ Executor container, and reports results back to the Manager.
 """
 
 import os
+from datetime import datetime
 from typing import Any
 import optuna
 
@@ -59,15 +60,25 @@ def objetive_function(training_config: dict[str, Any]):
 
 def optuna_search(training_config: dict[str, Any]):
     # Priority: Manager config > Local config > Default (1)
-    TRIALS_OF_CONFIG = training_config.get("n_trials", CONFIG.get("sweeper", {}).get("n_trials", 1))
-    DIRECTION = training_config.get("direction", CONFIG.get("sweeper", {}).get("direction", "maximize"))
-    SAMPLER = training_config.get("sampler", CONFIG.get("sweeper", {}).get("sampler", "TPESampler"))
-    
+    TRIALS_OF_CONFIG = training_config.get(
+        "n_trials", CONFIG.get("sweeper", {}).get("n_trials", 1)
+    )
+    DIRECTION = training_config.get(
+        "direction", CONFIG.get("sweeper", {}).get("direction", "maximize")
+    )
+    SAMPLER = training_config.get(
+        "sampler", CONFIG.get("sweeper", {}).get("sampler", "TPESampler")
+    )
+
     # Study Settings (Crucial for distributed scenario)
-    study_name = training_config.get("study_name", f"study_{datetime.now().strftime('%Y%m%d')}")
-    
+    study_name = training_config.get(
+        "study_name", f"study_{datetime.now().strftime('%Y%m%d')}"
+    )
+
     # Priority: Environment variable > Config file
-    storage_url = os.getenv("OPTUNA_DB_URL", CONFIG.get("optuna", {}).get("storage_url"))
+    storage_url = os.getenv(
+        "OPTUNA_DB_URL", CONFIG.get("optuna", {}).get("storage_url")
+    )
 
     if TRIALS_OF_CONFIG <= 0:
         raise ValueError("Number of trials must be greater than 0")
@@ -90,13 +101,13 @@ def optuna_search(training_config: dict[str, Any]):
 
     # Connect to the distributed database
     study = optuna.create_study(
-        study_name=study_name, 
-        direction=direction, 
+        study_name=study_name,
+        direction=direction,
         sampler=sampler,
         storage=storage_url,
-        load_if_exists=True
+        load_if_exists=True,
     )
-    
+
     study.optimize(
         objetive_function,
         n_trials=TRIALS_OF_CONFIG,
@@ -155,3 +166,30 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]):
     )
 
     return resultado
+
+
+@app.task(name="tasks.train_on_gpu_simple", bind=True)
+def train_on_gpu_simple(self: Task, training_config: dict[str, Any]):
+    """Simplified task that runs the Executor directly without Optuna.
+
+    Useful for testing the Invoker -> Executor -> results.json flow.
+    """
+    invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
+    user_id = training_config.get("user_id", "unknown")
+
+    print(
+        f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} started for user: {user_id} ---"
+    )
+
+    try:
+        run_training = RunTraining(CONFIG)
+        resultado = run_training(training_config)
+
+        print(
+            f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} completed. Accuracy: {resultado.get('accuracy', 'N/A')} ---"
+        )
+        return resultado
+
+    except Exception as exc:
+        print(f"--- [INVOKER:{invoker_name}] SIMPLE Task failed: {str(exc)} ---")
+        raise exc

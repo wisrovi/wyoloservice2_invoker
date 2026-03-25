@@ -37,13 +37,20 @@ services:
       celery -A worker_gpu worker  -Q ${WORKER_NAME:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1 --max-memory-per-child=250000 
 
   dashboard:
-    build: ./dashboard
+    build: ./simple_dashboard
     container_name: dashboard_${WORKER_NAME:-default}
     restart: always
     ports:
-      - "8000:8000"
+      - "8082:8000"
     environment:
       - REDIS_URL=${REDIS_URL:-redis://192.168.10.252:23437/0}
       - OPTUNA_DB_URL=${OPTUNA_DB_URL:-postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice}
     volumes:
       - ./invoker/config.yaml:/app/invoker/config.yaml
+    networks:
+      - train_service
+
+networks:
+  train_service:
+    name: train_service
+    external: true

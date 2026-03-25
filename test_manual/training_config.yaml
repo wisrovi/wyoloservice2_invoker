@@ -1,0 +1,27 @@
+# Configuración simplificada del entrenamiento
+# Este es el YAML que el Invoker usa para entrenar (similar al config_train.yaml del usuario)
+
+# Datos del entrenamiento (valores para este trial específico)
+train:
+  model: "yolov8n-cls.pt"      # Modelo base YOLO
+  data: "/dataset/"            # Ruta al dataset
+  epochs: 10                   # Número de épocas (reducido para prueba rápida)
+  imgsz: 640                   # Tamaño de imagen
+  batch: 0.85                  # Fracción de VRAM
+  lr0: 0.01                    # Learning rate inicial
+  lrf: 0.01                    # Learning rate final
+  dropout: 0.0                 # Dropout rate
+  cos_lr: true                 # Cosine annealing
+  workers: 4                   # Workers de dataloader
+
+# Configuración del estudio (para Optuna)
+study:
+  name: "test_manual_study"    # Nombre del estudio
+  direction: "maximize"        # maximize o minimize
+  n_trials: 1                  # Número de trials (1 para prueba)
+  sampler: "TPESampler"       # Algoritmo de muestreo
+
+# Metadatos
+metadata:
+  author: "test_user"
+  description: "Prueba manual del sistema invoker-executor"
