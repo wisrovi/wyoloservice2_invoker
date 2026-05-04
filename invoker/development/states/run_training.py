@@ -139,10 +139,10 @@ class RunTraining:
         os.chmod(temp_dir, 0o777)
 
         try:
-            # 1. Deliver Config: Write the JSON config to a file for the executor
-            config_path: str = os.path.join(temp_dir, "config.json")
+            # 1. Deliver Config: Write the YAML config to a file for the executor
+            config_path: str = os.path.join(temp_dir, "config.yaml")
             with open(config_path, "w", encoding="utf-8") as file:
-                json.dump(training_config, file)
+                yaml.dump(training_config, file, default_flow_style=False)
 
             # 2. Run the EXECUTOR
             self.docker_run(

@@ -68,7 +68,9 @@ def get_optuna_db():
 @app.get("/", response_class=HTMLResponse)
 async def dashboard_home(request: Request):
     """Render the main dashboard page."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request, name="index.html", context={}
+    )
 
 
 @app.get("/api/health")

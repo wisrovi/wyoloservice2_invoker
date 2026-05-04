@@ -6,35 +6,34 @@ version: '3.8'
 
 services:
   worker:
-    build: ./invoker
-    image: wisrovi/train_service:worker_invoker_v1.0.0
+    build:
+      context: ./invoker/development
     container_name: worker_${WORKER_NAME:-default}
-    hostname: worker_${WORKER_NAME:-default}
     restart: always
     deploy:
       resources:
-        limits:
-          cpus: '1.0'
-          memory: 300M
         reservations:
           memory: 100M
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
+    networks:
+      - train_service
     environment:
-      - REDIS_URL=${REDIS_URL:-redis://192.168.10.252:23437/0}
+      - REDIS_HOST=${REDIS_HOST:-192.168.1.202}
       - PRIVATE_QUEUE=${WORKER_NAME:-default}
-      - OPTUNA_DB_URL=${OPTUNA_DB_URL:-postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice}
+      - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.1.202:23436/wyoloservice
     labels:
       - "autoheal=true"
       - "com.centurylinklabs.watchtower.enable=true"
-    healthcheck:
-      test: [ "CMD", "celery", "-A", "worker_gpu", "inspect", "ping", "-d", "celery@worker_${WORKER_NAME:-default}" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    # Re-enable healthcheck after the first successful build
+    # healthcheck:
+    #   test: [ "CMD", "celery", "-A", "worker_gpu", "inspect", "ping", "-d", "celery@worker_${WORKER_NAME:-default}" ]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
     command: >
-      celery -A worker_gpu worker  -Q ${WORKER_NAME:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1 --max-memory-per-child=250000 
+      celery -A worker_gpu worker -E -Q ${WORKER_NAME:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1 --max-memory-per-child=250000
 
   dashboard:
     build: ./simple_dashboard
@@ -43,10 +42,25 @@ services:
     ports:
       - "8082:8000"
     environment:
-      - REDIS_URL=${REDIS_URL:-redis://192.168.10.252:23437/0}
-      - OPTUNA_DB_URL=${OPTUNA_DB_URL:-postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice}
+      - REDIS_HOST=${REDIS_HOST:-192.168.1.202}
+      - REDIS_PORT=23437
+      - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.1.202:23436/wyoloservice
     volumes:
       - ./invoker/config.yaml:/app/invoker/config.yaml
+    networks:
+      - train_service
+
+  gradio_launcher:
+    build: ./gradio_launcher
+    container_name: gradio_launcher_${WORKER_NAME:-default}
+    restart: always
+    ports:
+      - "8083:7860"
+    environment:
+      - REDIS_HOST=${REDIS_HOST:-192.168.1.202}
+      - REDIS_PORT=23437
+    volumes:
+      - ../wyoloservice2_control_server/dataset/datasets:/app/configs
     networks:
       - train_service
 

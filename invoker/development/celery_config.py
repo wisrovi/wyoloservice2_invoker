@@ -16,23 +16,20 @@ if os.path.exists(CONFIG_PATH):
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-# 2. Extract Redis URL (Priority: YAML > Env > Default)
-redis_cfg: dict[str, Any] = config.get("redis", {})
-redis_host: str = redis_cfg.get("host", "localhost")
+# 2. Extract Redis URL (Priority: Env > YAML > Default)
+REDIS_HOST_FROM_ENV = os.getenv("REDIS_HOST")
 
-# validate if port is in host, if not, set default port
-if ":" in redis_host:
-    redis_host = redis_host.split(":")[0]
-    redis_port = redis_host.split(":")[1]
+if REDIS_HOST_FROM_ENV:
+    redis_host = REDIS_HOST_FROM_ENV
 else:
-    redis_port: int = int(redis_cfg.get("port", 6379))
+    redis_cfg: dict[str, Any] = config.get("redis", {})
+    redis_host: str = redis_cfg.get("host", "localhost")
 
-redis_db: int = int(redis_cfg.get("db", 0))
+# Port and DB are considered static for this service
+REDIS_PORT = 23437
+REDIS_DB = 0
 
-# Build URL from YAML components
-DEFAULT_REDIS_URL: str = f"redis://{redis_host}:{redis_port}/{redis_db}"
-# Only use env if YAML doesn't have it or if explicitly set
-REDIS_URL: str = str(redis_cfg.get("url", os.getenv("REDIS_URL", DEFAULT_REDIS_URL)))
+REDIS_URL: str = f"redis://{redis_host}:{REDIS_PORT}/{REDIS_DB}"
 
 # 3. Initialize Celery App
 app: Celery = Celery("ml_cluster", broker=REDIS_URL, backend=REDIS_URL)
