@@ -7,6 +7,7 @@ container management, and results recovery.
 
 import os
 import json
+import yaml
 import tempfile
 import shutil
 import multiprocessing
@@ -139,10 +140,10 @@ class RunTraining:
         os.chmod(temp_dir, 0o777)
 
         try:
-            # 1. Deliver Config: Write the YAML config to a file for the executor
-            config_path: str = os.path.join(temp_dir, "config.yaml")
+            # 1. Deliver Config: Write the JSON config to a file for the executor
+            config_path: str = os.path.join(temp_dir, "config.json")
             with open(config_path, "w", encoding="utf-8") as file:
-                yaml.dump(training_config, file, default_flow_style=False)
+                json.dump(training_config, file, indent=4)
 
             # 2. Run the EXECUTOR
             self.docker_run(
