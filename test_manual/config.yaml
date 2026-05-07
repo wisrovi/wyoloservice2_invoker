@@ -2,7 +2,7 @@
 # Este archivo configura cómo el script send_task.py se conecta a Celery
 
 redis:
-  host: "192.168.1.202"   # Host de Redis
+  host: "192.168.10.252"   # Host de Redis
   port: 23437             # Puerto de Redis (del docker-compose)
   db: 0                   # Base de datos Redis
 
