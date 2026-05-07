@@ -21,7 +21,7 @@ from celery_config import (
 )
 
 TASK_NAME = "tasks.train_on_gpu_simple"
-QUEUE_NAME = "gpus_high"
+QUEUE_NAME = "wisrovi"
 
 
 def load_config() -> dict:
