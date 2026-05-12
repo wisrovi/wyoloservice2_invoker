@@ -52,6 +52,15 @@ services:
     networks:
       - train_service
 
+  wpipe-scanner:
+    image: wisrovi/train_service:worker_executor_v1.0.0
+    restart: always
+    volumes:
+      - /wyolo/worker/events:/wyolo/worker/events
+    command: bash -c 'python wpipe_scanner.py'
+    networks:
+      - train_service
+
   gradio_launcher:
     build: ./gradio_launcher
     container_name: gradio_launcher_${WORKER_NAME:-default}
