@@ -17,10 +17,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
+      - /home/wyolo/request:/wyolo/worker/request
+      - /home/wyolo/train_service_results:/home/wyolo/train_service_results
     networks:
       - train_service
     environment:
-      - REDIS_HOST=${REDIS_HOST:-192.168.1.202}
+      - REDIS_HOST=${REDIS_HOST:-192.168.10.252}
       - PRIVATE_QUEUE=${WORKER_NAME:-default}
       - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.1.202:23436/wyoloservice
     labels:
@@ -42,9 +44,9 @@ services:
     ports:
       - "8082:8000"
     environment:
-      - REDIS_HOST=${REDIS_HOST:-192.168.1.202}
+      - REDIS_HOST=${REDIS_HOST:-192.168.10.252}
       - REDIS_PORT=23437
-      - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.1.202:23436/wyoloservice
+      - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice
     volumes:
       - ./invoker/config.yaml:/app/invoker/config.yaml
     networks:
@@ -57,7 +59,7 @@ services:
     ports:
       - "8083:7860"
     environment:
-      - REDIS_HOST=${REDIS_HOST:-192.168.1.202}
+      - REDIS_HOST=${REDIS_HOST:-192.168.10.252}
       - REDIS_PORT=23437
     volumes:
       - ../wyoloservice2_control_server/dataset/datasets:/app/configs

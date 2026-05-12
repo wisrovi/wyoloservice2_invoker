@@ -16,8 +16,10 @@ from datetime import datetime
 
 import docker  # pylint: disable=import-error
 
-
 DEFAULT_TRAIN_IMAGE = "wisrovi/train_service:worker_executor_v1.0.0"
+BASE_DIR = "/wyolo/worker/request"
+FILE = "config_train.yaml"
+yaml_path = os.path.join(BASE_DIR, FILE)
 
 
 def get_system_limits(config: Dict[str, Any]):
@@ -41,7 +43,6 @@ def get_system_limits(config: Dict[str, Any]):
     mem_limit_bytes = int(total_mem_bytes * mem_pct)
 
     return cpu_limit, mem_limit_bytes
-
 
 
 class RunTraining:
@@ -94,26 +95,61 @@ class RunTraining:
             raise exc
 
         try:
-            # Resource constraints configuration
             client.containers.run(
                 image=image_name,
                 name=executor_name,
+                hostname=os.getenv("USER", "default_user"),
                 detach=False,
                 remove=True,
-                # Sharing all GPUs
+                privileged=True,
+                network_mode="host",
+                shm_size="16g",
+                # Resource Limits
+                nano_cpus=int(8 * 1e9),  # --cpus=8
+                mem_limit="24g",
+                # Capabilities
+                cap_add=["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
+                # GPU Configuration
                 device_requests=[
-                    docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])
+                    docker.types.DeviceRequest(device_ids=["0"], capabilities=[["gpu"]])
                 ],
-                # Hardware limits
-                mem_limit=f"{mem_limit}",
-                nano_cpus=int(cpu_limit * 1e9),
-                # Persistence and isolation
-                volumes={temp_dir: {"bind": "/app/data", "mode": "rw"}},
+                # Environment
+                environment={
+                    "NVIDIA_VISIBLE_DEVICES": "0",
+                    "NVIDIA_DRIVER_CAPABILITIES": "compute,utility",
+                    "TZ": "Europe/Madrid",
+                },
+                # Labels
+                labels={
+                    "autoheal": "true",
+                    "com.centurylinklabs.watchtower.enable": "true",
+                },
+                # Logging
+                log_config=docker.types.LogConfig(
+                    type=docker.types.LogConfig.types.JSON,
+                    config={"max-size": "10m", "max-file": "3"},
+                ),
+                # Volumes
+                volumes={
+                    "/home/wyolo/events": {
+                        "bind": "/wyolo/worker/events",
+                        "mode": "rw",
+                    },
+                    "/home/wyolo/train_service_results": {
+                        "bind": "/wyolo/worker/train_service_results",
+                        "mode": "rw",
+                    },
+                    "/home/wyolo/request": {
+                        "bind": "/wyolo/worker/request",
+                        "mode": "rw",
+                    }
+                },
+                # Command
+                command=f"bash -c '/usr/local/bin/mount-cifs.sh && python main.py --file {yaml_path}'",
             )
         except Exception as exc:
-            print(
-                f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Unexpected error: {exc} ---"
-            )
+            private_queue = os.getenv("PRIVATE_QUEUE", "unknown")
+            print(f"--- [INVOKER:{private_queue}] Unexpected error: {exc} ---")
             raise exc
 
     def __call__(self, training_config: Dict[str, Any]) -> Dict[str, Any]:
@@ -141,6 +177,11 @@ class RunTraining:
 
         try:
             # 1. Deliver Config: Write the JSON config to a file for the executor
+            # training_config in yaml file
+
+            with open(yaml_path, "w", encoding="utf-8") as file:
+                yaml.dump(training_config, file)
+
             config_path: str = os.path.join(temp_dir, "config.json")
             with open(config_path, "w", encoding="utf-8") as file:
                 json.dump(training_config, file, indent=4)
