@@ -41,3 +41,6 @@ start: user.env config.py
 
 stop:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  down  --remove-orphans
+
+start_gradio:
+	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  --compatibility up -d --build --force-recreate --no-deps  --pull always gradio_launcher 

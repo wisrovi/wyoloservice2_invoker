@@ -12,83 +12,91 @@ REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 # Initialize Celery
 celery_app = Celery("gradio_launcher", broker=REDIS_URL, backend=REDIS_URL)
 
-# Paths to default configs (mapped via volumes or relative paths)
-CONFIG_BASE_PATH = "/app/examples"
-CONFIG_PATHS = {
-    "Clasificación": f"{CONFIG_BASE_PATH}/clasificacion/config_train.yaml",
-    "Detección": f"{CONFIG_BASE_PATH}/detecion/config_train.yaml",
-    "Segmentación": f"{CONFIG_BASE_PATH}/segmentacion/config_train.yaml"
-}
+# YAML templates (Internal)
+EXAMPLE_CLS = """model: "yolov8n-cls.pt"
+type: "yolo"
+train:
+  batch: -1
+  data: "/datasets/clasification/colorball.v8i.multiclass/"
+  epochs: 2
+  imgsz: 640
+sweeper:
+  study_name: "exp_clasificacion"
+  fitness: "metrics/accuracy_top1"
+metadata:
+  author: "Gradio User"
+  content: "Experimento de clasificación"
+"""
 
-def load_yaml_config(task_type):
-    path = CONFIG_PATHS.get(task_type)
-    if not path or not os.path.exists(path):
-        return {}
-    with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+EXAMPLE_DET = """model: "yolov8n.pt"
+type: "yolo"
+train:
+  batch: -1
+  data: "/datasets/detecion/colorball.v8i.multiclass/"
+  epochs: 2
+  imgsz: 640
+sweeper:
+  study_name: "exp_deteccion"
+  fitness: "metrics/mAP50-95(B)"
+metadata:
+  author: "Gradio User"
+  content: "Experimento de detección"
+"""
 
-def handle_mode_change(is_demo):
-    # Returns updates for task_type (visible if demo), data_path (interactive if not demo)
-    return (
-        gr.update(visible=is_demo),
-        gr.update(interactive=not is_demo)
-    )
+EXAMPLE_SEG = """model: "yolov8n-seg.pt"
+type: "yolo"
+train:
+  batch: -1
+  data: "/datasets/segmentation/ArchitecturePlan/data.yaml"
+  epochs: 2
+  imgsz: 640
+sweeper:
+  study_name: "ArchitecturePlan"
+  fitness: "metrics/mAP50(M)"
+metadata:
+  author: "Manu G"
+  content: "Experimento de segmentación"
+"""
 
-def handle_task_change(task_type, is_demo):
-    if not is_demo:
-        return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
-        
-    config = load_yaml_config(task_type)
-    train_cfg = config.get("train", {})
-    metadata = config.get("metadata", {})
-    
-    return (
-        config.get("model", ""),
-        train_cfg.get("data", ""),
-        train_cfg.get("epochs", 2),
-        train_cfg.get("imgsz", 640),
-        metadata.get("author", "Gradio User"),
-        metadata.get("content", "")
-    )
+# Examples for gr.Examples: [Path/Name, Queue, Hidden_YAML_Content]
+# We use a trick: the third element is the actual content, but we will handle the mapping
+EXAMPLES = [
+    ["/app/examples/clasificacion/config_train.yaml", "gpus_high", EXAMPLE_CLS],
+    ["/app/examples/detecion/config_train.yaml", "gpus_medium", EXAMPLE_DET],
+    ["/app/examples/segmentacion/config_train.yaml", "gpus_low", EXAMPLE_SEG],
+]
 
-def launch_training(task_type, is_demo, model, data, epochs, imgsz, author, description, queue):
+def parse_yaml_file(file):
+    if file is None:
+        return ""
     try:
-        # Internal type mapping
-        type_mapping = {
-            "Clasificación": "yolo",
-            "Detección": "yolo",
-            "Segmentación": "yolo"
-        }
-        internal_type = type_mapping.get(task_type, "yolo")
-        
-        # Determine fitness metric based on task
-        fitness_metric = "metrics/accuracy_top1" if "Clasificación" in task_type else "metrics/mAP50-95(B)"
+        with open(file.name, "r", encoding="utf-8") as f:
+            content = f.read()
+            yaml.safe_load(content)
+            return content
+    except Exception as e:
+        return f"Error al leer YAML: {str(e)}"
 
-        # Payload exactly as expected by Executor's root level
-        payload = {
-            "model": model,
-            "type": internal_type,
-            "train": {
-                "model": model,
-                "data": data,
-                "epochs": int(epochs),
-                "imgsz": int(imgsz),
-                "batch": -1,
-                "device": 0,
-                "verbose": True
-            },
-            "sweeper": {
-                "study_name": f"exp_{author.lower().replace(' ', '_')}",
-                "fitness": fitness_metric
-            },
-            "metadata": {
-                "author": author,
-                "content": description,
-                "task": task_type.lower()
-            },
-            "user_id": author
-        }
+def validate_and_launch(yaml_content, queue):
+    if not yaml_content.strip():
+        return "❌ Error: La configuración YAML está vacía."
+    
+    if yaml_content.startswith("Error"):
+        return f"❌ {yaml_content}"
+
+    try:
+        payload = yaml.safe_load(yaml_content)
         
+        # Validation of required root fields
+        if "model" not in payload:
+            return "❌ Error: El YAML debe contener el campo 'model' en la raíz."
+        if "type" not in payload:
+            return "❌ Error: El YAML debe contener el campo 'type' en la raíz (ej: 'yolo')."
+        
+        # Defaults if missing
+        if "user_id" not in payload:
+            payload["user_id"] = payload.get("metadata", {}).get("author", "unknown_user")
+            
         task_name = "tasks.train_on_gpu_simple"
         result = celery_app.send_task(
             task_name,
@@ -96,9 +104,10 @@ def launch_training(task_type, is_demo, model, data, epochs, imgsz, author, desc
             queue=queue
         )
         
-        return f"✅ Tarea enviada con éxito!\n\nID: {result.id}\nModo: {'Demo' if is_demo else 'Manual'}\nCola: {queue}"
+        return f"✅ ¡Entrenamiento enviado!\n\nID: {result.id}\nCola: {queue}\n\nEstructura detectada:\n- Modelo: {payload['model']}\n- Tipo: {payload['type']}"
+    
     except Exception as e:
-        return f"❌ Error al enviar la tarea: {str(e)}"
+        return f"❌ Error de sintaxis o envío: {str(e)}"
 
 # --- UI Theme ---
 theme = gr.themes.Soft(
@@ -109,67 +118,49 @@ theme = gr.themes.Soft(
 )
 
 with gr.Blocks(theme=theme, title="NeuralForge Launcher") as demo:
-    gr.Markdown("# 🚀 NeuralForge AI Launcher")
+    gr.Markdown("# 🚀 NeuralForge AI: Entrenamiento en Cluster")
+    gr.Markdown("Selecciona una plantilla o sube tu YAML para lanzar el entrenamiento.")
     
     with gr.Row():
-        with gr.Column(scale=1):
-            is_demo = gr.Checkbox(label="🌟 Activar Modo Demo", value=True, info="Pre-carga configuraciones de ejemplo")
-            task_type = gr.Dropdown(
-                choices=["Clasificación", "Detección", "Segmentación"],
-                label="🎯 Ejemplo de Tarea",
-                value="Detección",
-                visible=True
-            )
-        
         with gr.Column(scale=2):
-            with gr.Group():
-                gr.Markdown("### 🛠️ Configuración del Entrenamiento")
-                with gr.Row():
-                    model = gr.Textbox(label="Modelo Base (.pt)", placeholder="yolov8n.pt")
-                    data_path = gr.Textbox(label="Ruta del Dataset", placeholder="/datasets/...", interactive=False)
-                
-                with gr.Row():
-                    epochs = gr.Number(label="Epochs", value=2, precision=0)
-                    imgsz = gr.Number(label="Tamaño Imagen", value=640, precision=0)
+            gr.Markdown("### 📄 Configuración YAML")
+            yaml_file = gr.File(label="Subir archivo .yaml", file_types=[".yaml", ".yml"])
+            yaml_editor = gr.Code(label="Editor YAML", language="yaml", lines=18, interactive=False)
             
-            with gr.Group():
-                gr.Markdown("### 📝 Metadatos")
-                with gr.Row():
-                    author = gr.Textbox(label="Autor", value="Gradio User")
-                    queue = gr.Dropdown(
-                        choices=["gpus_high", "gpus_medium", "gpus_low", "default"],
-                        label="Cola de Prioridad",
-                        value="gpus_high"
-                    )
-                description = gr.Textbox(label="Descripción del experimento", lines=2)
+        with gr.Column(scale=1):
+            gr.Markdown("### ⚙️ Parámetros de Envío")
+            queue_form = gr.Dropdown(
+                choices=["gpus_high", "gpus_medium", "gpus_low", "default"],
+                label="Cola de Prioridad",
+                value="gpus_high",
+                info="Selecciona la cola de procesamiento."
+            )
             
-            launch_btn = gr.Button("🚀 ENVIAR AL CLUSTER", variant="primary", size="lg")
-            output_msg = gr.Textbox(label="Estado del Sistema", lines=4, interactive=False)
+            # Hidden field to help gr.Examples trigger logic if needed, 
+            # but here we just map directly to yaml_editor
+            dummy_hidden = gr.Textbox(visible=False)
+
+            launch_btn = gr.Button("🔥 Entrenar", variant="primary", size="lg")
+            output_msg = gr.Textbox(label="Estado del Sistema", lines=8, interactive=False)
+
+    # Examples Section
+    gr.Markdown("### 💡 Plantillas Disponibles")
+    gr.Examples(
+        examples=EXAMPLES,
+        inputs=[dummy_hidden, queue_form, yaml_editor],
+        label="Selecciona una ruta para cargar su contenido"
+    )
 
     # Event Handlers
-    is_demo.change(
-        fn=handle_mode_change,
-        inputs=[is_demo],
-        outputs=[task_type, data_path]
-    )
-    
-    # Pre-load demo logic
-    task_type.change(
-        fn=handle_task_change,
-        inputs=[task_type, is_demo],
-        outputs=[model, data_path, epochs, imgsz, author, description]
-    )
-    
-    # Initialize UI
-    demo.load(
-        fn=handle_task_change,
-        inputs=[task_type, is_demo],
-        outputs=[model, data_path, epochs, imgsz, author, description]
+    yaml_file.change(
+        fn=parse_yaml_file,
+        inputs=[yaml_file],
+        outputs=[yaml_editor]
     )
 
     launch_btn.click(
-        fn=launch_training,
-        inputs=[task_type, is_demo, model, data_path, epochs, imgsz, author, description, queue],
+        fn=validate_and_launch,
+        inputs=[yaml_editor, queue_form],
         outputs=[output_msg]
     )
 

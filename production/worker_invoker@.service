@@ -5,7 +5,7 @@ Requires=docker.service
 
 [Service]
 EnvironmentFile=/etc/default/worker_invoker
-ExecStart=/bin/bash /home/wisrovi/scripts/launcher_worker.sh -n ${WORKER_NAME} -r ${REDIS_HOST}
+ExecStart=/bin/bash /home/wisrovi/scripts/launcher_worker.sh -n ${WORKER_NAME}
 Restart=always
 RestartSec=10
 

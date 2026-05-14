@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  worker:
+    image: wisrovi/train_service:worker_invoker_v1.0.0
+    container_name: worker_${WORKER_NAME}
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 300M
+    # Affinity can be set via env var, defaults to 0 if not provided
+    cpuset: ${CORE_ASSIGNED:-0}
+    environment:
+      - WORKER_NAME=${WORKER_NAME}
+    env_file:
+      - ./control_host.env
+      - ./user.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/wyolo/request:/wyolo/worker/request
+      - /home/wyolo/train_service_results:/home/wyolo/train_service_results
+    labels:
+      - "autoheal=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+    healthcheck:
+      test: ["CMD", "celery", "-A", "worker_gpu", "inspect", "ping", "-d", "celery@worker_${WORKER_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: >
+      celery -A worker_gpu worker -Q ${WORKER_NAME},gpus_high,gpus_medium,gpus_low 
+      --loglevel=info --concurrency=1 --prefetch-multiplier=1 -Ofair 
+      --max-tasks-per-child=1 --max-memory-per-child=250000 
+      --without-gossip --without-mingle --without-heartbeat
+    networks:
+      - train_service
+
+  autoheal:
+    image: willfarrell/autoheal
+    container_name: autoheal_${WORKER_NAME}
+    restart: always
+    environment:
+      - AUTOHEAL_INTERVAL=10
+      - CURL_TIMEOUT=30
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - train_service
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower_${WORKER_NAME}
+    restart: always
+    environment:
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_SCHEDULE=0 0 0,2,4,6,8,10,12,14,16,18,20,22 * * *
+      - WATCHTOWER_CLEANUP=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    networks:
+      - train_service
+
+networks:
+  train_service:
+    name: train_service
+    external: true
