@@ -9,6 +9,7 @@ services:
     build:
       context: ./invoker/development
     container_name: worker_${WORKER_NAME:-default}
+    image: wisrovi/train_service:worker_invoker_v1.0.0
     restart: always
     deploy:
       resources:
