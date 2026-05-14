@@ -1,0 +1,20 @@
+services:
+
+  gradio_launcher:
+    image: wisrovi/train_service:worker_invoker_gradio_v1.0.0
+    container_name: gradio_launcher_${WORKER_NAME:-default}
+    restart: always
+    ports:
+      - "8083:7860"
+    env_file:
+      - control_host.env
+      - user.env
+    volumes:
+      - ../wyoloservice2_control_server/dataset/datasets:/app/configs
+    networks:
+      - train_service
+
+networks:
+  train_service:
+    name: train_service
+    external: true
