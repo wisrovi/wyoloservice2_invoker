@@ -90,20 +90,78 @@ class RunTraining:
             client = docker.from_env()
         except Exception as exc:
             print(
-                f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Unexpected error: {exc} ---"
+                f"--- [INVOKER:{os.getenv('WORKER_NAME', 'unknown')}] Unexpected error: {exc} ---"
             )
             raise exc
 
+        # CONTROL_HOST=192.168.10.252
+        # CIFS_USER=wisrovi
+        # CIFS_PASS=wyoloservice
+        # NUM_CURRENT_TRAIN=1
+        # MAX_GPU=30
+        # USER=william.rodriguez
+        # TZ=Europe/Madrid
+        # WORKER_HOST=192.168.1.84
+        # WORKER_HOSTNAME=cima111.ecapturedtech.com
+        # WORKER_OS=Linux
+        # WORKER_KERNEL_VERSION=6.17.0-19-generic
+        # WORKER_CPU_CORES=8
+        # WORKER_GATEWAY=192.168.1.1-192.168.3.1
+        # WORKER_NETWORK_INTERFACE=enp2s0-wlp3s0
+        # WORKER_DOCKER_VERSION=28.2.2
+        # WORKER_APP_BASE_PATH=/home/william.rodriguez/Documents/train_service2/wyoloservice2_worker/executor_v2.0
+        # WORKER_APP_ENV=production
+        # WORKER_HOME_DIR=/home/william.rodriguez
+        # WORKER_CURRENT_DATE=2026-05-13
+        # WORKER_CURRENT_TIME=17:58:33
+        # WORKER_GPU_COUNT=1
+        # WORKER_GPU_MODEL=NVIDIA GeForce RTX 3060
+        # WORKER_GPU_MEMORY=12288 MiB
+        # WORKER_GPU_MEMORY=12288 MiB
+        # WORKER_RAM_MEMORY=24g
+        # WORKER_CPU_CORES=7.0
+
+        def load_env_file(path):
+            envs = {}
+            if os.path.exists(path):
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        for line in f:
+                            line = line.strip()
+                            if line and not line.startswith("#"):
+                                key_val = line.split("=", 1)
+                                if len(key_val) == 2:
+                                    envs[key_val[0]] = key_val[1]
+                except Exception as e:
+                    print(f"--- [INVOKER] Warning: Error reading env file {path}: {e} ---")
+            return envs
+
+        # Environment priority: Files > os.environ > Defaults
+        environments = os.environ.copy()
+        # In the invoker container, these are usually at /app/config/
+        environments.update(load_env_file("/app/config/control_host.env"))
+        environments.update(load_env_file("/app/config/user.env"))
+        
+        environments.update(
+            {
+                "NVIDIA_VISIBLE_DEVICES": "0",
+                "NVIDIA_DRIVER_CAPABILITIES": "compute,utility",
+                "TZ": "Europe/Madrid",
+            }
+        )
+
         try:
-            client.containers.run(
+            container = client.containers.run(
                 image=image_name,
                 name=executor_name,
-                hostname=os.getenv("USER", "default_user"),
-                detach=False,
+                hostname=environments.get("USER", "default_user"),
+                detach=True,
                 remove=True,
                 privileged=True,
                 network_mode="host",
                 shm_size="16g",
+                tty=True,
+                stdin_open=True,
                 # Resource Limits
                 nano_cpus=int(8 * 1e9),  # --cpus=8
                 mem_limit="24g",
@@ -114,21 +172,12 @@ class RunTraining:
                     docker.types.DeviceRequest(device_ids=["0"], capabilities=[["gpu"]])
                 ],
                 # Environment
-                environment={
-                    "NVIDIA_VISIBLE_DEVICES": "0",
-                    "NVIDIA_DRIVER_CAPABILITIES": "compute,utility",
-                    "TZ": "Europe/Madrid",
-                },
+                environment=environments,
                 # Labels
                 labels={
                     "autoheal": "true",
                     "com.centurylinklabs.watchtower.enable": "true",
                 },
-                # Logging
-                log_config=docker.types.LogConfig(
-                    type=docker.types.LogConfig.types.JSON,
-                    config={"max-size": "10m", "max-file": "3"},
-                ),
                 # Volumes
                 volumes={
                     "/home/wyolo/events": {
@@ -142,13 +191,37 @@ class RunTraining:
                     "/home/wyolo/request": {
                         "bind": "/wyolo/worker/request",
                         "mode": "rw",
-                    }
+                    },
                 },
                 # Command
                 command=f"bash -c '/usr/local/bin/mount-cifs.sh && python main.py --file {yaml_path}'",
             )
+
+            print(f"--- [INVOKER] Executor {executor_name} started. Streaming logs... ---", flush=True)
+
+            # Stream logs to the invoker's output
+            logs_gen = container.logs(stream=True, follow=True)
+            while True:
+                try:
+                    line = next(logs_gen)
+                    decoded_line = line.decode("utf-8", errors="replace").rstrip()
+                    if decoded_line:
+                        print(f"[{executor_name}] {decoded_line}", flush=True)
+                except StopIteration:
+                    break
+                except Exception as e:
+                    print(f"--- [INVOKER] Warning: Log streaming interrupted: {e} ---")
+                    break
+
+            # Wait for container to exit and check status
+            result = container.wait()
+            exit_code = result.get("StatusCode", 0)
+            if exit_code != 0:
+                print(f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exit_code} ---")
+                raise RuntimeError(f"Executor failed with exit code {exit_code}")
+
         except Exception as exc:
-            private_queue = os.getenv("PRIVATE_QUEUE", "unknown")
+            private_queue = os.getenv("WORKER_NAME", "unknown")
             print(f"--- [INVOKER:{private_queue}] Unexpected error: {exc} ---")
             raise exc
 
@@ -170,7 +243,7 @@ class RunTraining:
             Exception: For any other unexpected errors.
         """
 
-        invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
+        invoker_name = os.getenv("WORKER_NAME", "unknown")
 
         temp_dir: str = tempfile.mkdtemp(prefix="trial_", dir="/tmp")
         os.chmod(temp_dir, 0o777)
@@ -194,7 +267,10 @@ class RunTraining:
             )
 
             # 3. Recover Metric: Optuna needs the accuracy to proceed
-            result_path: str = os.path.join(temp_dir, "results.json")
+            # The executor writes results to /wyolo/worker/train_service_results/results.json
+            # which is mapped to a path in the invoker (default: /home/wyolo/train_service_results)
+            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
+            result_path: str = os.path.join(results_dir, "results.json")
             if os.path.exists(result_path):
                 with open(result_path, "r", encoding="utf-8") as file:
                     result: Dict[str, Any] = json.load(file)

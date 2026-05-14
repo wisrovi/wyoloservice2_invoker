@@ -1,12 +1,12 @@
 # Worker Config - Total Control
 redis:
-  host: "192.168.1.137"  # IP del Servidor Central
+  host: "192.168.10.252"  # IP del Servidor Central (CONTROL_HOST)
   port: 23437
   db: 0
 
 optuna:
   # IP y Puerto del servidor central (Postgres distribuido)
-  storage_url: "postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice"
+  storage_url: "postgresql://postgres:postgres@<IP>:23436/wyoloservice"
 
 celery:
   concurrency: 1        # Cuántos contenedores executor lanzar a la vez (ej: 1 por GPU)

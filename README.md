@@ -205,7 +205,7 @@ celery:
   queue: "gpus"
 
 optuna:
-  storage_url: "postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice"
+  storage_url: "postgresql://postgres:postgres@<IP>:23436/wyoloservice"
 ```
 
 ---

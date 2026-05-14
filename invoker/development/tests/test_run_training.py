@@ -4,7 +4,7 @@ import os
 import json
 import shutil
 import tempfile
-from worker.invoker.states.run_training import RunTraining
+from states.run_training import RunTraining
 
 
 class TestRunTraining:
@@ -16,18 +16,29 @@ class TestRunTraining:
     """
 
     @pytest.fixture
-    def config(self):
+    def temp_results_dir(self):
+        """Creates a temporary directory for results."""
+        temp_dir = tempfile.mkdtemp()
+        yield temp_dir
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+
+    @pytest.fixture
+    def config(self, temp_results_dir):
         """Provides a basic configuration for RunTraining."""
-        return {"executor_image": "test_image:latest"}
+        return {
+            "executor_image": "test_image:latest",
+            "results_dir": temp_results_dir
+        }
 
     @pytest.fixture
     def training_config(self):
         """Provides a basic training configuration."""
         return {"lr": 0.01, "epochs": 10}
 
-    @patch("worker.invoker.states.run_training.docker.from_env")
-    @patch("worker.invoker.states.run_training.tempfile.mkdtemp")
-    def test_call_success(self, mock_mkdtemp, mock_docker, config, training_config):
+    @patch("states.run_training.docker.from_env")
+    @patch("states.run_training.tempfile.mkdtemp")
+    def test_call_success(self, mock_mkdtemp, mock_docker, config, training_config, temp_results_dir):
         """
         Validates a successful training execution.
 
@@ -37,8 +48,8 @@ class TestRunTraining:
         3. Checks if the returned accuracy matches the one in results.json.
         """
         # Setup temp dir mock
-        temp_dir = tempfile.mkdtemp()
-        mock_mkdtemp.return_value = temp_dir
+        temp_workspace = tempfile.mkdtemp()
+        mock_mkdtemp.return_value = temp_workspace
 
         # Mock docker client and run
         mock_client = MagicMock()
@@ -48,7 +59,7 @@ class TestRunTraining:
         run_training = RunTraining(config)
 
         # Simulate results.json creation before it's read
-        results_path = os.path.join(temp_dir, "results.json")
+        results_path = os.path.join(temp_results_dir, "results.json")
         with open(results_path, "w") as f:
             json.dump({"accuracy": 0.95}, f)
 
@@ -59,10 +70,10 @@ class TestRunTraining:
         assert mock_client.containers.run.called
 
         # Cleanup
-        if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir)
+        if os.path.exists(temp_workspace):
+            shutil.rmtree(temp_workspace)
 
-    @patch("worker.invoker.states.run_training.docker.from_env")
+    @patch("states.run_training.docker.from_env")
     def test_call_results_not_found(self, mock_docker, config, training_config):
         """
         Validates that a FileNotFoundError is raised if results.json is missing.

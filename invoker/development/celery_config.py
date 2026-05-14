@@ -17,19 +17,12 @@ if os.path.exists(CONFIG_PATH):
         config = yaml.safe_load(f)
 
 # 2. Extract Redis URL (Priority: Env > YAML > Default)
-REDIS_HOST_FROM_ENV = os.getenv("REDIS_HOST")
-
-if REDIS_HOST_FROM_ENV:
-    redis_host = REDIS_HOST_FROM_ENV
-else:
-    redis_cfg: dict[str, Any] = config.get("redis", {})
-    redis_host: str = redis_cfg.get("host", "localhost")
-
 # Port and DB are considered static for this service
+CONTROL_HOST = os.getenv("CONTROL_HOST", "localhost")
 REDIS_PORT = 23437
 REDIS_DB = 0
 
-REDIS_URL: str = f"redis://{redis_host}:{REDIS_PORT}/{REDIS_DB}"
+REDIS_URL: str = f"redis://{CONTROL_HOST}:{REDIS_PORT}/{REDIS_DB}"
 
 # 3. Initialize Celery App
 app: Celery = Celery("ml_cluster", broker=REDIS_URL, backend=REDIS_URL)
@@ -53,5 +46,9 @@ worker_settings: dict[str, Any] = {
 app.conf.update(worker_settings)
 
 print(f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery initialized ---")
-print(f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery configuration: {worker_settings} ---")
-print(f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery broker: {REDIS_URL} ---")
+print(
+    f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery configuration: {worker_settings} ---"
+)
+print(
+    f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery broker: {REDIS_URL} ---"
+)

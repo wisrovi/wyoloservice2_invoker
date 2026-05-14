@@ -56,7 +56,6 @@ deploy_worker() {
       --health-cmd="celery -A worker_gpu inspect ping -d celery@${CONTAINER_NAME}" \
       --health-interval=30s \
       -e REDIS_URL="${REDIS_URL}" \
-      -e PRIVATE_QUEUE="${WORKER_NAME}" \
       wisrovi/train_service:worker_invoker_v1.0.0 \
       celery -A worker_gpu worker -Q "${WORKER_NAME},gpus_high,gpus_medium,gpus_low" --loglevel=info --concurrency=1 --prefetch-multiplier=1 -Ofair --max-tasks-per-child=1 --max-memory-per-child=250000 --without-gossip --without-mingle --without-heartbeat
 }

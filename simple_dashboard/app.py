@@ -30,18 +30,21 @@ if os.path.exists(CONFIG_PATH):
 
 # 1. Database Connection (PostgreSQL)
 optuna_cfg: dict[str, Any] = CONFIG.get("optuna", {})
+CONTROL_HOST = os.getenv("CONTROL_HOST", "localhost")
+DEFAULT_DB_URL = optuna_cfg.get("storage_url", "postgresql://optuna_user:optuna_pass@localhost/optuna_db").replace("<IP>", CONTROL_HOST)
+
 OPTUNA_DB_URL = os.getenv(
     "OPTUNA_DB_URL",
-    optuna_cfg.get("storage_url", "postgresql://optuna_user:optuna_pass@localhost/optuna_db")
+    DEFAULT_DB_URL
 )
 
 engine = create_engine(OPTUNA_DB_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 redis_cfg: dict[str, Any] = CONFIG.get("redis", {})
-redis_host: str = redis_cfg.get("host", "localhost")
-redis_port: int = int(redis_cfg.get("port", 6379))
-redis_db: int = int(redis_cfg.get("db", 0))
+redis_host: str = os.getenv("CONTROL_HOST", redis_cfg.get("host", "localhost"))
+redis_port: int = int(os.getenv("REDIS_PORT", redis_cfg.get("port", 23437)))
+redis_db: int = int(os.getenv("REDIS_DB", redis_cfg.get("db", 0)))
 REDIS_URL: str = f"redis://{redis_host}:{redis_port}/{redis_db}"
 
 celery_app: Celery = Celery("dashboard", broker=REDIS_URL, backend=REDIS_URL)

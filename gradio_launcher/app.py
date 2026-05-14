@@ -5,8 +5,8 @@ import gradio as gr
 from celery import Celery
 
 # --- Configuration ---
-REDIS_HOST = os.getenv("REDIS_HOST", "192.168.1.202")
-REDIS_PORT = os.getenv("REDIS_PORT", "23437")
+REDIS_HOST = os.getenv("CONTROL_HOST", "localhost")
+REDIS_PORT = "23437"
 REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 
 # Initialize Celery
@@ -53,20 +53,38 @@ def handle_task_change(task_type, is_demo):
 
 def launch_training(task_type, is_demo, model, data, epochs, imgsz, author, description, queue):
     try:
-        final_type = task_type if is_demo else "custom"
+        # Internal type mapping
+        type_mapping = {
+            "Clasificación": "yolo",
+            "Detección": "yolo",
+            "Segmentación": "yolo"
+        }
+        internal_type = type_mapping.get(task_type, "yolo")
+        
+        # Determine fitness metric based on task
+        fitness_metric = "metrics/accuracy_top1" if "Clasificación" in task_type else "metrics/mAP50-95(B)"
+
+        # Payload exactly as expected by Executor's root level
         payload = {
+            "model": model,
+            "type": internal_type,
             "train": {
                 "model": model,
                 "data": data,
                 "epochs": int(epochs),
                 "imgsz": int(imgsz),
-                "batch": -1
+                "batch": -1,
+                "device": 0,
+                "verbose": True
+            },
+            "sweeper": {
+                "study_name": f"exp_{author.lower().replace(' ', '_')}",
+                "fitness": fitness_metric
             },
             "metadata": {
                 "author": author,
                 "content": description,
-                "type": final_type.lower(),
-                "mode": "demo" if is_demo else "manual"
+                "task": task_type.lower()
             },
             "user_id": author
         }

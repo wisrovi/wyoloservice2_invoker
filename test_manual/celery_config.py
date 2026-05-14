@@ -17,9 +17,9 @@ if os.path.exists(CONFIG_PATH):
         config = yaml.safe_load(f)
 
 redis_cfg: dict[str, Any] = config.get("redis", {})
-redis_host: str = redis_cfg.get("host", "localhost")
-redis_port: int = int(redis_cfg.get("port", 6379))
-redis_db: int = int(redis_cfg.get("db", 0))
+redis_host: str = os.getenv("CONTROL_HOST", redis_cfg.get("host", "localhost"))
+redis_port: int = int(os.getenv("REDIS_PORT", redis_cfg.get("port", 23437)))
+redis_db: int = int(os.getenv("REDIS_DB", redis_cfg.get("db", 0)))
 
 REDIS_URL: str = f"redis://{redis_host}:{redis_port}/{redis_db}"
 

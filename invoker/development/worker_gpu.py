@@ -18,7 +18,7 @@ from states.llm_analizer import LlmAnalizer
 from wpipe.pipe import Pipeline
 import yaml
 
-PRIVATE_QUEUE = os.getenv("PRIVATE_QUEUE", "unknown")
+PRIVATE_QUEUE = os.getenv("WORKER_NAME", "unknown")
 
 # Load local worker configuration
 CONFIG: dict[str, Any] = {}
@@ -76,9 +76,9 @@ def optuna_search(training_config: dict[str, Any]):
     )
 
     # Priority: Environment variable > Config file
-    storage_url = os.getenv(
-        "OPTUNA_DB_URL", CONFIG.get("optuna", {}).get("storage_url")
-    )
+    BASE = "postgresql://postgres:postgres@<IP>:23436/wyoloservice"
+    CONTROL_HOST = os.getenv("CONTROL_HOST", "localhost")
+    storage_url = BASE.replace("<IP>", CONTROL_HOST)
 
     if TRIALS_OF_CONFIG <= 0:
         raise ValueError("Number of trials must be greater than 0")

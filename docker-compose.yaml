@@ -14,17 +14,16 @@ services:
       resources:
         reservations:
           memory: 100M
+    env_file:
+      - config/control_host.env
+      - config/user.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp
+      # - /tmp:/tmp
       - /home/wyolo/request:/wyolo/worker/request
       - /home/wyolo/train_service_results:/home/wyolo/train_service_results
     networks:
       - train_service
-    environment:
-      - REDIS_HOST=${REDIS_HOST:-192.168.10.252}
-      - PRIVATE_QUEUE=${WORKER_NAME:-default}
-      - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.1.202:23436/wyoloservice
     labels:
       - "autoheal=true"
       - "com.centurylinklabs.watchtower.enable=true"
@@ -37,29 +36,30 @@ services:
     command: >
       celery -A worker_gpu worker -E -Q ${WORKER_NAME:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1 --max-memory-per-child=250000
 
-  dashboard:
-    build: ./simple_dashboard
-    container_name: dashboard_${WORKER_NAME:-default}
-    restart: always
-    ports:
-      - "8082:8000"
-    environment:
-      - REDIS_HOST=${REDIS_HOST:-192.168.10.252}
-      - REDIS_PORT=23437
-      - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice
-    volumes:
-      - ./invoker/config.yaml:/app/invoker/config.yaml
-    networks:
-      - train_service
+  # dashboard:
+  #   build: ./simple_dashboard
+  #   container_name: dashboard_${WORKER_NAME:-default}
+  #   restart: always
+  #   ports:
+  #     - "8082:8000"
+  #   env_file:
+  #     - config/control_host.env
+  #     - config/user.env
+  #   volumes:
+  #     - ./invoker/config.yaml:/app/invoker/config.yaml
+  #   networks:
+  #     - train_service
 
-  wpipe-scanner:
-    image: wisrovi/train_service:worker_executor_v1.0.0
-    restart: always
-    volumes:
-      - /wyolo/worker/events:/wyolo/worker/events
-    command: bash -c 'python wpipe_scanner.py'
-    networks:
-      - train_service
+  # wpipe-scanner:
+  #   image: wisrovi/train_service:worker_executor_v1.0.0
+  #   restart: always
+  #   volumes:
+  #     - /wyolo/worker/events:/wyolo/worker/events
+  #   command: bash -c 'python -m wpipe.dashboard --db /wyolo/worker/events/wtrain.db --port 8036'
+  #   ports:
+  #     - "8082:8036"
+  #   networks:
+  #     - train_service
 
   gradio_launcher:
     build: ./gradio_launcher
@@ -67,9 +67,9 @@ services:
     restart: always
     ports:
       - "8083:7860"
-    environment:
-      - REDIS_HOST=${REDIS_HOST:-192.168.10.252}
-      - REDIS_PORT=23437
+    env_file:
+      - config/control_host.env
+      - config/user.env
     volumes:
       - ../wyoloservice2_control_server/dataset/datasets:/app/configs
     networks:
