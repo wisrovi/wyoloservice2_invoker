@@ -4,6 +4,7 @@ services:
   worker:
     image: wisrovi/train_service:worker_invoker_v1.0.0
     container_name: worker_${WORKER_NAME}
+    hostname: worker_${WORKER_NAME}
     restart: always
     deploy:
       resources:
