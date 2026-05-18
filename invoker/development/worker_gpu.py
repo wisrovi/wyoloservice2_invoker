@@ -18,7 +18,7 @@ from states.llm_analizer import LlmAnalizer
 from wpipe.pipe import Pipeline
 import yaml
 
-PRIVATE_QUEUE = os.getenv("WORKER_NAME", "unknown")
+PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
 CONFIG: dict[str, Any] = {}

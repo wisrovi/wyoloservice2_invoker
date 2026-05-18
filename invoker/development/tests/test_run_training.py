@@ -37,23 +37,22 @@ class TestRunTraining:
         return {"lr": 0.01, "epochs": 10}
 
     @patch("states.run_training.docker.from_env")
-    @patch("states.run_training.tempfile.mkdtemp")
-    def test_call_success(self, mock_mkdtemp, mock_docker, config, training_config, temp_results_dir):
+    def test_call_success(self, mock_docker, config, training_config, temp_results_dir):
         """
         Validates a successful training execution.
 
         Steps:
-        1. Mocks the temporary directory and docker client.
+        1. Mocks the docker client.
         2. Simulates the creation of results.json by the executor.
         3. Checks if the returned accuracy matches the one in results.json.
         """
-        # Setup temp dir mock
-        temp_workspace = tempfile.mkdtemp()
-        mock_mkdtemp.return_value = temp_workspace
-
         # Mock docker client and run
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
+        mock_container = MagicMock()
+        mock_client.containers.run.return_value = mock_container
+        mock_container.wait.return_value = {"StatusCode": 0}
+        mock_container.logs.return_value = [b"log line 1", b"log line 2"]
 
         # Instantiate and call
         run_training = RunTraining(config)
@@ -69,10 +68,6 @@ class TestRunTraining:
         assert result["accuracy"] == 0.95
         assert mock_client.containers.run.called
 
-        # Cleanup
-        if os.path.exists(temp_workspace):
-            shutil.rmtree(temp_workspace)
-
     @patch("states.run_training.docker.from_env")
     def test_call_results_not_found(self, mock_docker, config, training_config):
         """
@@ -80,6 +75,10 @@ class TestRunTraining:
         """
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
+        mock_container = MagicMock()
+        mock_client.containers.run.return_value = mock_container
+        mock_container.wait.return_value = {"StatusCode": 0}
+        mock_container.logs.return_value = [b"log line 1"]
 
         run_training = RunTraining(config)
 

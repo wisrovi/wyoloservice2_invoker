@@ -94,33 +94,6 @@ class RunTraining:
             )
             raise exc
 
-        # CONTROL_HOST=192.168.10.252
-        # CIFS_USER=wisrovi
-        # CIFS_PASS=wyoloservice
-        # NUM_CURRENT_TRAIN=1
-        # MAX_GPU=30
-        # USER=william.rodriguez
-        # TZ=Europe/Madrid
-        # WORKER_HOST=192.168.1.84
-        # WORKER_HOSTNAME=cima111.ecapturedtech.com
-        # WORKER_OS=Linux
-        # WORKER_KERNEL_VERSION=6.17.0-19-generic
-        # WORKER_CPU_CORES=8
-        # WORKER_GATEWAY=192.168.1.1-192.168.3.1
-        # WORKER_NETWORK_INTERFACE=enp2s0-wlp3s0
-        # WORKER_DOCKER_VERSION=28.2.2
-        # WORKER_APP_BASE_PATH=/home/william.rodriguez/Documents/train_service2/wyoloservice2_worker/executor_v2.0
-        # WORKER_APP_ENV=production
-        # WORKER_HOME_DIR=/home/william.rodriguez
-        # WORKER_CURRENT_DATE=2026-05-13
-        # WORKER_CURRENT_TIME=17:58:33
-        # WORKER_GPU_COUNT=1
-        # WORKER_GPU_MODEL=NVIDIA GeForce RTX 3060
-        # WORKER_GPU_MEMORY=12288 MiB
-        # WORKER_GPU_MEMORY=12288 MiB
-        # WORKER_RAM_MEMORY=24g
-        # WORKER_CPU_CORES=7.0
-
         def load_env_file(path):
             envs = {}
             if os.path.exists(path):
@@ -145,23 +118,30 @@ class RunTraining:
         environments.update(
             {
                 "NVIDIA_VISIBLE_DEVICES": "0",
-                "NVIDIA_DRIVER_CAPABILITIES": "compute,utility",
+                "NVIDIA_DRIVER_CAPABILITIES": "all",
                 "TZ": "Europe/Madrid",
+                "PYTHONUNBUFFERED": "1",
             }
         )
 
         try:
+            # Clean up stale results before running
+            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
+            result_path: str = os.path.join(results_dir, "results.json")
+            if os.path.exists(result_path):
+                os.remove(result_path)
+                print(f"--- [INVOKER] Stale results.json removed. ---")
+
             container = client.containers.run(
                 image=image_name,
                 name=executor_name,
                 hostname=environments.get("USER", "default_user"),
                 detach=True,
-                remove=True,
+                remove=False,  # Don't remove yet so we can check status/logs if needed
                 privileged=True,
                 network_mode="host",
                 shm_size="16g",
-                tty=True,
-                stdin_open=True,
+                tty=False,     # Disable TTY to avoid multiplexing issues and ANSI codes
                 # Resource Limits
                 nano_cpus=int(8 * 1e9),  # --cpus=8
                 mem_limit="24g",
@@ -193,36 +173,67 @@ class RunTraining:
                         "mode": "rw",
                     },
                 },
-                # Command
-                command=f"bash -c '/usr/local/bin/mount-cifs.sh && python main.py --file {yaml_path}'",
+                # Command: More verbose for debugging
+                command=f"bash -c 'nvidia-smi && echo \"[EXECUTOR] Starting mount...\" && /usr/local/bin/mount-cifs.sh && echo \"[EXECUTOR] Mount OK. Starting training...\" && python main.py --file {yaml_path}'",
             )
 
             print(f"--- [INVOKER] Executor {executor_name} started. Streaming logs... ---", flush=True)
 
-            # Stream logs to the invoker's output
-            logs_gen = container.logs(stream=True, follow=True)
-            while True:
-                try:
-                    line = next(logs_gen)
-                    decoded_line = line.decode("utf-8", errors="replace").rstrip()
-                    if decoded_line:
-                        print(f"[{executor_name}] {decoded_line}", flush=True)
-                except StopIteration:
-                    break
-                except Exception as e:
-                    print(f"--- [INVOKER] Warning: Log streaming interrupted: {e} ---")
-                    break
+            # Prepare log file path in the shared results volume
+            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
+            log_file_path = os.path.join(results_dir, f"logs_{executor_name}.txt")
+            
+            # Stream logs to the invoker's output and save to a file
+            with open(log_file_path, "w", encoding="utf-8") as log_file:
+                # Use a generator to get clean lines from the stream
+                log_stream = container.logs(stream=True, follow=True)
+                for line in log_stream:
+                    try:
+                        decoded_line = line.decode("utf-8", errors="replace").rstrip()
+                        if decoded_line:
+                            formatted_line = f"[{executor_name}] {decoded_line}"
+                            print(formatted_line, flush=True)
+                            log_file.write(decoded_line + "\n")
+                            log_file.flush()
+                    except Exception as e:
+                        print(f"--- [INVOKER] Warning: Error decoding log line: {e} ---")
 
             # Wait for container to exit and check status
             result = container.wait()
             exit_code = result.get("StatusCode", 0)
+            
+            # If it failed, try to get the full logs even if stream finished
             if exit_code != 0:
                 print(f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exit_code} ---")
-                raise RuntimeError(f"Executor failed with exit code {exit_code}")
+                # Attempt to get full logs for debugging
+                full_logs = container.logs(stdout=True, stderr=True).decode("utf-8", errors="replace")
+                print(f"--- [INVOKER] Full executor logs: ---\n{full_logs}")
+                
+                # Cleanup manually since remove=False
+                container.remove()
+                raise RuntimeError(f"Executor failed with exit code {exit_code}. Logs:\n{full_logs[-1000:]}")
+            
+            # Cleanup manually since remove=False
+            container.remove()
 
         except Exception as exc:
             private_queue = os.getenv("WORKER_NAME", "unknown")
-            print(f"--- [INVOKER:{private_queue}] Unexpected error: {exc} ---")
+            print(f"--- [INVOKER:{private_queue}] Error in docker_run: {exc} ---")
+            
+            # put -1 in results.json to indicate failure for Optuna
+            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
+            os.makedirs(results_dir, exist_ok=True)
+            
+            result_path: str = os.path.join(results_dir, "results.json")
+            
+            # Write failure result only if it doesn't exist (to avoid overwriting partial success if any)
+            if not os.path.exists(result_path):
+                try:
+                    with open(result_path, "w", encoding="utf-8") as file:
+                        json.dump({"accuracy": -1.0, "status": "failed", "error": str(exc)}, file, indent=4)
+                except Exception as e:
+                    print(f"--- [INVOKER] Failed to write results.json: {e} ---")
+            
             raise exc
 
     def __call__(self, training_config: Dict[str, Any]) -> Dict[str, Any]:
@@ -251,6 +262,7 @@ class RunTraining:
         try:
             # 1. Deliver Config: Write the JSON config to a file for the executor
             # training_config in yaml file
+            os.makedirs(os.path.dirname(yaml_path), exist_ok=True)
 
             with open(yaml_path, "w", encoding="utf-8") as file:
                 yaml.dump(training_config, file)
@@ -268,8 +280,8 @@ class RunTraining:
 
             # 3. Recover Metric: Optuna needs the accuracy to proceed
             # The executor writes results to /wyolo/worker/train_service_results/results.json
-            # which is mapped to a path in the invoker (default: /home/wyolo/train_service_results)
-            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
+            # which is mapped to a path in the invoker (default: /results)
+            results_dir = self.config.get("results_dir", "/results")
             result_path: str = os.path.join(results_dir, "results.json")
             if os.path.exists(result_path):
                 with open(result_path, "r", encoding="utf-8") as file:

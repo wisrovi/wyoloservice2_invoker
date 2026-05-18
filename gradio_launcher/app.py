@@ -17,7 +17,7 @@ EXAMPLE_CLS = """model: "yolov8n-cls.pt"
 type: "yolo"
 train:
   batch: -1
-  data: "/datasets/clasification/colorball.v8i.multiclass/"
+  data: "/datasets/examples/clasification/colorball.v8i.multiclass/"
   epochs: 2
   imgsz: 640
 sweeper:
@@ -32,7 +32,7 @@ EXAMPLE_DET = """model: "yolov8n.pt"
 type: "yolo"
 train:
   batch: -1
-  data: "/datasets/detecion/colorball.v8i.multiclass/"
+  data: "/datasets/examples/detecion/colorball.v8i.multiclass/"
   epochs: 2
   imgsz: 640
 sweeper:
@@ -47,7 +47,7 @@ EXAMPLE_SEG = """model: "yolov8n-seg.pt"
 type: "yolo"
 train:
   batch: -1
-  data: "/datasets/segmentation/ArchitecturePlan/data.yaml"
+  data: "/datasets/examples/segmentation/ArchitecturePlan/data.yaml"
   epochs: 2
   imgsz: 640
 sweeper:

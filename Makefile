@@ -9,6 +9,7 @@ user.env:
 	echo "WORKER_HOST=$$(hostname -I | awk '{print $$1}')" >> user.env
 	echo "WORKER_HOSTNAME=$$(hostname)" >> user.env
 	echo "WORKER_OS=$$(uname -s)" >> user.env
+	echo "WORKER_NAME=$$(uname -s)" >> user.env
 	echo "WORKER_KERNEL_VERSION=$$(uname -r)" >> user.env
 	echo "WORKER_CPU_CORES=$$(nproc)" >> user.env
 	echo "WORKER_GATEWAY=$$(ip route | grep default | awk '{print $$3}')" >> user.env
@@ -29,15 +30,14 @@ user.env:
 
 
 config.py:
-	pip install customtkinter
-	python production/config.py
+	python3 -m pip install customtkinter
+	python3 production/config.py
 
 
 start: user.env config.py
 	mv user.env ./config/
 	[ -f "control_host.env" ] && mv control_host.env ./config/ || true
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  --compatibility up -d --build --force-recreate --no-deps  --pull always
-
 
 stop:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  down  --remove-orphans

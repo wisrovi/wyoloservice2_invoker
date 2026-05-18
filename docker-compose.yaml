@@ -8,7 +8,7 @@ services:
   worker:
     build:
       context: ./invoker/development
-    container_name: worker_${WORKER_NAME:-default}
+    container_name: w${WORKER_HOST:-default}
     image: wisrovi/train_service:worker_invoker_v1.0.0
     restart: always
     deploy:
@@ -72,7 +72,7 @@ services:
       - config/control_host.env
       - config/user.env
     volumes:
-      - ../wyoloservice2_control_server/dataset/datasets:/app/configs
+      - /home/wyolo/train_service_results:/results
     networks:
       - train_service
 
