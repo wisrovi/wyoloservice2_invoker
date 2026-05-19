@@ -64,6 +64,7 @@ services:
 
   gradio_launcher:
     build: ./gradio_launcher
+    image: wisrovi/train_service:worker_invoker_gradio_v1.0.0
     container_name: gradio_launcher_${WORKER_NAME:-default}
     restart: always
     ports:
