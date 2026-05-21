@@ -23,6 +23,7 @@ services:
       # - /tmp:/tmp
       - /home/wyolo/request:/wyolo/worker/request
       - /home/wyolo/train_service_results:/home/wyolo/train_service_results
+      - ./invoker/development:/app
     networks:
       - train_service
     labels:
@@ -35,7 +36,7 @@ services:
     #   timeout: 10s
     #   retries: 3
     command: >
-      celery -A worker_gpu worker -E -Q ${WORKER_NAME:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1 --max-memory-per-child=250000
+      celery -A worker_gpu worker -E -Q ${WORKER_HOST:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1 --max-memory-per-child=250000
 
   # dashboard:
   #   build: ./simple_dashboard
