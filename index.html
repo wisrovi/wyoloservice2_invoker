@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPU Invoker | WDarwin Ops Infrastructure</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' style='stop-color:%2310b981'/><stop offset='100%25' style='stop-color:%233b82f6'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)'/><path d='M30 50 L45 65 L70 35' stroke='white' stroke-width='8' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --bg-deep: #020617;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --gradient-linear: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-deep); color: var(--text-main); background-image: radial-gradient(at 0% 100%, hsla(160, 100%, 50%, 0.1) 0, transparent 50%); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .gradient-text { background: var(--gradient-linear); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero h1 { font-size: clamp(3rem, 8vw, 6rem); font-weight: 800; line-height: 1.1; margin-bottom: 2rem; }
+        .hero p { font-size: 1.25rem; color: var(--text-dim); max-width: 800px; margin: 0 auto 3rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; padding: 50px 0; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); padding: 3rem; border-radius: 24px; text-align: left; }
+        .card h3 { color: var(--primary); margin-bottom: 1rem; }
+        .card i { font-size: 2rem; margin-bottom: 1.5rem; color: var(--primary); }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="container">
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 0.5rem 1.5rem; border-radius: 100px; display: inline-block; font-weight: 700; font-size: 0.8rem; margin-bottom: 2rem; letter-spacing: 0.1em;">DISTRIBUTED POWER</div>
+            <h1>Deploy <span class="gradient-text">The Hive</span></h1>
+            <p>
+                The Invoker is the bridge between management and execution. 
+                Running on every GPU node, it listens to Celery queues, manages Docker resources, 
+                and ensures datasets are correctly mounted for high-speed training.
+            </p>
+            <div class="grid">
+                <div class="card">
+                    <i class="fas fa-microchip"></i>
+                    <h3>GPU Allocation</h3>
+                    <p>Dynamic detection and reservation of NVIDIA resources for isolated training environments.</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-network-wired"></i>
+                    <h3>Samba Client</h3>
+                    <p>Automated mounting of remote dataset shares using high-performance CIFS protocols.</p>
+                </div>
+                <div class="card">
+                    <i class="fas fa-tasks"></i>
+                    <h3>State Machine</h3>
+                    <p>Resilient handling of training lifecycle: from 'Ready' to 'Mounting' to 'Running' and 'Cleanup'.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
