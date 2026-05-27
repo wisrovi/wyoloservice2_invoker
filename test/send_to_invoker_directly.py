@@ -1,4 +1,4 @@
-REDIS_HOST = "192.168.3.89"
+REDIS_HOST = "192.168.1.137"
 
 
 import os

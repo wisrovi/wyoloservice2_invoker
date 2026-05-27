@@ -132,6 +132,14 @@ class RunTraining:
                 os.remove(result_path)
                 print(f"--- [INVOKER] Stale results.json removed. ---")
 
+            # Force remove any existing container with the same name to prevent conflict
+            try:
+                existing_container = client.containers.get(executor_name)
+                print(f"--- [INVOKER] Found existing container {executor_name}. Removing... ---")
+                existing_container.remove(force=True)
+            except Exception:
+                pass
+
             container = client.containers.run(
                 image=image_name,
                 name=executor_name,
