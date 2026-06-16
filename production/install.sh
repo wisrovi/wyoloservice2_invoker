@@ -37,7 +37,7 @@ USER_ENV="/home/wisrovi/scripts/user.env"
     echo "WORKER_HOME_DIR=$HOME"
     echo "WORKER_CURRENT_DATE=$(date '+%Y-%m-%d')"
     echo "WORKER_CURRENT_TIME=$(date '+%H:%M:%S')"
-    
+
     # Información de GPU
     if command -v nvidia-smi &> /dev/null; then
         echo "WORKER_GPU_COUNT=$(nvidia-smi --query-gpu=count --format=csv,noheader)"
@@ -77,8 +77,8 @@ else
     echo "Verificando dependencias de sistema (python3-tk y customtkinter)..."
     sudo apt-get update -y && sudo apt-get install -y python3-tk
     pip3 install customtkinter --quiet --break-system-packages
-    
-    # Intentamos ejecutar el configurador. 
+
+    # Intentamos ejecutar el configurador.
     # Si falla (por falta de X11), el usuario deberá crearlo manualmente.
     if python3 config.py; then
         if is_valid_env "./control_host.env"; then

@@ -7,7 +7,7 @@ sweeper:
   study_name: exp_deteccion_headless
 train:
   batch: -1
-  data: /datasets/examples/clasification/colorball.v8i.multiclass/
+  data: /datasets/examples/classification/colorball.v8i.multiclass/
   epochs: 2
   imgsz: 640
 type: yolo

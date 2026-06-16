@@ -15,4 +15,3 @@ Welcome to GPU Invoker (Hive Worker)'s documentation!
 Overview
 --------
 The Celery-based worker node that manages GPU allocation and Samba dataset mounting.
-

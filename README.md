@@ -42,6 +42,6 @@ make start_all || docker-compose up -d
 
 ---
 ## Author
-**William Steve Rodriguez Villamizar (wisrovi)**  
-Principal Systems & Software Architect / Technology Evangelist  
+**William Steve Rodriguez Villamizar (wisrovi)**
+Principal Systems & Software Architect / Technology Evangelist
 [LinkedIn Profile](https://es.linkedin.com/in/wisrovi-rodriguez)

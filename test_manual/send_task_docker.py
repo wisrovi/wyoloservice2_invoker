@@ -4,11 +4,12 @@
 Este script se ejecuta dentro del contenedor Docker.
 """
 
+import json
 import os
 import sys
 import time
+
 import yaml
-import json
 from celery import Celery
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://192.168.1.137:23437/0")
@@ -46,7 +47,7 @@ def main():
         "user_id": "docker_test",
     }
 
-    print(f"\n[1] Enviando tarea...")
+    print("\n[1] Enviando tarea...")
     result = app.send_task(
         TASK_NAME,
         args=[training_config],
@@ -57,7 +58,7 @@ def main():
     print(f"    Task ID: {task_id}")
     print(f"    Estado: {result.state}")
 
-    print(f"\n[2] Esperando resultado (timeout: 600s)...")
+    print("\n[2] Esperando resultado (timeout: 600s)...")
 
     try:
         resultado = result.get(timeout=600, propagate=True)

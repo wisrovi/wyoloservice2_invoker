@@ -27,4 +27,4 @@ user.env:
 
 
 start_gradio: user.env
-	docker-compose -f docker-compose.gradio.yaml --env-file ./user.env  --env-file ./control_host.env  --compatibility up -d --build --force-recreate --no-deps  --pull always gradio_launcher 
+	docker-compose -f docker-compose.gradio.yaml --env-file ./user.env  --env-file ./control_host.env  --compatibility up -d --build --force-recreate --no-deps  --pull always gradio_launcher

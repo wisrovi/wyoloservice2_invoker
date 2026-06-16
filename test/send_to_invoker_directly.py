@@ -2,6 +2,7 @@ REDIS_HOST = "192.168.1.137"
 
 
 import os
+
 import yaml
 from celery import Celery
 
@@ -20,7 +21,7 @@ DEFAULT_CONFIG = {
     "type": "yolo",
     "train": {
         "batch": -1,
-        "data": "/datasets/examples/clasification/colorball.v8i.multiclass/",
+        "data": "/datasets/examples/classification/colorball.v8i.multiclass/",
         "epochs": 2,
         "imgsz": 640,
     },
@@ -43,12 +44,10 @@ def load_config():
     """Loads configuration from file or returns default."""
     if os.path.exists(YAML_CONFIG_PATH):
         print(f"[*] Loading configuration from {YAML_CONFIG_PATH}...")
-        with open(YAML_CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(YAML_CONFIG_PATH, encoding="utf-8") as f:
             return yaml.safe_load(f)
     else:
-        print(
-            f"[!] {YAML_CONFIG_PATH} not found. Using hardcoded default configuration."
-        )
+        print(f"[!] {YAML_CONFIG_PATH} not found. Using hardcoded default configuration.")
 
         # save the default_config
         with open(YAML_CONFIG_PATH, "w", encoding="utf-8") as f:

@@ -8,22 +8,22 @@ Executor container, and reports results back to the Manager.
 import os
 from datetime import datetime
 from typing import Any
-import optuna
 
+import optuna
+import yaml
 from celery import Task
 from celery_config import app
-from states.run_training import RunTraining
 from states.eda import EDA
 from states.llm_analizer import LlmAnalizer
+from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
-import yaml
 
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
 CONFIG: dict[str, Any] = {}
 if os.path.exists("config.yaml"):
-    with open("config.yaml", "r", encoding="utf-8") as f:
+    with open("config.yaml", encoding="utf-8") as f:
         CONFIG = yaml.safe_load(f).get("worker", {})
 
 pipe_pretrain = Pipeline()
@@ -60,20 +60,12 @@ def objetive_function(training_config: dict[str, Any]):
 
 def optuna_search(training_config: dict[str, Any]):
     # Priority: Manager config > Local config > Default (1)
-    TRIALS_OF_CONFIG = training_config.get(
-        "n_trials", CONFIG.get("sweeper", {}).get("n_trials", 1)
-    )
-    DIRECTION = training_config.get(
-        "direction", CONFIG.get("sweeper", {}).get("direction", "maximize")
-    )
-    SAMPLER = training_config.get(
-        "sampler", CONFIG.get("sweeper", {}).get("sampler", "TPESampler")
-    )
+    TRIALS_OF_CONFIG = training_config.get("n_trials", CONFIG.get("sweeper", {}).get("n_trials", 1))
+    DIRECTION = training_config.get("direction", CONFIG.get("sweeper", {}).get("direction", "maximize"))
+    SAMPLER = training_config.get("sampler", CONFIG.get("sweeper", {}).get("sampler", "TPESampler"))
 
     # Study Settings (Crucial for distributed scenario)
-    study_name = training_config.get(
-        "study_name", f"study_{datetime.now().strftime('%Y%m%d')}"
-    )
+    study_name = training_config.get("study_name", f"study_{datetime.now().strftime('%Y%m%d')}")
 
     # Priority: Environment variable > Config file
     BASE = "postgresql://postgres:postgres@<IP>:23436/wyoloservice"
@@ -134,14 +126,11 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]):
     Raises:
         Exception: If the executor fails or results are missing.
     """
-
     invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
 
     user_id: str = training_config.get("user_id", "unknown")
 
-    print(
-        f"--- [INVOKER:{invoker_name}] Task {self.request.id} started for user: {user_id} ---"
-    )
+    print(f"--- [INVOKER:{invoker_name}] Task {self.request.id} started for user: {user_id} ---")
 
     try:
         resultado = pipe_pretrain.run(training_config)
@@ -161,9 +150,7 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]):
         print(f"Pipeline fallido: {str(exc)}")
         raise exc
 
-    print(
-        f"--- [INVOKER:{invoker_name}] Task {self.request.id} completed for user: {user_id} ---"
-    )
+    print(f"--- [INVOKER:{invoker_name}] Task {self.request.id} completed for user: {user_id} ---")
 
     return resultado
 
@@ -177,9 +164,7 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]):
     invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
     user_id = training_config.get("user_id", "unknown")
 
-    print(
-        f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} started for user: {user_id} ---"
-    )
+    print(f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} started for user: {user_id} ---")
 
     try:
         run_training = RunTraining(CONFIG)

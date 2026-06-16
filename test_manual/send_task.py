@@ -17,29 +17,30 @@ El flujo es:
     5. Imprime métricas
 """
 
+import json
 import os
 import sys
 import time
+
 import yaml
-import json
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
 
 from celery_config import (
-    app,
-    TASK_NAME,
     QUEUE_NAME,
     REDIS_URL,
-    RESULT_TIMEOUT,
     RESULT_INTERVAL,
+    RESULT_TIMEOUT,
+    TASK_NAME,
+    app,
 )
 
 
 def load_config() -> dict:
     """Carga la configuración de entrenamiento."""
     config_path = os.path.join(SCRIPT_DIR, "training_config.yaml")
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -48,7 +49,7 @@ def main():
     print("TEST MANUAL: Envío de tarea al Invoker via Celery")
     print("=" * 60)
 
-    print(f"\n[1] Configuración de conexión:")
+    print("\n[1] Configuración de conexión:")
     print(f"    - Redis URL: {REDIS_URL}")
     print(f"    - Cola: {QUEUE_NAME}")
     print(f"    - Tarea: {TASK_NAME}")
@@ -58,13 +59,13 @@ def main():
     study_cfg = config.get("study", {})
     metadata_cfg = config.get("metadata", {})
 
-    print(f"\n[2] Configuración del entrenamiento:")
+    print("\n[2] Configuración del entrenamiento:")
     print(f"    - Modelo: {train_cfg.get('model')}")
     print(f"    - Epochs: {train_cfg.get('epochs')}")
     print(f"    - Image size: {train_cfg.get('imgsz')}")
     print(f"    - Learning rate: {train_cfg.get('lr0')}")
 
-    print(f"\n[3] Preparando payload para Celery...")
+    print("\n[3] Preparando payload para Celery...")
 
     training_config = {
         "train": train_cfg,
@@ -78,11 +79,11 @@ def main():
         "user_id": metadata_cfg.get("author", "test_user"),
     }
 
-    print(f"    Payload JSON (primeros 500 chars):")
+    print("    Payload JSON (primeros 500 chars):")
     payload_json = json.dumps(training_config, indent=2)
     print(f"    {payload_json[:500]}...")
 
-    print(f"\n[4] Enviando tarea a Celery...")
+    print("\n[4] Enviando tarea a Celery...")
     result = app.send_task(
         TASK_NAME,
         args=[training_config],
@@ -98,7 +99,7 @@ def main():
     try:
         result.get(timeout=RESULT_TIMEOUT, propagate=True)
 
-        print(f"\n[6] Resultado recibido:")
+        print("\n[6] Resultado recibido:")
         print(f"    - Estado final: {result.state}")
         print(f"    - Resultado: {result.result}")
 
@@ -115,7 +116,7 @@ def main():
     except Exception as e:
         print(f"\n✗ ERROR esperando resultado: {e}")
         print(f"  Task ID: {task_id}")
-        print(f"  Revisa los logs del Invoker para más detalles")
+        print("  Revisa los logs del Invoker para más detalles")
         sys.exit(1)
 
     print("\n" + "=" * 60)

@@ -12,7 +12,7 @@ This component acts as a bridge between Celery and the Docker-based Executor. It
 ## Pipeline Workflow
 
 1.  **EDA Phase:** Initial data analysis before starting the optimization loop.
-2.  **Optuna Loop:** 
+2.  **Optuna Loop:**
     -   Suggests hyperparameters based on the configured sampler (TPE, Random, etc.).
     -   Launches a dedicated **Executor** container for training.
     -   Collects metrics and feeds them back to the study.

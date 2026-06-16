@@ -1,6 +1,7 @@
-import customtkinter as ctk
-import subprocess
 import os
+import subprocess
+
+import customtkinter as ctk
 
 if os.path.exists("config/control_host.env"):
     print("No need to set environment variables, because they are already set.")
@@ -10,9 +11,7 @@ if os.path.exists("config/control_host.env"):
 def obtener_usuario():
     """Obtiene el nombre de usuario usando 'whoami'."""
     try:
-        resultado = subprocess.run(
-            ["whoami"], capture_output=True, text=True, check=True
-        )
+        resultado = subprocess.run(["whoami"], capture_output=True, text=True, check=True)
         return resultado.stdout.strip()
     except subprocess.CalledProcessError:
         return "usuario_desconocido"
@@ -23,9 +22,7 @@ def crear_archivo():
     cifs_user = entry_cifs_user.get()
     cifs_pass = entry_cifs_pass.get()
     modo = menu_modo.get() if opciones_avanzadas_visible else "Público"
-    num_current_train = (
-        entry_num_current_train.get() if opciones_avanzadas_visible else "1"
-    )
+    num_current_train = entry_num_current_train.get() if opciones_avanzadas_visible else "1"
     max_gpu = entry_max_gpu.get() if opciones_avanzadas_visible else "60"
 
     if control_host and cifs_user and cifs_pass:
@@ -96,9 +93,7 @@ entry_max_gpu.insert(0, "60")  # Valor predeterminado
 
 # Botón para mostrar/ocultar opciones avanzadas
 opciones_avanzadas_visible = False
-boton_opciones_avanzadas = ctk.CTkButton(
-    ventana, text="Opciones Avanzadas", command=toggle_opciones_avanzadas
-)
+boton_opciones_avanzadas = ctk.CTkButton(ventana, text="Opciones Avanzadas", command=toggle_opciones_avanzadas)
 boton_opciones_avanzadas.grid(row=3, column=0, columnspan=2, pady=10)
 
 boton_crear = ctk.CTkButton(ventana, text="Crear archivo", command=crear_archivo)

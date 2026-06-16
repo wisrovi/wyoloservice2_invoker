@@ -26,22 +26,22 @@ flowchart TB
         Optuna[(PostgreSQL<br/>Optuna DB)]
         MLflow[(MLflow<br/>Tracking)]
     end
-    
+
     subgraph CONTAINERS["🐳 Contenedores Docker"]
         Sender[test_sender<br/>send_task_docker.py]
         WorkerInv[worker_invoker<br/>Celery Worker]
         Executor[worker_executor<br/>YOLO Training]
     end
-    
+
     Sender -->|"send_task()"| Redis
     Redis -->|"Celery Queue"| WorkerInv
     WorkerInv -->|"docker.run()"| Executor
     Executor -->|"results.json"| WorkerInv
     WorkerInv -->|"result.get()"| Sender
-    
+
     WorkerInv -->|"Optuna Study"| Optuna
     WorkerInv -->|"Metrics"| MLflow
-    
+
     style Sender fill:#90EE90,stroke:#228B22
     style WorkerInv fill:#87CEEB,stroke:#4169E1
     style Executor fill:#FFB6C1,stroke:#DC143C
@@ -56,31 +56,31 @@ sequenceDiagram
     participant Worker as Worker Invoker
     participant Executor as Executor Container
     participant Host as Docker Host
-    
+
     Note over Sender: Usuario ejecuta<br/>docker-compose up
-    
+
     Sender->>Redis: send_task(tasks.train_on_gpu_simple)
     Note right of Sender: Payload JSON:<br/>{train: {...}, metadata: {...}}
-    
+
     Redis->>Worker: Task en cola gpus_high
     Worker->>Worker: Recibe task de Celery
-    
+
     Worker->>Host: Crea temp_dir en /tmp
     Worker->>Host: Escribe config.json
     Note over Host: /tmp/trial_xxx/config.json
-    
+
     Worker->>Executor: docker.run(executor_image)
     Note over Executor: Lee config.json<br/>Ejecuta entrenamiento<br/>Simula 5 minutos
-    
+
     Executor->>Host: Escribe results.json
     Note over Host: /tmp/trial_xxx/results.json<br/>{accuracy: 0.869}
-    
+
     Executor--x Executor: Container termina
     Note over Executor: remove=True en docker.run()
-    
+
     Worker->>Host: Lee results.json
     Worker->>Redis: Task SUCCESS con accuracy
-    
+
     Sender->>Sender: result.get() retorna
     Note over Sender: Imprime resultado<br/>Contenedor termina
 ```
@@ -115,7 +115,7 @@ flowchart LR
         A2 --> A3[Ejecuta send_task_docker.py]
         A3 --> A4[Celery send_task()]
     end
-    
+
     subgraph PROCESO["⚙️ Procesamiento"]
         A4 --> B1[Redis cola gpus_high]
         B1 --> B2[Worker Invoker recibe]
@@ -123,14 +123,14 @@ flowchart LR
         B3 --> B4[Entrenamiento ~5min]
         B4 --> B5[results.json]
     end
-    
+
     subgraph RESPUESTA["📥 Respuesta"]
         B5 --> C1[Worker lee accuracy]
         C1 --> C2[Celery result.get()]
         C2 --> C3[Imprime resultado]
         C3 --> C4[✓ TEST COMPLETADO]
     end
-    
+
     style ENVIO fill:#90EE90
     style PROCESO fill:#87CEEB
     style RESPUESTA fill:#FFD700
@@ -169,7 +169,7 @@ TEST COMPLETADO EXITOSAMENTE
 ============================================================
 ```
 
-## Requisitos Previos
+## Requisitos Previous
 
 1. **Redis** corriendo en `192.168.1.137:23437`
 2. **Worker Invoker** escuchando la cola `gpus_high`
@@ -241,7 +241,7 @@ classDiagram
         +dict metadata
         +str user_id
     }
-    
+
     class TrainParams {
         +str model
         +str data
@@ -254,18 +254,18 @@ classDiagram
         +bool cos_lr
         +int workers
     }
-    
+
     class Metadata {
         +str author
         +str description
     }
-    
+
     class Result {
         +str status
         +float accuracy
         +str invoker
     }
-    
+
     TrainingConfig *-- TrainParams : train
     TrainingConfig *-- Metadata : metadata
     Result ..> TrainParams : contiene

@@ -6,6 +6,7 @@ that can send tasks to the Invoker's queue.
 
 import os
 from typing import Any
+
 import yaml
 from celery import Celery
 
@@ -13,7 +14,7 @@ CONFIG_PATH: str = os.path.join(os.path.dirname(__file__), "config.yaml")
 
 config: dict[str, Any] = {}
 if os.path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
 redis_cfg: dict[str, Any] = config.get("redis", {})

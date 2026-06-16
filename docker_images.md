@@ -52,16 +52,16 @@ docker push wisrovi/neuralforgeai:v1.0.0
 services:
   control_server:
     image: wisrovi/train_service:control_server_v1.0.0
-  
+
   manager:
     image: wisrovi/train_service/manager:orchestrator_v1.0.0
-  
+
   worker:
     image: wisrovi/train_service:worker_invoker_v1.0.0
-  
+
   executor:
     image: wisrovi/train_service:worker_executor_v1.0.0
-  
+
   neuralforgeai:
     image: wisrovi/neuralforgeai:v1.0.0
 ```

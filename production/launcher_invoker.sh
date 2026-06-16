@@ -34,7 +34,7 @@ echo "Core asignado: $CORE_ASSIGNED"
 # Entramos al directorio donde está el docker-compose.yaml
 cd /home/wisrovi/scripts/
 
-# Limpiar contenedores previos si existieran con el mismo nombre de proyecto
+# Limpiar contenedores previous si existieran con el mismo nombre de proyecto
 # Usamos el nombre del worker como nombre de proyecto para evitar colisiones
 PROJECT_NAME="invoker_${WORKER_NAME//./_}"
 

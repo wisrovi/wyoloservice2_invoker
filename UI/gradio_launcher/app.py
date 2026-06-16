@@ -1,7 +1,8 @@
-import os
-import yaml
 import json
+import os
+
 import gradio as gr
+import yaml
 from celery import Celery
 
 # --- Configuration ---
@@ -17,7 +18,7 @@ EXAMPLE_CLS = """model: "yolov8n-cls.pt"
 type: "yolo"
 train:
   batch: -1
-  data: "/datasets/examples/clasification/colorball.v8i.multiclass/"
+  data: "/datasets/examples/classification/colorball.v8i.multiclass/"
   epochs: 2
   imgsz: 640
 sweeper:
@@ -32,7 +33,7 @@ EXAMPLE_DET = """model: "yolov8n.pt"
 type: "yolo"
 train:
   batch: -1
-  data: "/datasets/examples/detecion/colorball.v8i.multiclass/"
+  data: "/datasets/examples/detection/colorball.v8i.multiclass/"
   epochs: 2
   imgsz: 640
 sweeper:
@@ -62,52 +63,51 @@ metadata:
 # We use a trick: the third element is the actual content, but we will handle the mapping
 EXAMPLES = [
     ["/app/examples/clasificacion/config_train.yaml", "gpus_high", EXAMPLE_CLS],
-    ["/app/examples/detecion/config_train.yaml", "gpus_medium", EXAMPLE_DET],
+    ["/app/examples/detection/config_train.yaml", "gpus_medium", EXAMPLE_DET],
     ["/app/examples/segmentacion/config_train.yaml", "gpus_low", EXAMPLE_SEG],
 ]
+
 
 def parse_yaml_file(file):
     if file is None:
         return ""
     try:
-        with open(file.name, "r", encoding="utf-8") as f:
+        with open(file.name, encoding="utf-8") as f:
             content = f.read()
             yaml.safe_load(content)
             return content
     except Exception as e:
         return f"Error al leer YAML: {str(e)}"
 
+
 def validate_and_launch(yaml_content, queue):
     if not yaml_content.strip():
         return "❌ Error: La configuración YAML está vacía."
-    
+
     if yaml_content.startswith("Error"):
         return f"❌ {yaml_content}"
 
     try:
         payload = yaml.safe_load(yaml_content)
-        
+
         # Validation of required root fields
         if "model" not in payload:
-            return "❌ Error: El YAML debe contener el campo 'model' en la raíz."
+            return "❌ Error: El YAML debe container el campo 'model' en la raíz."
         if "type" not in payload:
-            return "❌ Error: El YAML debe contener el campo 'type' en la raíz (ej: 'yolo')."
-        
+            return "❌ Error: El YAML debe container el campo 'type' en la raíz (ej: 'yolo')."
+
         # Defaults if missing
         if "user_id" not in payload:
             payload["user_id"] = payload.get("metadata", {}).get("author", "unknown_user")
-            
+
         task_name = "tasks.train_on_gpu_simple"
-        result = celery_app.send_task(
-            task_name,
-            args=[payload],
-            queue=queue
-        )
-        
+        result = celery_app.send_task(task_name, args=[payload], queue=queue)
+
         return f"✅ ¡Entrenamiento enviado!\n\nID: {result.id}\nCola: {queue}\n\nEstructura detectada:\n- Modelo: {payload['model']}\n- Tipo: {payload['type']}"
-    
+
     except Exception as e:
         return f"❌ Error de sintaxis o envío: {str(e)}"
+
 
 # --- UI Theme ---
 theme = gr.themes.Soft(
@@ -120,23 +120,23 @@ theme = gr.themes.Soft(
 with gr.Blocks(theme=theme, title="NeuralForge Launcher") as demo:
     gr.Markdown("# 🚀 NeuralForge AI: Entrenamiento en Cluster")
     gr.Markdown("Selecciona una plantilla o sube tu YAML para lanzar el entrenamiento.")
-    
+
     with gr.Row():
         with gr.Column(scale=2):
             gr.Markdown("### 📄 Configuración YAML")
             yaml_file = gr.File(label="Subir archivo .yaml", file_types=[".yaml", ".yml"])
             yaml_editor = gr.Code(label="Editor YAML", language="yaml", lines=18, interactive=False)
-            
+
         with gr.Column(scale=1):
             gr.Markdown("### ⚙️ Parámetros de Envío")
             queue_form = gr.Dropdown(
                 choices=["gpus_high", "gpus_medium", "gpus_low", "default"],
                 label="Cola de Prioridad",
                 value="gpus_high",
-                info="Selecciona la cola de procesamiento."
+                info="Selecciona la cola de procesamiento.",
             )
-            
-            # Hidden field to help gr.Examples trigger logic if needed, 
+
+            # Hidden field to help gr.Examples trigger logic if needed,
             # but here we just map directly to yaml_editor
             dummy_hidden = gr.Textbox(visible=False)
 
@@ -148,21 +148,13 @@ with gr.Blocks(theme=theme, title="NeuralForge Launcher") as demo:
     gr.Examples(
         examples=EXAMPLES,
         inputs=[dummy_hidden, queue_form, yaml_editor],
-        label="Selecciona una ruta para cargar su contenido"
+        label="Selecciona una ruta para cargar su contenido",
     )
 
     # Event Handlers
-    yaml_file.change(
-        fn=parse_yaml_file,
-        inputs=[yaml_file],
-        outputs=[yaml_editor]
-    )
+    yaml_file.change(fn=parse_yaml_file, inputs=[yaml_file], outputs=[yaml_editor])
 
-    launch_btn.click(
-        fn=validate_and_launch,
-        inputs=[yaml_editor, queue_form],
-        outputs=[output_msg]
-    )
+    launch_btn.click(fn=validate_and_launch, inputs=[yaml_editor, queue_form], outputs=[output_msg])
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=7860)

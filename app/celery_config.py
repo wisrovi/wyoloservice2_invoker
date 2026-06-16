@@ -6,6 +6,7 @@ application with appropriate broker, backend, and concurrency settings.
 
 import os
 from typing import Any
+
 import yaml
 from celery import Celery
 
@@ -13,7 +14,7 @@ from celery import Celery
 CONFIG_PATH: str = "config.yaml"
 config: dict[str, Any] = {}
 if os.path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
 # 2. Extract Redis URL (Priority: Env > YAML > Default)
@@ -46,9 +47,5 @@ worker_settings: dict[str, Any] = {
 app.conf.update(worker_settings)
 
 print(f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery initialized ---")
-print(
-    f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery configuration: {worker_settings} ---"
-)
-print(
-    f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery broker: {REDIS_URL} ---"
-)
+print(f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery configuration: {worker_settings} ---")
+print(f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery broker: {REDIS_URL} ---")

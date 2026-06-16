@@ -5,16 +5,16 @@ of training trials within Docker containers. It handles configuration delivery,
 container management, and results recovery.
 """
 
-import os
 import json
-import yaml
-import tempfile
-import shutil
 import multiprocessing
-from typing import Any, Dict
+import os
+import shutil
+import tempfile
 from datetime import datetime
+from typing import Any, Dict
 
 import docker  # pylint: disable=import-error
+import yaml
 
 DEFAULT_TRAIN_IMAGE = "wisrovi/train_service:worker_executor_v1.0.0"
 BASE_DIR = "/wyolo/worker/request"
@@ -22,7 +22,7 @@ FILE = "config_train.yaml"
 yaml_path = os.path.join(BASE_DIR, FILE)
 
 
-def get_system_limits(config: Dict[str, Any]):
+def get_system_limits(config: dict[str, Any]):
     """Calculates the hardware limits based on the host system and config.
 
     Args:
@@ -60,7 +60,7 @@ class RunTraining:
     NAME: str = __name__
     VERSION: str = "1.0.0"
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initializes the RunTraining instance.
 
         Args:
@@ -76,7 +76,6 @@ class RunTraining:
             executor_name (str): The name to assign to the running container.
             temp_dir (str): The local directory to bind as a volume.
         """
-
         invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
 
         # Calculate hardware limits dynamically from config
@@ -89,16 +88,14 @@ class RunTraining:
         try:
             client = docker.from_env()
         except Exception as exc:
-            print(
-                f"--- [INVOKER:{os.getenv('WORKER_NAME', 'unknown')}] Unexpected error: {exc} ---"
-            )
+            print(f"--- [INVOKER:{os.getenv('WORKER_NAME', 'unknown')}] Unexpected error: {exc} ---")
             raise exc
 
         def load_env_file(path):
             envs = {}
             if os.path.exists(path):
                 try:
-                    with open(path, "r", encoding="utf-8") as f:
+                    with open(path, encoding="utf-8") as f:
                         for line in f:
                             line = line.strip()
                             if line and not line.startswith("#"):
@@ -114,7 +111,7 @@ class RunTraining:
         # In the invoker container, these are usually at /app/config/
         environments.update(load_env_file("/app/config/control_host.env"))
         environments.update(load_env_file("/app/config/user.env"))
-        
+
         environments.update(
             {
                 "NVIDIA_VISIBLE_DEVICES": "0",
@@ -130,7 +127,7 @@ class RunTraining:
             result_path: str = os.path.join(results_dir, "results.json")
             if os.path.exists(result_path):
                 os.remove(result_path)
-                print(f"--- [INVOKER] Stale results.json removed. ---")
+                print("--- [INVOKER] Stale results.json removed. ---")
 
             # Force remove any existing container with the same name to prevent conflict
             try:
@@ -149,16 +146,14 @@ class RunTraining:
                 privileged=True,
                 network_mode="host",
                 shm_size="16g",
-                tty=False,     # Disable TTY to avoid multiplexing issues and ANSI codes
+                tty=False,  # Disable TTY to avoid multiplexing issues and ANSI codes
                 # Resource Limits
                 nano_cpus=int(8 * 1e9),  # --cpus=8
                 mem_limit="24g",
                 # Capabilities
                 cap_add=["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
                 # GPU Configuration
-                device_requests=[
-                    docker.types.DeviceRequest(device_ids=["0"], capabilities=[["gpu"]])
-                ],
+                device_requests=[docker.types.DeviceRequest(device_ids=["0"], capabilities=[["gpu"]])],
                 # Environment
                 environment=environments,
                 # Labels
@@ -182,7 +177,7 @@ class RunTraining:
                     },
                 },
                 # Command: More verbose for debugging
-                command=f"bash -c 'nvidia-smi && echo \"[EXECUTOR] Starting mount...\" && /usr/local/bin/mount-cifs.sh && echo \"[EXECUTOR] Mount OK. Starting training...\" && python main.py --file {yaml_path}'",
+                command=f'bash -c \'nvidia-smi && echo "[EXECUTOR] Starting mount..." && /usr/local/bin/mount-cifs.sh && echo "[EXECUTOR] Mount OK. Starting training..." && python main.py --file {yaml_path}\'',
             )
 
             print(f"--- [INVOKER] Executor {executor_name} started. Streaming logs... ---", flush=True)
@@ -190,7 +185,7 @@ class RunTraining:
             # Prepare log file path in the shared results volume
             results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
             log_file_path = os.path.join(results_dir, f"logs_{executor_name}.txt")
-            
+
             # Stream logs to the invoker's output and save to a file
             with open(log_file_path, "w", encoding="utf-8") as log_file:
                 # Use a generator to get clean lines from the stream
@@ -209,31 +204,31 @@ class RunTraining:
             # Wait for container to exit and check status
             result = container.wait()
             exit_code = result.get("StatusCode", 0)
-            
+
             # If it failed, try to get the full logs even if stream finished
             if exit_code != 0:
                 print(f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exit_code} ---")
                 # Attempt to get full logs for debugging
                 full_logs = container.logs(stdout=True, stderr=True).decode("utf-8", errors="replace")
                 print(f"--- [INVOKER] Full executor logs: ---\n{full_logs}")
-                
+
                 # Cleanup manually since remove=False
                 container.remove()
                 raise RuntimeError(f"Executor failed with exit code {exit_code}. Logs:\n{full_logs[-1000:]}")
-            
+
             # Cleanup manually since remove=False
             container.remove()
 
         except Exception as exc:
             private_queue = os.getenv("WORKER_NAME", "unknown")
             print(f"--- [INVOKER:{private_queue}] Error in docker_run: {exc} ---")
-            
+
             # put -1 in results.json to indicate failure for Optuna
             results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
             os.makedirs(results_dir, exist_ok=True)
-            
+
             result_path: str = os.path.join(results_dir, "results.json")
-            
+
             # Write failure result only if it doesn't exist (to avoid overwriting partial success if any)
             if not os.path.exists(result_path):
                 try:
@@ -241,10 +236,10 @@ class RunTraining:
                         json.dump({"accuracy": -1.0, "status": "failed", "error": str(exc)}, file, indent=4)
                 except Exception as e:
                     print(f"--- [INVOKER] Failed to write results.json: {e} ---")
-            
+
             raise exc
 
-    def __call__(self, training_config: Dict[str, Any]) -> Dict[str, Any]:
+    def __call__(self, training_config: dict[str, Any]) -> dict[str, Any]:
         """Executes the training trial.
 
         This method sets up the environment, runs the executor container,
@@ -261,7 +256,6 @@ class RunTraining:
             RuntimeError: If the executor container fails.
             Exception: For any other unexpected errors.
         """
-
         invoker_name = os.getenv("WORKER_NAME", "unknown")
 
         temp_dir: str = tempfile.mkdtemp(prefix="trial_", dir="/tmp")
@@ -294,27 +288,21 @@ class RunTraining:
             results_dir = self.config.get("results_dir", "/results")
             result_path: str = os.path.join(results_dir, "results.json")
             if os.path.exists(result_path):
-                with open(result_path, "r", encoding="utf-8") as file:
-                    result: Dict[str, Any] = json.load(file)
+                with open(result_path, encoding="utf-8") as file:
+                    result: dict[str, Any] = json.load(file)
 
                 accuracy: float = float(result.get("accuracy", 0.0))
-                print(
-                    f"--- [INVOKER:{invoker_name}] Trial completed. Metric: {accuracy} ---"
-                )
+                print(f"--- [INVOKER:{invoker_name}] Trial completed. Metric: {accuracy} ---")
                 return {
                     "status": "done",
                     "accuracy": accuracy,
                     "invoker": invoker_name,
                 }
 
-            raise FileNotFoundError(
-                "Executor died but results.json not found in shared volume"
-            )
+            raise FileNotFoundError("Executor died but results.json not found in shared volume")
 
         except docker.errors.ContainerError as exc:
-            print(
-                f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exc.exit_status} ---"
-            )
+            print(f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exc.exit_status} ---")
             raise RuntimeError(f"Executor failed: {exc}") from exc
 
         except Exception as exc:

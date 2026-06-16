@@ -21,22 +21,19 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 CONFIG: dict[str, Any] = {}
-CONFIG_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "invoker", "config.yaml"
-)
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "invoker", "config.yaml")
 if os.path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
         CONFIG = yaml.safe_load(f)
 
 # 1. Database Connection (PostgreSQL)
 optuna_cfg: dict[str, Any] = CONFIG.get("optuna", {})
 CONTROL_HOST = os.getenv("CONTROL_HOST", "localhost")
-DEFAULT_DB_URL = optuna_cfg.get("storage_url", "postgresql://optuna_user:optuna_pass@localhost/optuna_db").replace("<IP>", CONTROL_HOST)
-
-OPTUNA_DB_URL = os.getenv(
-    "OPTUNA_DB_URL",
-    DEFAULT_DB_URL
+DEFAULT_DB_URL = optuna_cfg.get("storage_url", "postgresql://optuna_user:optuna_pass@localhost/optuna_db").replace(
+    "<IP>", CONTROL_HOST
 )
+
+OPTUNA_DB_URL = os.getenv("OPTUNA_DB_URL", DEFAULT_DB_URL)
 
 engine = create_engine(OPTUNA_DB_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -71,9 +68,7 @@ def get_optuna_db():
 @app.get("/", response_class=HTMLResponse)
 async def dashboard_home(request: Request):
     """Render the main dashboard page."""
-    return templates.TemplateResponse(
-        request=request, name="index.html", context={}
-    )
+    return templates.TemplateResponse(request=request, name="index.html", context={})
 
 
 @app.get("/api/health")
@@ -88,8 +83,9 @@ async def list_studies() -> dict[str, Any]:
     try:
         with engine.connect() as conn:
             # Standard Optuna Schema joins
-            result = conn.execute(text("""
-                SELECT 
+            result = conn.execute(
+                text("""
+                SELECT
                     s.study_id,
                     s.study_name,
                     sd.direction,
@@ -98,7 +94,8 @@ async def list_studies() -> dict[str, Any]:
                 FROM studies s
                 LEFT JOIN study_directions sd ON s.study_id = sd.study_id
                 ORDER BY start_time DESC NULLS LAST
-            """))
+            """)
+            )
             rows = result.fetchall()
 
         studies = []
@@ -120,7 +117,7 @@ async def get_study(study_name: str) -> dict[str, Any]:
         with engine.connect() as conn:
             result = conn.execute(
                 text("""
-                SELECT 
+                SELECT
                     s.study_id,
                     s.study_name,
                     sd.direction
@@ -133,9 +130,7 @@ async def get_study(study_name: str) -> dict[str, Any]:
             row = result.fetchone()
 
         if not row:
-            raise HTTPException(
-                status_code=404, detail=f"Study '{study_name}' not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Study '{study_name}' not found")
 
         study = dict(row._mapping)
         return study
@@ -153,7 +148,7 @@ async def get_study_trials(study_name: str) -> dict[str, Any]:
         with engine.connect() as conn:
             result = conn.execute(
                 text("""
-                SELECT 
+                SELECT
                     t.trial_id,
                     t.study_id,
                     t.state,
@@ -176,7 +171,7 @@ async def get_study_trials(study_name: str) -> dict[str, Any]:
             # Fetch params for each trial
             params_result = conn.execute(
                 text("SELECT param_name, param_value FROM trial_params WHERE trial_id = :trial_id"),
-                {"trial_id": trial["trial_id"]}
+                {"trial_id": trial["trial_id"]},
             )
             trial["params"] = {p[0]: p[1] for p in params_result.fetchall()}
             trials.append(trial)
@@ -194,7 +189,7 @@ async def get_best_trial(study_name: str) -> dict[str, Any]:
         with engine.connect() as conn:
             result = conn.execute(
                 text("""
-                SELECT 
+                SELECT
                     t.trial_id,
                     t.study_id,
                     t.state,
@@ -206,7 +201,7 @@ async def get_best_trial(study_name: str) -> dict[str, Any]:
                 JOIN trial_values tv ON t.trial_id = tv.trial_id
                 JOIN study_directions sd ON s.study_id = sd.study_id
                 WHERE s.study_name = :study_name AND t.state = 'COMPLETE'
-                ORDER BY 
+                ORDER BY
                     CASE WHEN sd.direction = 'MAXIMIZE' THEN tv.value END DESC,
                     CASE WHEN sd.direction = 'MINIMIZE' THEN tv.value END ASC
                 LIMIT 1
@@ -226,7 +221,7 @@ async def get_best_trial(study_name: str) -> dict[str, Any]:
         with engine.connect() as conn:
             params_result = conn.execute(
                 text("SELECT param_name, param_value FROM trial_params WHERE trial_id = :trial_id"),
-                {"trial_id": trial["trial_id"]}
+                {"trial_id": trial["trial_id"]},
             )
             trial["params"] = {p[0]: p[1] for p in params_result.fetchall()}
 
@@ -245,7 +240,7 @@ async def get_running_trials(study_name: str) -> dict[str, Any]:
         with engine.connect() as conn:
             result = conn.execute(
                 text("""
-                SELECT 
+                SELECT
                     t.trial_id,
                     t.study_id,
                     t.state,
@@ -265,7 +260,7 @@ async def get_running_trials(study_name: str) -> dict[str, Any]:
             # Fetch params
             params_result = conn.execute(
                 text("SELECT param_name, param_value FROM trial_params WHERE trial_id = :trial_id"),
-                {"trial_id": trial["trial_id"]}
+                {"trial_id": trial["trial_id"]},
             )
             trial["params"] = {p[0]: p[1] for p in params_result.fetchall()}
             trials.append(trial)
@@ -294,9 +289,7 @@ async def get_workers() -> dict[str, Any]:
                         "status": "online",
                         "stats": worker_stats,
                         "active_tasks": active.get(worker_name, []) if active else [],
-                        "reserved_tasks": reserved.get(worker_name, [])
-                        if reserved
-                        else [],
+                        "reserved_tasks": reserved.get(worker_name, []) if reserved else [],
                     }
                 )
 

@@ -492,7 +492,7 @@
         "kind": 2,
         "importPath": "gradio_launcher.app",
         "description": "gradio_launcher.app",
-        "peekOfCode": "def validate_and_launch(yaml_content, queue):\n    if not yaml_content.strip():\n        return \"❌ Error: La configuración YAML está vacía.\"\n    if yaml_content.startswith(\"Error\"):\n        return f\"❌ {yaml_content}\"\n    try:\n        payload = yaml.safe_load(yaml_content)\n        # Validation of required root fields\n        if \"model\" not in payload:\n            return \"❌ Error: El YAML debe contener el campo 'model' en la raíz.\"",
+        "peekOfCode": "def validate_and_launch(yaml_content, queue):\n    if not yaml_content.strip():\n        return \"❌ Error: La configuración YAML está vacía.\"\n    if yaml_content.startswith(\"Error\"):\n        return f\"❌ {yaml_content}\"\n    try:\n        payload = yaml.safe_load(yaml_content)\n        # Validation of required root fields\n        if \"model\" not in payload:\n            return \"❌ Error: El YAML debe container el campo 'model' en la raíz.\"",
         "detail": "gradio_launcher.app",
         "documentation": {}
     },
@@ -510,7 +510,7 @@
         "kind": 5,
         "importPath": "gradio_launcher.app",
         "description": "gradio_launcher.app",
-        "peekOfCode": "REDIS_PORT = \"23437\"\nREDIS_URL = f\"redis://{REDIS_HOST}:{REDIS_PORT}/0\"\n# Initialize Celery\ncelery_app = Celery(\"gradio_launcher\", broker=REDIS_URL, backend=REDIS_URL)\n# YAML templates (Internal)\nEXAMPLE_CLS = \"\"\"model: \"yolov8n-cls.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/clasification/colorball.v8i.multiclass/\"",
+        "peekOfCode": "REDIS_PORT = \"23437\"\nREDIS_URL = f\"redis://{REDIS_HOST}:{REDIS_PORT}/0\"\n# Initialize Celery\ncelery_app = Celery(\"gradio_launcher\", broker=REDIS_URL, backend=REDIS_URL)\n# YAML templates (Internal)\nEXAMPLE_CLS = \"\"\"model: \"yolov8n-cls.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/classification/colorball.v8i.multiclass/\"",
         "detail": "gradio_launcher.app",
         "documentation": {}
     },
@@ -519,7 +519,7 @@
         "kind": 5,
         "importPath": "gradio_launcher.app",
         "description": "gradio_launcher.app",
-        "peekOfCode": "REDIS_URL = f\"redis://{REDIS_HOST}:{REDIS_PORT}/0\"\n# Initialize Celery\ncelery_app = Celery(\"gradio_launcher\", broker=REDIS_URL, backend=REDIS_URL)\n# YAML templates (Internal)\nEXAMPLE_CLS = \"\"\"model: \"yolov8n-cls.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/clasification/colorball.v8i.multiclass/\"\n  epochs: 2",
+        "peekOfCode": "REDIS_URL = f\"redis://{REDIS_HOST}:{REDIS_PORT}/0\"\n# Initialize Celery\ncelery_app = Celery(\"gradio_launcher\", broker=REDIS_URL, backend=REDIS_URL)\n# YAML templates (Internal)\nEXAMPLE_CLS = \"\"\"model: \"yolov8n-cls.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/classification/colorball.v8i.multiclass/\"\n  epochs: 2",
         "detail": "gradio_launcher.app",
         "documentation": {}
     },
@@ -528,7 +528,7 @@
         "kind": 5,
         "importPath": "gradio_launcher.app",
         "description": "gradio_launcher.app",
-        "peekOfCode": "celery_app = Celery(\"gradio_launcher\", broker=REDIS_URL, backend=REDIS_URL)\n# YAML templates (Internal)\nEXAMPLE_CLS = \"\"\"model: \"yolov8n-cls.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/clasification/colorball.v8i.multiclass/\"\n  epochs: 2\n  imgsz: 640\nsweeper:",
+        "peekOfCode": "celery_app = Celery(\"gradio_launcher\", broker=REDIS_URL, backend=REDIS_URL)\n# YAML templates (Internal)\nEXAMPLE_CLS = \"\"\"model: \"yolov8n-cls.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/classification/colorball.v8i.multiclass/\"\n  epochs: 2\n  imgsz: 640\nsweeper:",
         "detail": "gradio_launcher.app",
         "documentation": {}
     },
@@ -537,7 +537,7 @@
         "kind": 5,
         "importPath": "gradio_launcher.app",
         "description": "gradio_launcher.app",
-        "peekOfCode": "EXAMPLE_CLS = \"\"\"model: \"yolov8n-cls.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/clasification/colorball.v8i.multiclass/\"\n  epochs: 2\n  imgsz: 640\nsweeper:\n  study_name: \"exp_clasificacion\"\n  fitness: \"metrics/accuracy_top1\"",
+        "peekOfCode": "EXAMPLE_CLS = \"\"\"model: \"yolov8n-cls.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/classification/colorball.v8i.multiclass/\"\n  epochs: 2\n  imgsz: 640\nsweeper:\n  study_name: \"exp_clasificacion\"\n  fitness: \"metrics/accuracy_top1\"",
         "detail": "gradio_launcher.app",
         "documentation": {}
     },
@@ -546,7 +546,7 @@
         "kind": 5,
         "importPath": "gradio_launcher.app",
         "description": "gradio_launcher.app",
-        "peekOfCode": "EXAMPLE_DET = \"\"\"model: \"yolov8n.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/detecion/colorball.v8i.multiclass/\"\n  epochs: 2\n  imgsz: 640\nsweeper:\n  study_name: \"exp_deteccion\"\n  fitness: \"metrics/mAP50-95(B)\"",
+        "peekOfCode": "EXAMPLE_DET = \"\"\"model: \"yolov8n.pt\"\ntype: \"yolo\"\ntrain:\n  batch: -1\n  data: \"datasets/detection/colorball.v8i.multiclass/\"\n  epochs: 2\n  imgsz: 640\nsweeper:\n  study_name: \"exp_deteccion\"\n  fitness: \"metrics/mAP50-95(B)\"",
         "detail": "gradio_launcher.app",
         "documentation": {}
     },
@@ -564,7 +564,7 @@
         "kind": 5,
         "importPath": "gradio_launcher.app",
         "description": "gradio_launcher.app",
-        "peekOfCode": "EXAMPLES = [\n    [\"/app/examples/clasificacion/config_train.yaml\", \"gpus_high\", EXAMPLE_CLS],\n    [\"/app/examples/detecion/config_train.yaml\", \"gpus_medium\", EXAMPLE_DET],\n    [\"/app/examples/segmentacion/config_train.yaml\", \"gpus_low\", EXAMPLE_SEG],\n]\ndef parse_yaml_file(file):\n    if file is None:\n        return \"\"\n    try:\n        with open(file.name, \"r\", encoding=\"utf-8\") as f:",
+        "peekOfCode": "EXAMPLES = [\n    [\"/app/examples/clasificacion/config_train.yaml\", \"gpus_high\", EXAMPLE_CLS],\n    [\"/app/examples/detection/config_train.yaml\", \"gpus_medium\", EXAMPLE_DET],\n    [\"/app/examples/segmentacion/config_train.yaml\", \"gpus_low\", EXAMPLE_SEG],\n]\ndef parse_yaml_file(file):\n    if file is None:\n        return \"\"\n    try:\n        with open(file.name, \"r\", encoding=\"utf-8\") as f:",
         "detail": "gradio_launcher.app",
         "documentation": {}
     },

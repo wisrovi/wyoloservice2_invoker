@@ -1,15 +1,15 @@
-import pytest
-from unittest.mock import MagicMock, patch
-import os
 import json
+import os
 import shutil
 import tempfile
+from unittest.mock import MagicMock, patch
+
+import pytest
 from states.run_training import RunTraining
 
 
 class TestRunTraining:
-    """
-    Unit tests for the RunTraining class.
+    """Unit tests for the RunTraining class.
 
     This class validates the training execution flow, including configuration delivery,
     container execution, and results recovery.
@@ -26,10 +26,7 @@ class TestRunTraining:
     @pytest.fixture
     def config(self, temp_results_dir):
         """Provides a basic configuration for RunTraining."""
-        return {
-            "executor_image": "test_image:latest",
-            "results_dir": temp_results_dir
-        }
+        return {"executor_image": "test_image:latest", "results_dir": temp_results_dir}
 
     @pytest.fixture
     def training_config(self):
@@ -38,8 +35,7 @@ class TestRunTraining:
 
     @patch("states.run_training.docker.from_env")
     def test_call_success(self, mock_docker, config, training_config, temp_results_dir):
-        """
-        Validates a successful training execution.
+        """Validates a successful training execution.
 
         Steps:
         1. Mocks the docker client.
@@ -70,9 +66,7 @@ class TestRunTraining:
 
     @patch("states.run_training.docker.from_env")
     def test_call_results_not_found(self, mock_docker, config, training_config):
-        """
-        Validates that a FileNotFoundError is raised if results.json is missing.
-        """
+        """Validates that a FileNotFoundError is raised if results.json is missing."""
         mock_client = MagicMock()
         mock_docker.return_value = mock_client
         mock_container = MagicMock()

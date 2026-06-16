@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  
+
   autoheal:
     image: willfarrell/autoheal
     container_name: autoheal_${WORKER_NAME}
