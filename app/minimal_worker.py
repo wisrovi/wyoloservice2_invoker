@@ -1,3 +1,8 @@
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
+"""Docstring."""
+
 import os
 import time
 

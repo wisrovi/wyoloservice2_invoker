@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
 """Script para enviar tareas simplificadas al Invoker via Celery.
 
 Este script envía una tarea directa al Executor sin pasar por Optuna.

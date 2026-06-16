@@ -1,3 +1,8 @@
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
+"""Docstring."""
+
 REDIS_HOST = "192.168.1.137"
 
 

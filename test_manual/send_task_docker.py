@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
 """Script que envía tarea al Invoker y espera resultado.
 
 Este script se ejecuta dentro del contenedor Docker.

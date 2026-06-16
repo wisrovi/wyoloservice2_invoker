@@ -10,6 +10,7 @@ echo "-------------------------------------------------------"
 WORKER_INSTANCE=$(hostname -I | awk '{print $1}')
 
 if [ -f /etc/default/worker_invoker ]; then
+    # shellcheck disable=SC1091
     source /etc/default/worker_invoker
     INSTANCE_NAME=${WORKER_NAME:-$WORKER_INSTANCE}
 else
@@ -25,7 +26,7 @@ sudo systemctl disable "worker_invoker@$WORKER_INSTANCE" 2>/dev/null
 # Limpiar contenedores de Docker Compose
 if [ -d /home/wisrovi/scripts/ ]; then
     echo "Limpiando contenedores de Docker..."
-    cd /home/wisrovi/scripts/
+    cd /home/wisrovi/scripts/ || exit
     PROJECT_NAME="invoker_${INSTANCE_NAME//./_}"
     sudo docker-compose -p "$PROJECT_NAME" down --remove-orphans
 fi

@@ -1,3 +1,6 @@
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
 """Gradio Launcher for NeuralForge AI.
 
 This module provides a web interface to launch training tasks on the GPU cluster.

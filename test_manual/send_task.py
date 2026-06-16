@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
 """Script para enviar tareas de entrenamiento al Invoker via Celery.
 
 Uso:

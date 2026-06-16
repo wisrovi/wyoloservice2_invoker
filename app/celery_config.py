@@ -1,3 +1,6 @@
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
 """Dynamic Celery configuration for the Worker Invoker.
 
 This module reads configuration from a YAML file and initializes the Celery

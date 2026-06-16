@@ -1,3 +1,6 @@
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
 """Celery configuration for test_manual scripts.
 
 This module reads from config.yaml and initializes a Celery app

@@ -3,6 +3,7 @@
 # Author: William Rodríguez - wisrovi
 
 # --- 1. DETECCIÓN Y PREPARACIÓN ---
+# shellcheck disable=SC2034
 IP_SUGERIDA=$(hostname -I | awk '{print $1}')
 
 echo "-------------------------------------------------------"
@@ -51,7 +52,7 @@ USER_ENV="/home/wisrovi/scripts/user.env"
 
     # Información de RAM
     MEM_TOTAL=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
-    echo "WORKER_RAM_MEMORY=$((MEM_TOTAL / 1048576 * 8 / 10))g"
+    echo "WORKER_RAM_MEMORY=$((MEM_TOTAL * 8 / 10 / 1048576))g"
     echo "WORKER_CPU_CORES_AVAILABLE=$(( $(nproc) - 1 )).0"
 } | sudo tee "$USER_ENV" > /dev/null
 

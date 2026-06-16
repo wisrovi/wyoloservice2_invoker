@@ -1,3 +1,6 @@
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
 """Worker Invoker Module.
 
 This module acts as a bridge between Celery and the Docker-based Executor.

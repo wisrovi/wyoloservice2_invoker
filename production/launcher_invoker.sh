@@ -32,7 +32,7 @@ echo "Core asignado: $CORE_ASSIGNED"
 
 # --- 2. EJECUCIÓN ---
 # Entramos al directorio donde está el docker-compose.yaml
-cd /home/wisrovi/scripts/
+cd /home/wisrovi/scripts/ || exit
 
 # Limpiar contenedores previous si existieran con el mismo nombre de proyecto
 # Usamos el nombre del worker como nombre de proyecto para evitar colisiones

@@ -4,6 +4,7 @@
 echo "Calculating code coverage..."
 
 # Ensure we are in the right directory and have PYTHONPATH set
-export PYTHONPATH=$PYTHONPATH:$(pwd)
+PYTHONPATH=$PYTHONPATH:$(pwd)
+export PYTHONPATH
 
 pytest --cov=states --cov=worker_gpu tests/ --cov-report=term-missing
