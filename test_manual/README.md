@@ -177,7 +177,7 @@ TEST COMPLETADO EXITOSAMENTE
 ### Iniciar Worker Invoker (si no está corriendo)
 
 ```bash
-cd ../invoker/development
+cd ../app
 REDIS_URL=redis://192.168.1.137:23437/0 \
 PRIVATE_QUEUE=test_worker \
 celery -A worker_gpu worker \
@@ -314,6 +314,6 @@ python send_task.py
 O usar el worker local:
 
 ```bash
-cd ../invoker/development
+cd ../app
 celery -A worker_gpu worker -Q gpus_high --loglevel=info
 ```

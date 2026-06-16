@@ -7,7 +7,7 @@ version: '3.8'
 services:
   worker:
     build:
-      context: ./invoker/development
+      context: ./app
     container_name: w${WORKER_HOST:-default}
     image: wisrovi/train_service:worker_invoker_v1.0.0
     restart: always
@@ -23,7 +23,7 @@ services:
       # - /tmp:/tmp
       - /home/wyolo/request:/wyolo/worker/request
       - /home/wyolo/train_service_results:/home/wyolo/train_service_results
-      - ./invoker/development:/app
+      # - ./app:/app
     networks:
       - train_service
     labels:
@@ -38,19 +38,21 @@ services:
     command: >
       celery -A worker_gpu worker -E -Q ${WORKER_HOST:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1 --max-memory-per-child=250000
 
-  # dashboard:
-  #   build: ./simple_dashboard
-  #   container_name: dashboard_${WORKER_NAME:-default}
-  #   restart: always
-  #   ports:
-  #     - "8082:8000"
-  #   env_file:
-  #     - config/control_host.env
-  #     - config/user.env
-  #   volumes:
-  #     - ./invoker/config.yaml:/app/invoker/config.yaml
-  #   networks:
-  #     - train_service
+  dashboard:
+    build: ./UI/simple_dashboard
+    container_name: dashboard_${WORKER_NAME:-default}
+    restart: always
+    ports:
+      - "8082:8000"
+    env_file:
+      - config/control_host.env
+      - config/user.env
+    environment:
+      - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice
+    # volumes:
+    #   - ./app/config.yaml:/app/invoker/config.yaml
+    networks:
+      - train_service
 
   # wpipe-scanner:
   #   image: wisrovi/train_service:worker_executor_v1.0.0
@@ -64,7 +66,7 @@ services:
   #     - train_service
 
   gradio_launcher:
-    build: ./gradio_launcher
+    build: ./UI/gradio_launcher
     image: wisrovi/train_service:worker_invoker_gradio_v1.0.0
     container_name: gradio_launcher_${WORKER_NAME:-default}
     restart: always

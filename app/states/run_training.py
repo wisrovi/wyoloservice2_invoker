@@ -280,8 +280,8 @@ class RunTraining:
                 json.dump(training_config, file, indent=4)
 
             # 2. Run the EXECUTOR
-            # name_for_logs = f"{invoker_name}_son_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            name_for_logs = f"{invoker_name}_son"
+            # name_for_logs = f"wyolo_executor_{invoker_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            name_for_logs = f"wyolo_executor_{invoker_name}"
             self.docker_run(
                 image_name=self.config.get("executor_image", DEFAULT_TRAIN_IMAGE),
                 executor_name=name_for_logs,
