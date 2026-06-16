@@ -51,6 +51,7 @@ services:
       - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice
     # volumes:
     #   - ./app/config.yaml:/app/invoker/config.yaml
+    command: uvicorn dashboard_app:app --host 0.0.0.0 --port 8000
     networks:
       - train_service
 
@@ -77,9 +78,7 @@ services:
       - config/user.env
     volumes:
       - /home/wyolo/train_service_results:/results
-    networks:
-      - train_service
-
+    command: python gradio_app.py
 networks:
   train_service:
     name: train_service

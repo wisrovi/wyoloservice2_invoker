@@ -11,7 +11,7 @@ import os
 import shutil
 import tempfile
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import docker  # pylint: disable=import-error
 import yaml
@@ -19,10 +19,10 @@ import yaml
 DEFAULT_TRAIN_IMAGE = "wisrovi/train_service:worker_executor_v1.0.0"
 BASE_DIR = "/wyolo/worker/request"
 FILE = "config_train.yaml"
-yaml_path = os.path.join(BASE_DIR, FILE)
+YAML_PATH = os.path.join(BASE_DIR, FILE)
 
 
-def get_system_limits(config: dict[str, Any]):
+def get_system_limits(config: dict[str, Any]) -> tuple[float, int]:
     """Calculates the hardware limits based on the host system and config.
 
     Args:
@@ -68,13 +68,13 @@ class RunTraining:
         """
         self.config = config
 
-    def docker_run(self, image_name: str, executor_name: str, temp_dir: str) -> None:
+    def docker_run(self, image_name: str, executor_name: str, _temp_dir: str) -> None:
         """Runs a Docker container with the specified configuration.
 
         Args:
             image_name (str): The name of the Docker image to run.
             executor_name (str): The name to assign to the running container.
-            temp_dir (str): The local directory to bind as a volume.
+            _temp_dir (str): The local directory to bind as a volume (unused for now).
         """
         invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
 
@@ -82,16 +82,18 @@ class RunTraining:
         cpu_limit, mem_limit = get_system_limits(self.config)
 
         print(
-            f"--- [INVOKER:{invoker_name}] Launching executor: {executor_name} with limits (CPU: {cpu_limit:.2f}, RAM: {mem_limit // (1024**2)}MB) ---"
+            f"--- [INVOKER:{invoker_name}] Launching executor: {executor_name} with limits "
+            f"(CPU: {cpu_limit:.2f}, RAM: {mem_limit // (1024**2)}MB) ---"
         )
 
         try:
             client = docker.from_env()
         except Exception as exc:
-            print(f"--- [INVOKER:{os.getenv('WORKER_NAME', 'unknown')}] Unexpected error: {exc} ---")
+            worker_name = os.getenv("WORKER_NAME", "unknown")
+            print(f"--- [INVOKER:{worker_name}] Unexpected error: {exc} ---")
             raise exc
 
-        def load_env_file(path):
+        def load_env_file(path: str) -> dict[str, str]:
             envs = {}
             if os.path.exists(path):
                 try:
@@ -124,9 +126,9 @@ class RunTraining:
         try:
             # Clean up stale results before running
             results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
-            result_path: str = os.path.join(results_dir, "results.json")
-            if os.path.exists(result_path):
-                os.remove(result_path)
+            stale_result_path: str = os.path.join(results_dir, "results.json")
+            if os.path.exists(stale_result_path):
+                os.remove(stale_result_path)
                 print("--- [INVOKER] Stale results.json removed. ---")
 
             # Force remove any existing container with the same name to prevent conflict
@@ -177,7 +179,11 @@ class RunTraining:
                     },
                 },
                 # Command: More verbose for debugging
-                command=f'bash -c \'nvidia-smi && echo "[EXECUTOR] Starting mount..." && /usr/local/bin/mount-cifs.sh && echo "[EXECUTOR] Mount OK. Starting training..." && python main.py --file {yaml_path}\'',
+                command=(
+                    f'bash -c \'nvidia-smi && echo "[EXECUTOR] Starting mount..." && '
+                    f'/usr/local/bin/mount-cifs.sh && echo "[EXECUTOR] Mount OK. Starting training..." && '
+                    f"python main.py --file {YAML_PATH}'"
+                ),
             )
 
             print(f"--- [INVOKER] Executor {executor_name} started. Streaming logs... ---", flush=True)
@@ -227,12 +233,12 @@ class RunTraining:
             results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
             os.makedirs(results_dir, exist_ok=True)
 
-            result_path: str = os.path.join(results_dir, "results.json")
+            final_result_path: str = os.path.join(results_dir, "results.json")
 
             # Write failure result only if it doesn't exist (to avoid overwriting partial success if any)
-            if not os.path.exists(result_path):
+            if not os.path.exists(final_result_path):
                 try:
-                    with open(result_path, "w", encoding="utf-8") as file:
+                    with open(final_result_path, "w", encoding="utf-8") as file:
                         json.dump({"accuracy": -1.0, "status": "failed", "error": str(exc)}, file, indent=4)
                 except Exception as e:
                     print(f"--- [INVOKER] Failed to write results.json: {e} ---")
@@ -258,15 +264,17 @@ class RunTraining:
         """
         invoker_name = os.getenv("WORKER_NAME", "unknown")
 
-        temp_dir: str = tempfile.mkdtemp(prefix="trial_", dir="/tmp")
-        os.chmod(temp_dir, 0o777)
+        # B108: Hardcoded /tmp is acceptable for this environment.
+        # B103: Permissive mask is needed for shared volume access between host and container.
+        temp_dir: str = tempfile.mkdtemp(prefix="trial_", dir="/tmp")  # nosec
+        os.chmod(temp_dir, 0o777)  # nosec
 
         try:
             # 1. Deliver Config: Write the JSON config to a file for the executor
             # training_config in yaml file
-            os.makedirs(os.path.dirname(yaml_path), exist_ok=True)
+            os.makedirs(os.path.dirname(YAML_PATH), exist_ok=True)
 
-            with open(yaml_path, "w", encoding="utf-8") as file:
+            with open(YAML_PATH, "w", encoding="utf-8") as file:
                 yaml.dump(training_config, file)
 
             config_path: str = os.path.join(temp_dir, "config.json")
@@ -279,16 +287,16 @@ class RunTraining:
             self.docker_run(
                 image_name=self.config.get("executor_image", DEFAULT_TRAIN_IMAGE),
                 executor_name=name_for_logs,
-                temp_dir=temp_dir,
+                _temp_dir=temp_dir,
             )
 
             # 3. Recover Metric: Optuna needs the accuracy to proceed
             # The executor writes results to /wyolo/worker/train_service_results/results.json
             # which is mapped to a path in the invoker (default: /results)
             results_dir = self.config.get("results_dir", "/results")
-            result_path: str = os.path.join(results_dir, "results.json")
-            if os.path.exists(result_path):
-                with open(result_path, encoding="utf-8") as file:
+            result_file_path: str = os.path.join(results_dir, "results.json")
+            if os.path.exists(result_file_path):
+                with open(result_file_path, encoding="utf-8") as file:
                     result: dict[str, Any] = json.load(file)
 
                 accuracy: float = float(result.get("accuracy", 0.0))

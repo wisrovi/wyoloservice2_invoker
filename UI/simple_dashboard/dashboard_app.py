@@ -4,13 +4,12 @@ This module provides a REST API to monitor and manage Optuna hyperparameter
 optimization studies and Celery worker status.
 """
 
-import json
 import os
-import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import uvicorn
 import yaml
 from celery import Celery
 from fastapi import FastAPI, HTTPException, Request
@@ -58,6 +57,7 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 
 def get_optuna_db():
+    """Dependency to get a database session."""
     db = SessionLocal()
     try:
         yield db
@@ -107,7 +107,7 @@ async def list_studies() -> dict[str, Any]:
         return {"studies": studies, "count": len(studies)}
     except Exception as e:
         print(f"ERROR list_studies: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/studies/{study_name}")
@@ -138,7 +138,7 @@ async def get_study(study_name: str) -> dict[str, Any]:
         raise
     except Exception as e:
         print(f"ERROR get_study: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/studies/{study_name}/trials")
@@ -179,7 +179,7 @@ async def get_study_trials(study_name: str) -> dict[str, Any]:
         return {"trials": trials, "count": len(trials)}
     except Exception as e:
         print(f"ERROR get_study_trials: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/studies/{study_name}/best")
@@ -230,7 +230,7 @@ async def get_best_trial(study_name: str) -> dict[str, Any]:
         raise
     except Exception as e:
         print(f"ERROR get_best_trial: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/studies/{study_name}/trials/running")
@@ -268,7 +268,7 @@ async def get_running_trials(study_name: str) -> dict[str, Any]:
         return {"running_trials": trials, "count": len(trials)}
     except Exception as e:
         print(f"ERROR get_running_trials: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/api/workers")
@@ -382,6 +382,5 @@ async def get_overall_stats() -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # B104: Binding to all interfaces is intended for Docker containers
+    uvicorn.run(app, host="0.0.0.0", port=8000)  # nosec

@@ -1,3 +1,8 @@
+"""Gradio Launcher for NeuralForge AI.
+
+This module provides a web interface to launch training tasks on the GPU cluster.
+"""
+
 import json
 import os
 
@@ -69,6 +74,7 @@ EXAMPLES = [
 
 
 def parse_yaml_file(file):
+    """Parse a YAML file and return its content as a string."""
     if file is None:
         return ""
     try:
@@ -81,6 +87,7 @@ def parse_yaml_file(file):
 
 
 def validate_and_launch(yaml_content, queue):
+    """Validate YAML content and launch a Celery task."""
     if not yaml_content.strip():
         return "❌ Error: La configuración YAML está vacía."
 
@@ -103,7 +110,11 @@ def validate_and_launch(yaml_content, queue):
         task_name = "tasks.train_on_gpu_simple"
         result = celery_app.send_task(task_name, args=[payload], queue=queue)
 
-        return f"✅ ¡Entrenamiento enviado!\n\nID: {result.id}\nCola: {queue}\n\nEstructura detectada:\n- Modelo: {payload['model']}\n- Tipo: {payload['type']}"
+        status_msg = (
+            f"✅ ¡Entrenamiento enviado!\n\nID: {result.id}\nCola: {queue}\n\n"
+            f"Estructura detectada:\n- Modelo: {payload['model']}\n- Tipo: {payload['type']}"
+        )
+        return status_msg
 
     except Exception as e:
         return f"❌ Error de sintaxis o envío: {str(e)}"
@@ -157,4 +168,5 @@ with gr.Blocks(theme=theme, title="NeuralForge Launcher") as demo:
     launch_btn.click(fn=validate_and_launch, inputs=[yaml_editor, queue_form], outputs=[output_msg])
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    # B104: Binding to all interfaces is intended for Docker containers
+    demo.launch(server_name="0.0.0.0", server_port=7860)  # nosec

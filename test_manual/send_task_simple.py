@@ -69,7 +69,7 @@ def main():
 
     task_id = result.id
     print(f"    - Task ID: {task_id}")
-    print(f"    - Estado inicial: {result.state}")
+    print(f"    - Estado initial: {result.state}")
 
     print(f"\n[5] Esperando resultado (timeout: {RESULT_TIMEOUT}s)...")
 

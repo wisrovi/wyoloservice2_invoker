@@ -7,7 +7,7 @@ Executor container, and reports results back to the Manager.
 
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict
 
 import optuna
 import yaml
@@ -24,7 +24,9 @@ PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 CONFIG: dict[str, Any] = {}
 if os.path.exists("config.yaml"):
     with open("config.yaml", encoding="utf-8") as f:
-        CONFIG = yaml.safe_load(f).get("worker", {})
+        config_data = yaml.safe_load(f)
+        if config_data:
+            CONFIG = config_data.get("worker", {})
 
 pipe_pretrain = Pipeline()
 pipe_pretrain.set_steps(
@@ -48,45 +50,61 @@ pipe_posttrain.set_steps(
 )
 
 
-def objetive_function(training_config: dict[str, Any]):
+def objetive_function(training_config: dict[str, Any]) -> float:
+    """Objective function for Optuna optimization.
+
+    Args:
+        training_config: Configuration for the training trial.
+
+    Returns:
+        float: The accuracy metric achieved in the trial.
+    """
     try:
         resultado = pipe_train.run(training_config)
 
-        return resultado["accuracy"]
+        return float(resultado.get("accuracy", 0.0))
     except Exception as exc:
         print(f"Pipeline fallido: {str(exc)}")
         raise exc
 
 
-def optuna_search(training_config: dict[str, Any]):
+def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
+    """Perform hyperparameter search using Optuna.
+
+    Args:
+        training_config: Base configuration for the search.
+
+    Returns:
+        Dict[str, Any]: The best parameters found during search.
+    """
     # Priority: Manager config > Local config > Default (1)
-    TRIALS_OF_CONFIG = training_config.get("n_trials", CONFIG.get("sweeper", {}).get("n_trials", 1))
-    DIRECTION = training_config.get("direction", CONFIG.get("sweeper", {}).get("direction", "maximize"))
-    SAMPLER = training_config.get("sampler", CONFIG.get("sweeper", {}).get("sampler", "TPESampler"))
+    trials_count = training_config.get("n_trials", CONFIG.get("sweeper", {}).get("n_trials", 1))
+    direction_str = training_config.get("direction", CONFIG.get("sweeper", {}).get("direction", "maximize"))
+    sampler_name = training_config.get("sampler", CONFIG.get("sweeper", {}).get("sampler", "TPESampler"))
 
     # Study Settings (Crucial for distributed scenario)
     study_name = training_config.get("study_name", f"study_{datetime.now().strftime('%Y%m%d')}")
 
     # Priority: Environment variable > Config file
-    BASE = "postgresql://postgres:postgres@<IP>:23436/wyoloservice"
-    CONTROL_HOST = os.getenv("CONTROL_HOST", "localhost")
-    storage_url = BASE.replace("<IP>", CONTROL_HOST)
+    base_url = "postgresql://postgres:postgres@<IP>:23436/wyoloservice"
+    control_host = os.getenv("CONTROL_HOST", "localhost")
+    storage_url = base_url.replace("<IP>", control_host)
 
-    if TRIALS_OF_CONFIG <= 0:
+    if trials_count <= 0:
         raise ValueError("Number of trials must be greater than 0")
 
-    if SAMPLER == "TPESampler":
+    if sampler_name == "TPESampler":
         sampler = optuna.samplers.TPESampler()
-    elif SAMPLER == "RandomSampler":
+    elif sampler_name == "RandomSampler":
         sampler = optuna.samplers.RandomSampler()
-    elif SAMPLER == "CmaEsSampler":
+    elif sampler_name == "CmaEsSampler":
         sampler = optuna.samplers.CmaEsSampler()
     else:
         raise ValueError("Invalid sampler")
 
-    if DIRECTION == "maximize":
+    if direction_str == "maximize":
         direction = optuna.study.StudyDirection.MAXIMIZE
-    elif DIRECTION == "minimize":
+    elif direction_str == "minimize":
         direction = optuna.study.StudyDirection.MINIMIZE
     else:
         raise ValueError("Invalid direction")
@@ -102,14 +120,14 @@ def optuna_search(training_config: dict[str, Any]):
 
     study.optimize(
         objetive_function,
-        n_trials=TRIALS_OF_CONFIG,
+        n_trials=trials_count,
         show_progress_bar=True,
     )
     return study.best_params
 
 
 @app.task(name="tasks.train_on_gpu", bind=True)
-def train_on_gpu(self: Task, training_config: dict[str, Any]):
+def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
     """Orchestrates the execution of the training EXECUTOR container.
 
     This task creates a temporary workspace, delivers configuration to the
@@ -156,10 +174,17 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]):
 
 
 @app.task(name="tasks.train_on_gpu_simple", bind=True)
-def train_on_gpu_simple(self: Task, training_config: dict[str, Any]):
+def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
     """Simplified task that runs the Executor directly without Optuna.
 
     Useful for testing the Invoker -> Executor -> results.json flow.
+
+    Args:
+        self: Celery task instance.
+        training_config: Training configuration.
+
+    Returns:
+        dict: Execution results.
     """
     invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
     user_id = training_config.get("user_id", "unknown")
@@ -170,9 +195,8 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]):
         run_training = RunTraining(CONFIG)
         resultado = run_training(training_config)
 
-        print(
-            f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} completed. Accuracy: {resultado.get('accuracy', 'N/A')} ---"
-        )
+        accuracy = resultado.get("accuracy", "N/A")
+        print(f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} completed. Accuracy: {accuracy} ---")
         return resultado
 
     except Exception as exc:

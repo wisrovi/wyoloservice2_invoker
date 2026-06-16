@@ -8,7 +8,7 @@ train:
   epochs: 10                   # Número de épocas (reducido para prueba rápida)
   imgsz: 640                   # Tamaño de imagen
   batch: 0.85                  # Fracción de VRAM
-  lr0: 0.01                    # Learning rate inicial
+  lr0: 0.01                    # Learning rate initial
   lrf: 0.01                    # Learning rate final
   dropout: 0.0                 # Dropout rate
   cos_lr: true                 # Cosine annealing
