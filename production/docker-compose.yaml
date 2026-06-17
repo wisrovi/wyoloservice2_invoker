@@ -26,7 +26,7 @@ services:
       - "autoheal=true"
       - "com.centurylinklabs.watchtower.enable=true"
     healthcheck:
-      test: ["CMD", "celery", "-A", "worker_gpu", "inspect", "ping", "-d", "celery@worker_${WORKER_NAME}"]
+      test: ["CMD", "celery", "-A", "worker_gpu", "inspect", "ping", "-d", "celery@wyolo_invoker_${WORKER_NAME}"]
       interval: 30s
       timeout: 10s
       retries: 3
