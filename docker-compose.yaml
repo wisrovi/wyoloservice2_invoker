@@ -8,7 +8,7 @@ services:
   worker:
     build:
       context: ./app
-    container_name: w${WORKER_HOST:-default}
+    container_name: wyolo_invoker_${WORKER_HOSTNAME:-default}
     image: wisrovi/train_service:worker_invoker_v1.0.0
     restart: always
     deploy:
