@@ -3,7 +3,7 @@ version: '3.8'
 services:
   worker:
     image: wisrovi/train_service:worker_invoker_v1.0.0
-    container_name: wyolo_invoker_${WORKER_NAME}
+    container_name: wyolo_invoker_${WORKER_HOSTNAME}
     hostname: wyolo_invoker_${WORKER_NAME}
     restart: always
     deploy:
