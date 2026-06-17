@@ -29,7 +29,7 @@ async function loadStats() {
         document.getElementById('workerCount').textContent = data.workers?.online ?? '-';
 
         const now = new Date();
-        document.getElementById('lastUpdate').textContent = `Última actualización: ${now.toLocaleTimeString()}`;
+        document.getElementById('lastUpdate').textContent = `Last update: ${now.toLocaleTimeString()}`;
     } catch (e) {
         console.error('Error loading stats:', e);
     }
@@ -43,7 +43,7 @@ async function loadStudies() {
         const container = document.getElementById('studiesList');
 
         if (state.studies.length === 0) {
-            container.innerHTML = '<div class="empty-state">No hay estudios disponibles</div>';
+            container.innerHTML = '<div class="empty-state">No studies available</div>';
             return;
         }
 
@@ -59,17 +59,17 @@ async function loadStudies() {
                         <span class="study-stat-value">${study.n_trials ?? 0}</span>
                     </div>
                     <div class="study-stat">
-                        <span class="study-stat-label">Mejor Valor</span>
+                        <span class="study-stat-label">Best Value</span>
                         <span class="study-stat-value">${study.best_value?.toFixed(4) ?? '-'}</span>
                     </div>
                     <div class="study-stat">
-                        <span class="study-stat-label">Inicio</span>
+                        <span class="study-stat-label">Start</span>
                         <span class="study-stat-value">${study.start_time ? new Date(study.start_time).toLocaleDateString() : '-'}</span>
                     </div>
                 </div>
                 ${study.best_params ? `
                     <div class="best-params">
-                        <div class="best-params-title">Mejores Parámetros</div>
+                        <div class="best-params-title">Best Parameters</div>
                         <div class="params-grid">
                             ${Object.entries(study.best_params).map(([key, value]) => `
                                 <div class="param-item">
@@ -85,7 +85,7 @@ async function loadStudies() {
     } catch (e) {
         console.error('Error loading studies:', e);
         document.getElementById('studiesList').innerHTML =
-            '<div class="empty-state">Error cargando estudios</div>';
+            '<div class="empty-state">Error loading studies</div>';
     }
 }
 
@@ -100,7 +100,7 @@ async function showStudyDetails(studyName) {
             <h2>Trials - ${studyName}</h2>
             <div class="trial-list">
                 ${trials.trials.length === 0 ?
-                    '<div class="empty-state">No hay trials</div>' :
+                    '<div class="empty-state">No trials</div>' :
                     trials.trials.map(trial => `
                         <div class="trial-item">
                             <div>
@@ -140,7 +140,7 @@ async function loadWorkers() {
         const container = document.getElementById('workersList');
 
         if (state.workers.length === 0) {
-            container.innerHTML = '<div class="empty-state">No hay workers online</div>';
+            container.innerHTML = '<div class="empty-state">No workers online</div>';
             return;
         }
 
@@ -155,14 +155,14 @@ async function loadWorkers() {
                 </div>
                 <div class="worker-tasks">
                     <div class="worker-tasks-count">${worker.active_tasks?.length || 0}</div>
-                    <div class="worker-tasks-label">tareas activas</div>
+                    <div class="worker-tasks-label">active tasks</div>
                 </div>
             </div>
         `).join('');
     } catch (e) {
         console.error('Error loading workers:', e);
         document.getElementById('workersList').innerHTML =
-            '<div class="empty-state">Error cargando workers</div>';
+            '<div class="empty-state">Error loading workers</div>';
     }
 }
 
@@ -174,7 +174,7 @@ async function loadQueues() {
         const container = document.getElementById('queuesList');
 
         if (state.queues.length === 0) {
-            container.innerHTML = '<div class="empty-state">No hay colas configuradas</div>';
+            container.innerHTML = '<div class="empty-state">No queues configured</div>';
             return;
         }
 
@@ -190,7 +190,7 @@ async function loadQueues() {
     } catch (e) {
         console.error('Error loading queues:', e);
         document.getElementById('queuesList').innerHTML =
-            '<div class="empty-state">Error cargando colas</div>';
+            '<div class="empty-state">Error loading queues</div>';
     }
 }
 
@@ -202,7 +202,7 @@ async function loadTasks() {
         const container = document.getElementById('tasksList');
 
         if (state.tasks.length === 0) {
-            container.innerHTML = '<div class="empty-state">No hay tareas en ejecución</div>';
+            container.innerHTML = '<div class="empty-state">No tasks in execution</div>';
             return;
         }
 
@@ -218,7 +218,7 @@ async function loadTasks() {
     } catch (e) {
         console.error('Error loading tasks:', e);
         document.getElementById('tasksList').innerHTML =
-            '<div class="empty-state">Error cargando tareas</div>';
+            '<div class="empty-state">Error loading tasks</div>';
     }
 }
 

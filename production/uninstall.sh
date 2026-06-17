@@ -1,12 +1,12 @@
 #!/bin/bash
 # Uninstaller for Worker Invoker (Production Version)
-# Author: William Rodríguez - wisrovi
+# Author: William Rodriguez - wisrovi
 
 echo "-------------------------------------------------------"
-echo "  Desinstalación de Worker Invoker"
+echo "  Worker Invoker Uninstallation"
 echo "-------------------------------------------------------"
 
-# --- 1. DETECCIÓN DE INSTANCIA ---
+# --- 1. INSTANCE DETECTION ---
 WORKER_INSTANCE=$(hostname -I | awk '{print $1}')
 
 if [ -f /etc/default/worker_invoker ]; then
@@ -17,41 +17,41 @@ else
     INSTANCE_NAME=$WORKER_INSTANCE
 fi
 
-echo "Deteniendo y deshabilitando servicio: worker_invoker@$WORKER_INSTANCE"
+echo "Stopping and disabling service: worker_invoker@$WORKER_INSTANCE"
 
-# --- 2. DETENER SERVICIO Y LIMPIAR CONTENEDORES ---
+# --- 2. STOP SERVICE AND CLEAN CONTAINERS ---
 sudo systemctl stop "worker_invoker@$WORKER_INSTANCE" 2>/dev/null
 sudo systemctl disable "worker_invoker@$WORKER_INSTANCE" 2>/dev/null
 
-# Limpiar contenedores de Docker Compose
+# Clean Docker Compose containers
 if [ -d /home/wisrovi/scripts/ ]; then
-    echo "Limpiando contenedores de Docker..."
+    echo "Cleaning Docker containers..."
     cd /home/wisrovi/scripts/ || exit
     PROJECT_NAME="invoker_${INSTANCE_NAME//./_}"
     sudo docker-compose -p "$PROJECT_NAME" down --remove-orphans
 fi
 
-# --- 3. ELIMINACIÓN DE ARCHIVOS DE SISTEMA ---
-echo "Eliminando archivos de configuración y servicio..."
+# --- 3. REMOVAL OF SYSTEM FILES ---
+echo "Removing configuration and service files..."
 
 sudo rm -f /etc/systemd/system/worker_invoker@.service
 sudo rm -f /etc/default/worker_invoker
 
-# --- 4. LIMPIEZA DE DIRECTORIOS DE TRABAJO ---
-# Solo eliminamos los archivos que nosotros pusimos para no borrar otros scripts del usuario
-echo "Limpiando archivos en /home/wisrovi/scripts/..."
+# --- 4. WORK DIRECTORY CLEANUP ---
+# Only remove the files we placed to avoid deleting other user scripts
+echo "Cleaning files in /home/wisrovi/scripts/..."
 sudo rm -f /home/wisrovi/scripts/launcher_worker.sh
 sudo rm -f /home/wisrovi/scripts/docker-compose.yaml
 sudo rm -f /home/wisrovi/scripts/user.env
 sudo rm -f /home/wisrovi/scripts/control_host.env
 
-# Intentar borrar el directorio si está vacío
+# Try to delete the directory if it's empty
 sudo rmdir /home/wisrovi/scripts/ 2>/dev/null
 
-# --- 5. FINALIZACIÓN ---
+# --- 5. COMPLETION ---
 sudo systemctl daemon-reload
 
 echo "-------------------------------------------------------"
-echo "¡Desinstalación completada!"
-echo "El servicio y sus configuraciones han sido eliminados."
+echo "Uninstallation completed!"
+echo "The service and its configurations have been removed."
 echo "-------------------------------------------------------"

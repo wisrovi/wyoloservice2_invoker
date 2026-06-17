@@ -1,13 +1,13 @@
 #!/bin/bash
 # Launcher script for Worker Invoker using Docker Compose
-# Author: William Rodríguez - wisrovi
+# Author: William Rodriguez - wisrovi
 
-# --- 1. CONFIGURACIÓN ---
-# Variables heredadas de Systemd (EnvironmentFile=/etc/default/worker_invoker)
+# --- 1. CONFIGURATION ---
+# Variables inherited from Systemd (EnvironmentFile=/etc/default/worker_invoker)
 DEFAULT_IP=$(hostname -I | awk '{print $1}')
 export WORKER_NAME=${WORKER_NAME:-$DEFAULT_IP}
 
-# Procesar parámetros (opcional para overrides manuales)
+# Process parameters (optional for manual overrides)
 while [[ $# -gt 0 ]]; do
   case $1 in
     -n|--private_name)
@@ -21,25 +21,26 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Generar afinidad de CPU aleatoria si no existe
+# Generate random CPU affinity if it doesn't exist
 if [ -z "$CORE_ASSIGNED" ]; then
     export CORE_ASSIGNED=$((RANDOM % $(nproc)))
 fi
 
-echo "Iniciando Worker Invoker Stack para: $WORKER_NAME"
-echo "Redis Host: $REDIS_HOST"
-echo "Core asignado: $CORE_ASSIGNED"
+echo "Starting Worker Invoker Stack for: $WORKER_NAME"
+echo "Assigned core: $CORE_ASSIGNED"
 
-# --- 2. EJECUCIÓN ---
-# Entramos al directorio donde está el docker-compose.yaml
+# --- 2. EXECUTION ---
+# Enter the directory where docker-compose.yaml is located
 cd /home/wisrovi/scripts/ || exit
 
-# Limpiar contenedores previous si existieran con el mismo nombre de proyecto
-# Usamos el nombre del worker como nombre de proyecto para evitar colisiones
+# Clean previous containers if they exist with the same project name
+# Use the worker name as project name to avoid collisions
 PROJECT_NAME="invoker_${WORKER_NAME//./_}"
 
-# Ejecutar compose
-# --remove-orphans para limpiar servicios que ya no estén en el yaml
-# Sin -d para que Systemd pueda monitorear el proceso
-docker network create train_service
+# Re-create network if it doesn't exist (silent)
+docker network create train_service 2>/dev/null || true
+
+# Execute compose
+# --remove-orphans to clean services no longer in the yaml
+# No -d so Systemd can monitor the process
 docker-compose -p "$PROJECT_NAME" up --remove-orphans

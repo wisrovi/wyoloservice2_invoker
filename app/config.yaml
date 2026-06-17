@@ -1,21 +1,21 @@
 # Worker Config - Total Control
 redis:
-  host: "192.168.10.252"  # IP del Servidor Central (CONTROL_HOST)
+  host: "192.168.10.252"  # Central Server IP (CONTROL_HOST)
   port: 23437
   db: 0
 
 optuna:
-  # IP y Puerto del servidor central (Postgres distribuido)
+  # Central server IP and Port (Distributed Postgres)
   storage_url: "postgresql://postgres:postgres@<IP>:23436/wyoloservice"
 
 celery:
-  concurrency: 1        # Cuántos contenedores executor lanzar a la vez (ej: 1 por GPU)
+  concurrency: 1        # How many executor containers to launch at once (e.g., 1 per GPU)
   loglevel: "INFO"
   queue: "gpus"
 
 worker:
   executor_image: "wisrovi/train_service:worker_executor_v1.0.0"
-  host_temp_dir: "/tmp" # Carpeta en el HOST para volúmenes efímeros
-  cpu_limit_pct: 0.85   # % máximo de cores a usar (0.0 a 1.0)
-  mem_limit_pct: 0.60   # % máximo de RAM a usar (0.0 a 1.0)
+  host_temp_dir: "/tmp" # Folder on the HOST for ephemeral volumes
+  cpu_limit_pct: 0.85   # Max % of cores to use (0.0 to 1.0)
+  mem_limit_pct: 0.60   # Max % of RAM to use (0.0 to 1.0)
   results_dir: "/home/wyolo/train_service_results"

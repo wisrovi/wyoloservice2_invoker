@@ -1,16 +1,16 @@
-# Configuración para pruebas manuales del Invoker
-# Este archivo configura cómo el script send_task.py se conecta a Celery
+# Configuration for manual tests of the Invoker
+# This file configures how the send_task.py script connects to Celery
 
 redis:
-  host: "<IP>"   # Host de Redis
-  port: 23437             # Puerto de Redis (del docker-compose)
-  db: 0                   # Base de datos Redis
+  host: "<IP>"   # Redis Host
+  port: 23437             # Redis Port (from docker-compose)
+  db: 0                   # Redis Database
 
 celery:
-  queue: "gpus_high"      # Cola donde el invoker está escuchando
-  task_name: "tasks.train_on_gpu"  # Nombre de la tarea
+  queue: "gpus_high"      # Queue where the invoker is listening
+  task_name: "tasks.train_on_gpu"  # Task name
 
-# Configuración opcional para esperar resultado
+# Optional configuration to wait for result
 wait_result:
-  timeout: 600           # Timeout en segundos (10 minutos)
-  interval: 5            # Intervalo de polling en segundos
+  timeout: 600           # Timeout in seconds (10 minutes)
+  interval: 5            # Polling interval in seconds

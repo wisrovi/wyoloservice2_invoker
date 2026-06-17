@@ -41,7 +41,7 @@ docker build -t wisrovi/train_service:worker_executor_v1.0.0 ./wyoloservice2_wor
 docker push wisrovi/train_service:worker_executor_v1.0.0
 
 # NeuralForgeAI (React Frontend)
-docker build -t wisrovi/neuralforgeai:v1.0.0 ./NeuralForgeAI
+docker build -t wisrovi/neuralforgeai:v1.0.0 ./NeuralForgeAI/UI
 docker push wisrovi/neuralforgeai:v1.0.0
 ```
 

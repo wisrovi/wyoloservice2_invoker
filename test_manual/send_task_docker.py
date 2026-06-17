@@ -2,9 +2,9 @@
 # mypy: ignore-errors
 # pylint: disable=all
 # ruff: noqa
-"""Script que envía tarea al Invoker y espera resultado.
+"""Script that sends a task to the Invoker and waits for the result.
 
-Este script se ejecuta dentro del contenedor Docker.
+This script runs inside the Docker container.
 """
 
 import json
@@ -24,11 +24,11 @@ app = Celery("test_sender", broker=REDIS_URL, backend=REDIS_URL)
 
 def main():
     print("=" * 60)
-    print("DOCKER TEST: Enviando tarea al Invoker")
+    print("DOCKER TEST: Sending task to Invoker")
     print("=" * 60)
     print(f"Redis: {REDIS_URL}")
-    print(f"Cola: {QUEUE_NAME}")
-    print(f"Tarea: {TASK_NAME}")
+    print(f"Queue: {QUEUE_NAME}")
+    print(f"Task: {TASK_NAME}")
 
     training_config = {
         "train": {
@@ -45,12 +45,12 @@ def main():
         },
         "metadata": {
             "author": "docker_test",
-            "description": "Prueba desde docker-compose",
+            "description": "Test from docker-compose",
         },
         "user_id": "docker_test",
     }
 
-    print("\n[1] Enviando tarea...")
+    print("\n[1] Sending task...")
     result = app.send_task(
         TASK_NAME,
         args=[training_config],
@@ -59,25 +59,25 @@ def main():
 
     task_id = result.id
     print(f"    Task ID: {task_id}")
-    print(f"    Estado: {result.state}")
+    print(f"    Status: {result.state}")
 
-    print("\n[2] Esperando resultado (timeout: 600s)...")
+    print("\n[2] Waiting for result (timeout: 600s)...")
 
     try:
         resultado = result.get(timeout=600, propagate=True)
 
         print("\n" + "=" * 60)
-        print("RESULTADO RECIBIDO")
+        print("RESULT RECEIVED")
         print("=" * 60)
         print(f"Task ID: {task_id}")
-        print(f"Estado: {result.state}")
-        print(f"Resultado: {json.dumps(resultado, indent=2)}")
+        print(f"Status: {result.state}")
+        print(f"Result: {json.dumps(resultado, indent=2)}")
 
         if resultado.get("accuracy"):
             print(f"\n✓ Accuracy: {resultado['accuracy']}")
 
         print("=" * 60)
-        print("TEST COMPLETADO EXITOSAMENTE")
+        print("TEST COMPLETED SUCCESSFULLY")
         print("=" * 60)
 
     except Exception as e:

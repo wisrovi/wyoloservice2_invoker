@@ -12,10 +12,10 @@ import yaml
 from celery import Celery
 
 # --- User Configuration (Hardcoded) ---
-# Modifica estas variables según tus necesidades
+# Modify these variables according to your needs
 REDIS_HOST = os.getenv("CONTROL_HOST", REDIS_HOST)
 REDIS_PORT = "23437"
-QUEUE_NAME = "gpus_high"  # Opciones: gpus_high, gpus_medium, gpus_low, default
+QUEUE_NAME = "gpus_high"  # Options: gpus_high, gpus_medium, gpus_low, default
 
 # Path to your YAML configuration file
 YAML_CONFIG_PATH = "test_to_send_invoker.yaml"
@@ -31,12 +31,12 @@ DEFAULT_CONFIG = {
         "imgsz": 640,
     },
     "sweeper": {
-        "study_name": "exp_deteccion_headless",
+        "study_name": "exp_detection_headless",
         "fitness": "metrics/mAP50-95(B)",
     },
     "metadata": {
-        "author": "William Rodríguez - wisrovi",
-        "content": "Experimento lanzado desde script headless",
+        "author": "William Rodriguez - wisrovi",
+        "content": "Experiment launched from headless script",
     },
 }
 

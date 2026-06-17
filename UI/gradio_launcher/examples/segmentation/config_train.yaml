@@ -1,6 +1,6 @@
 model: "yolov8n-seg.pt"
 type: "yolo"
-# dvc_data_path: /datasets/clasificacion/colorball.v8i.multiclass.dvc
+# dvc_data_path: /datasets/classification/colorball.v8i.multiclass.dvc
 train:
   batch: -1
   data: /datasets/segmentation/ArchitecturePlan/data.yaml
@@ -27,6 +27,6 @@ extras:
     id: 0
     limit: 0.60
 metadata:
-  content: "Este es un entrenamiento de prueba de Wisrovi"
+  content: "This is a Wisrovi test training"
   author: "Manu G"
-  documentation: "Este modelo fue entrenado con datos de marzo 2025."
+  documentation: "This model was trained with March 2025 data."

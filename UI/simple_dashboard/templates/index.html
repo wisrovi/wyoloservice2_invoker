@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,7 @@
         <header>
             <h1>ML Training Dashboard</h1>
             <div class="header-actions">
-                <button id="refreshBtn" class="btn btn-primary">Actualizar</button>
+                <button id="refreshBtn" class="btn btn-primary">Refresh</button>
                 <span id="lastUpdate" class="last-update"></span>
             </div>
         </header>
@@ -19,70 +19,70 @@
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
                 <div class="stat-value" id="totalStudies">-</div>
-                <div class="stat-label">Estudios</div>
+                <div class="stat-label">Studies</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalTrials">-</div>
-                <div class="stat-label">Trials Totales</div>
+                <div class="stat-label">Total Trials</div>
             </div>
             <div class="stat-card stat-success">
                 <div class="stat-value" id="completedTrials">-</div>
-                <div class="stat-label">Completados</div>
+                <div class="stat-label">Completed</div>
             </div>
             <div class="stat-card stat-warning">
                 <div class="stat-value" id="runningTrials">-</div>
-                <div class="stat-label">En Ejecución</div>
+                <div class="stat-label">Running</div>
             </div>
             <div class="stat-card stat-danger">
                 <div class="stat-value" id="failedTrials">-</div>
-                <div class="stat-label">Fallidos</div>
+                <div class="stat-label">Failed</div>
             </div>
             <div class="stat-card stat-info">
                 <div class="stat-value" id="workerCount">-</div>
-                <div class="stat-label">Workers Online</div>
+                <div class="stat-label">Online Workers</div>
             </div>
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" data-tab="studies">Estudios</button>
+            <button class="tab-btn active" data-tab="studies">Studies</button>
             <button class="tab-btn" data-tab="workers">Workers</button>
-            <button class="tab-btn" data-tab="queues">Colas</button>
-            <button class="tab-btn" data-tab="tasks">Tareas Activas</button>
+            <button class="tab-btn" data-tab="queues">Queues</button>
+            <button class="tab-btn" data-tab="tasks">Active Tasks</button>
         </div>
 
         <div class="tab-content active" id="studies-tab">
             <div class="section-header">
-                <h2>Estudios Optuna</h2>
+                <h2>Optuna Studies</h2>
             </div>
             <div id="studiesList" class="studies-list">
-                <div class="loading">Cargando estudios...</div>
+                <div class="loading">Loading studies...</div>
             </div>
         </div>
 
         <div class="tab-content" id="workers-tab">
             <div class="section-header">
-                <h2>Workers Celery</h2>
+                <h2>Celery Workers</h2>
             </div>
             <div id="workersList" class="workers-list">
-                <div class="loading">Cargando workers...</div>
+                <div class="loading">Loading workers...</div>
             </div>
         </div>
 
         <div class="tab-content" id="queues-tab">
             <div class="section-header">
-                <h2>Colas Celery</h2>
+                <h2>Celery Queues</h2>
             </div>
             <div id="queuesList" class="queues-list">
-                <div class="loading">Cargando colas...</div>
+                <div class="loading">Loading queues...</div>
             </div>
         </div>
 
         <div class="tab-content" id="tasks-tab">
             <div class="section-header">
-                <h2>Tareas Activas</h2>
+                <h2>Active Tasks</h2>
             </div>
             <div id="tasksList" class="tasks-list">
-                <div class="loading">Cargando tareas...</div>
+                <div class="loading">Loading tasks...</div>
             </div>
         </div>
     </div>

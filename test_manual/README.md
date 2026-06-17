@@ -1,33 +1,33 @@
-# Test Manual - Invoker
+# Manual Test - Invoker
 
-Pruebas manuales del flujo Invoker-Executor via Celery y Docker.
+Manual tests of the Invoker-Executor flow via Celery and Docker.
 
-## Estructura
+## Structure
 
 ```
 test_manual/
-├── config.yaml              # Configuración de conexión Redis
-├── training_config.yaml     # Hiperparámetros del entrenamiento
-├── celery_config.py        # Módulo de conexión Celery (para scripts)
-├── send_task.py           # Envía tarea directamente (desarrollo)
-├── send_task_docker.py    # Envía tarea (para docker)
-├── Dockerfile             # Imagen del contenedor de prueba
-├── docker-compose.yml     # Orquestación Docker
-├── requirements.txt       # Dependencias Python
-└── README.md             # Este archivo
+├── config.yaml              # Redis connection configuration
+├── training_config.yaml     # Training hyperparameters
+├── celery_config.py        # Celery connection module (for scripts)
+├── send_task.py           # Sends task directly (development)
+├── send_task_docker.py    # Sends task (for docker)
+├── Dockerfile             # Test container image
+├── docker-compose.yml     # Docker orchestration
+├── requirements.txt       # Python dependencies
+└── README.md             # This file
 ```
 
-## Arquitectura del Sistema
+## System Architecture
 
 ```mermaid
 flowchart TB
-    subgraph INFRASTRUCTURE["🖥️ Infraestructura"]
+    subgraph INFRASTRUCTURE["🖥️ Infrastructure"]
         Redis[(Redis<br/>192.168.1.137:23437)]
         Optuna[(PostgreSQL<br/>Optuna DB)]
         MLflow[(MLflow<br/>Tracking)]
     end
 
-    subgraph CONTAINERS["🐳 Contenedores Docker"]
+    subgraph CONTAINERS["🐳 Docker Containers"]
         Sender[test_sender<br/>send_task_docker.py]
         WorkerInv[worker_invoker<br/>Celery Worker]
         Executor[worker_executor<br/>YOLO Training]
@@ -47,7 +47,7 @@ flowchart TB
     style Executor fill:#FFB6C1,stroke:#DC143C
 ```
 
-## Flujo de Datos Completo
+## Complete Data Flow
 
 ```mermaid
 sequenceDiagram
@@ -57,107 +57,107 @@ sequenceDiagram
     participant Executor as Executor Container
     participant Host as Docker Host
 
-    Note over Sender: Usuario ejecuta<br/>docker-compose up
+    Note over Sender: User executes<br/>docker-compose up
 
     Sender->>Redis: send_task(tasks.train_on_gpu_simple)
-    Note right of Sender: Payload JSON:<br/>{train: {...}, metadata: {...}}
+    Note right of Sender: JSON Payload:<br/>{train: {...}, metadata: {...}}
 
-    Redis->>Worker: Task en cola gpus_high
-    Worker->>Worker: Recibe task de Celery
+    Redis->>Worker: Task in gpus_high queue
+    Worker->>Worker: Receives Celery task
 
-    Worker->>Host: Crea temp_dir en /tmp
-    Worker->>Host: Escribe config.json
+    Worker->>Host: Creates temp_dir in /tmp
+    Worker->>Host: Writes config.json
     Note over Host: /tmp/trial_xxx/config.json
 
     Worker->>Executor: docker.run(executor_image)
-    Note over Executor: Lee config.json<br/>Ejecuta entrenamiento<br/>Simula 5 minutos
+    Note over Executor: Reads config.json<br/>Executes training<br/>Simulates 5 minutes
 
-    Executor->>Host: Escribe results.json
+    Executor->>Host: Writes results.json
     Note over Host: /tmp/trial_xxx/results.json<br/>{accuracy: 0.869}
 
-    Executor--x Executor: Container termina
-    Note over Executor: remove=True en docker.run()
+    Executor--x Executor: Container finishes
+    Note over Executor: remove=True in docker.run()
 
-    Worker->>Host: Lee results.json
-    Worker->>Redis: Task SUCCESS con accuracy
+    Worker->>Host: Reads results.json
+    Worker->>Redis: Task SUCCESS with accuracy
 
-    Sender->>Sender: result.get() retorna
-    Note over Sender: Imprime resultado<br/>Contenedor termina
+    Sender->>Sender: result.get() returns
+    Note over Sender: Prints result<br/>Container finishes
 ```
 
-## Uso Rápido
+## Quick Start
 
 ```bash
-# 1. Asegúrate que Redis y Worker estén corriendo
+# 1. Make sure Redis and Worker are running
 docker ps | grep redis
 ps aux | grep celery | grep worker
 
-# 2. Ejecutar prueba
+# 2. Run test
 cd test_manual
 docker-compose up --build
 
-# 3. El contenedor:
-#    - Envía tarea a Celery
-#    - Espera resultado del Executor
-#    - Imprime resultados
-#    - Muere
+# 3. The container:
+#    - Sends task to Celery
+#    - Waits for Executor result
+#    - Prints results
+#    - Dies
 
-# 4. Repetir
+# 4. Repeat
 docker-compose up --build
 ```
 
-## Flujo Visual Paso a Paso
+## Visual Step-by-Step Flow
 
 ```mermaid
 flowchart LR
-    subgraph ENVIO["📤 Envío"]
-        A1[docker-compose up] --> A2[Build imagen]
-        A2 --> A3[Ejecuta send_task_docker.py]
+    subgraph SEND["📤 Send"]
+        A1[docker-compose up] --> A2[Build image]
+        A2 --> A3[Execute send_task_docker.py]
         A3 --> A4[Celery send_task()]
     end
 
-    subgraph PROCESO["⚙️ Procesamiento"]
-        A4 --> B1[Redis cola gpus_high]
-        B1 --> B2[Worker Invoker recibe]
-        B2 --> B3[Ejecutor Docker]
-        B3 --> B4[Entrenamiento ~5min]
+    subgraph PROCESS["⚙️ Processing"]
+        A4 --> B1[Redis gpus_high queue]
+        B1 --> B2[Worker Invoker receives]
+        B2 --> B3[Docker Executor]
+        B3 --> B4[Training ~5min]
         B4 --> B5[results.json]
     end
 
-    subgraph RESPUESTA["📥 Respuesta"]
-        B5 --> C1[Worker lee accuracy]
+    subgraph RESPONSE["📥 Response"]
+        B5 --> C1[Worker reads accuracy]
         C1 --> C2[Celery result.get()]
-        C2 --> C3[Imprime resultado]
-        C3 --> C4[✓ TEST COMPLETADO]
+        C2 --> C3[Print result]
+        C3 --> C4[✓ TEST COMPLETED]
     end
 
-    style ENVIO fill:#90EE90
-    style PROCESO fill:#87CEEB
-    style RESPUESTA fill:#FFD700
+    style SEND fill:#90EE90
+    style PROCESS fill:#87CEEB
+    style RESPONSE fill:#FFD700
 ```
 
-## Salida Esperada
+## Expected Output
 
 ```
 ============================================================
-DOCKER TEST: Enviando tarea al Invoker
+DOCKER TEST: Sending task to Invoker
 ============================================================
 Redis: redis://192.168.1.137:23437/0
-Cola: gpus_high
-Tarea: tasks.train_on_gpu_simple
+Queue: gpus_high
+Task: tasks.train_on_gpu_simple
 
-[1] Enviando tarea...
+[1] Sending task...
     Task ID: abc123-def456-...
-    Estado: PENDING
+    Status: PENDING
 
-[2] Esperando resultado (timeout: 600s)...
+[2] Waiting for result (timeout: 600s)...
 
 ============================================================
-RESULTADO RECIBIDO
+RESULT RECEIVED
 ============================================================
 Task ID: abc123-def456-...
-Estado: SUCCESS
-Resultado: {
+Status: SUCCESS
+Result: {
   "status": "done",
   "accuracy": 0.869,
   "invoker": "test_worker"
@@ -165,16 +165,16 @@ Resultado: {
 
 ✓ Accuracy: 0.869
 ============================================================
-TEST COMPLETADO EXITOSAMENTE
+TEST COMPLETED SUCCESSFULLY
 ============================================================
 ```
 
-## Requisitos Previous
+## Previous Requirements
 
-1. **Redis** corriendo en `192.168.1.137:23437`
-2. **Worker Invoker** escuchando la cola `gpus_high`
+1. **Redis** running at `192.168.1.137:23437`
+2. **Worker Invoker** listening to the `gpus_high` queue
 
-### Iniciar Worker Invoker (si no está corriendo)
+### Start Worker Invoker (if not running)
 
 ```bash
 cd ../app
@@ -187,16 +187,16 @@ celery -A worker_gpu worker \
 --hostname=test_worker@%h
 ```
 
-### Ver Workers Activos
+### View Active Workers
 
 ```bash
 docker exec environment-redis-1 redis-cli KEYS "*"
 ps aux | grep celery | grep worker
 ```
 
-## Configuración
+## Configuration
 
-### config.yaml (para scripts de desarrollo)
+### config.yaml (for development scripts)
 
 ```yaml
 redis:
@@ -232,7 +232,7 @@ train:
   batch: 0.85
 ```
 
-## Estructura de Datos
+## Data Structure
 
 ```mermaid
 classDiagram
@@ -268,7 +268,7 @@ classDiagram
 
     TrainingConfig *-- TrainParams : train
     TrainingConfig *-- Metadata : metadata
-    Result ..> TrainParams : contiene
+    Result ..> TrainParams : contains
 ```
 
 ## Troubleshooting
@@ -276,42 +276,42 @@ classDiagram
 ### Error: Connection refused
 
 ```bash
-# Verificar Redis
+# Verify Redis
 docker exec environment-redis-1 redis-cli ping
-# Debe responder: PONG
+# Should respond: PONG
 ```
 
-### Cola vacía, worker no recibe
+### Empty queue, worker does not receive
 
 ```bash
-# Ver colas
+# View queues
 docker exec environment-redis-1 redis-cli KEYS "*"
 
-# Limpiar y reintentar
+# Clear and retry
 docker exec environment-redis-1 redis-cli FLUSHALL
 docker-compose up --build
 ```
 
-### Worker no levanta executor
+### Worker does not start executor
 
 ```bash
-# Ver logs del worker
+# View worker logs
 cat /tmp/worker_test.log
 
-# Ver contenedores executor
+# View executor containers
 docker ps | grep executor
 ```
 
-## Desarrollo (sin Docker)
+## Development (without Docker)
 
-Para probar directamente sin docker-compose:
+To test directly without docker-compose:
 
 ```bash
 pip install -r requirements.txt
 python send_task.py
 ```
 
-O usar el worker local:
+Or use the local worker:
 
 ```bash
 cd ../app

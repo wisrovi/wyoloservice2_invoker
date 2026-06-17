@@ -27,6 +27,6 @@ extras:
     id: 0
     limit: 0.95
 metadata:
-  content: "Este es un experimento de clasificación de imágenes."
+  content: "This is an image classification experiment."
   author: "William Rodriguez"
-  documentation: "Este modelo fue entrenado con datos del 2025."
+  documentation: "This model was trained with 2025 data."
