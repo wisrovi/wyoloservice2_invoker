@@ -41,6 +41,7 @@ services:
   dashboard:
     build: ./UI/simple_dashboard
     container_name: dashboard_${WORKER_NAME:-default}
+    image: wisrovi/train_service:worker_invoker_dashboard_v1.0.0
     restart: always
     ports:
       - "8082:8000"
