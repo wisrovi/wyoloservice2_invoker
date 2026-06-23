@@ -9,6 +9,9 @@ Executor container, and reports results back to the Manager.
 """
 
 import os
+import json
+import time
+import redis
 from datetime import datetime
 from typing import Any, Dict
 
@@ -148,32 +151,64 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
         Exception: If the executor fails or results are missing.
     """
     invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
-
     user_id: str = training_config.get("user_id", "unknown")
+    study_id = training_config.get("study_id")
 
     print(f"--- [INVOKER:{invoker_name}] Task {self.request.id} started for user: {user_id} ---")
 
-    try:
-        resultado = pipe_pretrain.run(training_config)
-    except Exception as exc:
-        print(f"Pipeline fallido: {str(exc)}")
-        raise exc
+    redis_client = None
+    if study_id:
+        try:
+            redis_client = redis.from_url(app.conf.broker_url)
+            active_info = {
+                "invoker": invoker_name,
+                "trial_id": self.request.id,
+                "start_time": time.time()
+            }
+            redis_client.set(f"study:{study_id}:active_trial", json.dumps(active_info), ex=3600)
+        except Exception as e:
+            print(f"Warning: Could not set active trial in Redis: {e}")
 
     try:
-        resultado = optuna_search(training_config)
+        try:
+            resultado = pipe_pretrain.run(training_config)
+        except Exception as exc:
+            print(f"Pipeline fallido: {str(exc)}")
+            raise exc
+
+        try:
+            resultado = optuna_search(training_config)
+        except Exception as exc:
+            print(f"Pipeline fallido: {str(exc)}")
+            raise exc
+
+        try:
+            resultado = pipe_posttrain.run(training_config)
+        except Exception as exc:
+            print(f"Pipeline fallido: {str(exc)}")
+            raise exc
+
+        print(f"--- [INVOKER:{invoker_name}] Task {self.request.id} completed for user: {user_id} ---")
+        if study_id and redis_client:
+            try:
+                redis_client.delete(f"study:{study_id}:active_trial")
+            except Exception as e:
+                print(f"Warning: Could not delete active trial in Redis: {e}")
+        return resultado
+
     except Exception as exc:
-        print(f"Pipeline fallido: {str(exc)}")
+        if study_id and redis_client:
+            try:
+                redis_client.delete(f"study:{study_id}:active_trial")
+                error_info = {
+                    "invoker": invoker_name,
+                    "error": str(exc),
+                    "timestamp": time.time()
+                }
+                redis_client.set(f"study:{study_id}:error", json.dumps(error_info), ex=86400)
+            except Exception as e:
+                print(f"Warning: Could not log error to Redis: {e}")
         raise exc
-
-    try:
-        resultado = pipe_posttrain.run(training_config)
-    except Exception as exc:
-        print(f"Pipeline fallido: {str(exc)}")
-        raise exc
-
-    print(f"--- [INVOKER:{invoker_name}] Task {self.request.id} completed for user: {user_id} ---")
-
-    return resultado
 
 
 @app.task(name="tasks.train_on_gpu_simple", bind=True)
@@ -191,8 +226,22 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
     """
     invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
     user_id = training_config.get("user_id", "unknown")
+    study_id = training_config.get("study_id")
 
     print(f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} started for user: {user_id} ---")
+
+    redis_client = None
+    if study_id:
+        try:
+            redis_client = redis.from_url(app.conf.broker_url)
+            active_info = {
+                "invoker": invoker_name,
+                "trial_id": self.request.id,
+                "start_time": time.time()
+            }
+            redis_client.set(f"study:{study_id}:active_trial", json.dumps(active_info), ex=3600)
+        except Exception as e:
+            print(f"Warning: Could not set active trial in Redis: {e}")
 
     try:
         run_training = RunTraining(CONFIG)
@@ -200,8 +249,25 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
 
         accuracy = resultado.get("accuracy", "N/A")
         print(f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} completed. Accuracy: {accuracy} ---")
+        
+        if study_id and redis_client:
+            try:
+                redis_client.delete(f"study:{study_id}:active_trial")
+            except Exception as e:
+                print(f"Warning: Could not delete active trial in Redis: {e}")
         return resultado
 
     except Exception as exc:
         print(f"--- [INVOKER:{invoker_name}] SIMPLE Task failed: {str(exc)} ---")
+        if study_id and redis_client:
+            try:
+                redis_client.delete(f"study:{study_id}:active_trial")
+                error_info = {
+                    "invoker": invoker_name,
+                    "error": str(exc),
+                    "timestamp": time.time()
+                }
+                redis_client.set(f"study:{study_id}:error", json.dumps(error_info), ex=86400)
+            except Exception as e:
+                print(f"Warning: Could not log error to Redis: {e}")
         raise exc
