@@ -27,6 +27,7 @@ user.env:
 	MEM_TOTAL=$$(awk '/^MemTotal:/ {print $$2}' /proc/meminfo); \
     echo "WORKER_RAM_MEMORY=$$((MEM_TOTAL / 1048576 * 8 / 10))g" >> user.env
 	echo "WORKER_CPU_CORES=$$((`nproc` - 1)).0" >> user.env
+	echo "PRIVATE_QUEUE=$$(hostname -I | awk '{print $$1}')" >> user.env
 
 
 config.py:
