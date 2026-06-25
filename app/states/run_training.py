@@ -267,6 +267,17 @@ class RunTraining:
         """
         invoker_name = os.getenv("WORKER_NAME", "unknown")
 
+        if training_config.get("dry_run") is True or training_config.get("sweeper", {}).get("dry_run") is True:
+            import time
+            print(f"--- [INVOKER:{invoker_name}] DRY RUN MODE ENABLED. Simulating training... ---", flush=True)
+            time.sleep(2)
+            return {
+                "status": "done",
+                "accuracy": 0.95,
+                "invoker": invoker_name,
+                "dry_run": True,
+            }
+
         # B108: Hardcoded /tmp is acceptable for this environment.
         # B103: Permissive mask is needed for shared volume access between host and container.
         temp_dir: str = tempfile.mkdtemp(prefix="trial_", dir="/tmp")  # nosec
