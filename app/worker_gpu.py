@@ -169,8 +169,11 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
                 "start_time": time.time()
             }
             redis_client.set(f"study:{study_id}:active_trial", json.dumps(active_info), ex=3600)
+            redis_client.set(f"study:{study_id}:invoker", invoker_name, ex=86400)
+            redis_client.sadd(f"study:{study_id}:all_invokers", invoker_name)
+            redis_client.expire(f"study:{study_id}:all_invokers", 86400)
         except Exception as e:
-            print(f"Warning: Could not set active trial in Redis: {e}")
+            print(f"Warning: Could not set active trial or invoker telemetry in Redis: {e}")
 
     try:
         try:
