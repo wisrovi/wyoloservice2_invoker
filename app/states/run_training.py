@@ -321,7 +321,11 @@ class RunTraining:
                     "invoker": invoker_name,
                 }
 
-            raise FileNotFoundError("Executor died but results.json not found in shared volume")
+            raise FileNotFoundError(
+                "Executor finished but 'results.json' was not found in the shared volume. "
+                "This typically indicates that the executor aborted early due to a configuration error, "
+                "such as an invalid dataset path. Check the configuration and executor logs."
+            )
 
         except docker.errors.ContainerError as exc:
             print(f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exc.exit_status} ---")
