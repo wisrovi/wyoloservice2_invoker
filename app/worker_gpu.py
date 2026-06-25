@@ -24,6 +24,8 @@ from states.llm_analizer import LlmAnalizer
 from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
+
+VERSION = "v1.0.0"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -154,6 +156,7 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
     user_id: str = training_config.get("user_id", "unknown")
     study_id = training_config.get("study_id")
 
+    print("VERSION: {VERSION}")
     print(f"--- [INVOKER:{invoker_name}] Task {self.request.id} started for user: {user_id} ---")
 
     redis_client = None
