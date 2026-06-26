@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "invoker_launcher"
+version = "1.0.0"
+description = "Gradio lifeline for local invoker training submission"
+requires-python = ">=3.10"
+
+[tool.black]
+line-length = 99
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 99
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[tool.pylint]
+max-line-length = 99
+disable = ["C0114", "C0115", "C0116", "R0903", "R0913"]
+
+[tool.ruff]
+line-length = 99
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = "-v --cov=gradio_app --cov-report=term-missing --cov-fail-under=80"
