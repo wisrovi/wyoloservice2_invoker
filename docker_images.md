@@ -16,7 +16,7 @@ All project images follow a standardized naming pattern for consistency across r
 | **Manager** | `wisrovi/train_service/manager:orchestrator_v1.0.0` | Optuna-based orchestrator (Celery worker) |
 | **Worker Invoker** | `wisrovi/train_service:worker_invoker_v1.0.0` | Celery worker that manages Docker containers |
 | **Worker Executor** | `wisrovi/train_service:worker_executor_v1.0.0` | Ephemeral container for YOLO training |
-| **NeuralForgeAI** | `wisrovi/neuralforgeai:v1.0.0` | React frontend UI |
+| **NeuralForgeAI** | `wisrovi/train_service:w_darwin_ops_frontend_v1.1.0` | React frontend UI |
 | **Redis** | `redis:7.2` | Message broker (standard image) |
 | **PostgreSQL** | `postgres:15` | Optuna study database (standard image) |
 | **MLflow** | `ghcr.io/mlflow/mlflow:latest` | Experiment tracking (standard image) |
@@ -41,8 +41,8 @@ docker build -t wisrovi/train_service:worker_executor_v1.0.0 ./wyoloservice2_wor
 docker push wisrovi/train_service:worker_executor_v1.0.0
 
 # NeuralForgeAI (React Frontend)
-docker build -t wisrovi/neuralforgeai:v1.0.0 ./NeuralForgeAI/UI
-docker push wisrovi/neuralforgeai:v1.0.0
+docker build -t wisrovi/train_service:w_darwin_ops_frontend_v1.1.0 ./NeuralForgeAI/UI
+docker push wisrovi/train_service:w_darwin_ops_frontend_v1.1.0
 ```
 
 ## Docker Compose References
@@ -63,7 +63,7 @@ services:
     image: wisrovi/train_service:worker_executor_v1.0.0
 
   neuralforgeai:
-    image: wisrovi/neuralforgeai:v1.0.0
+    image: wisrovi/train_service:w_darwin_ops_frontend_v1.1.0
 ```
 
 ## Environment Variables
