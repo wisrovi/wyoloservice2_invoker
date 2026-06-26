@@ -22,10 +22,8 @@ services:
       - config/user.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      # - /tmp:/tmp
       - /home/wyolo/request:/wyolo/worker/request
       - /home/wyolo/train_service_results:/home/wyolo/train_service_results
-      # - ./app:/app
     networks:
       - train_service
     labels:
