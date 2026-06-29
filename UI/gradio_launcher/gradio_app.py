@@ -27,6 +27,12 @@ import yaml
 from celery import Celery
 from wredis import RedisHashManager
 
+# ── Constants for Executor ───────────────────────────────────────────
+_EXECUTOR_IMAGE: str = "wisrovi/train_service:worker_executor_v1.0.0"
+_REQUEST_DIR: str = "/home/wyolo/request"
+_EVENTS_DIR: str = "/home/wyolo/events"
+_RESULTS_DIR: str = "/home/wyolo/train_service_results"
+
 # ── Constants ──────────────────────────────────────────────────────
 _CONTROL_HOST: str = os.getenv("CONTROL_HOST", "127.0.0.1")
 _REDIS_PORT: int = 23_437
@@ -298,6 +304,86 @@ def launch_dry_run() -> str:
     )
 
 
+# ── Executor direct run ──────────────────────────────────────────────
+
+
+def launch_via_executor(yaml_content: str) -> str:
+    """Write config to /home/wyolo/request and launch executor container.
+
+    This bypasses the Celery queue entirely, mimicking ``micro_train.sh``:
+    writes the YAML to the shared request directory, then runs the
+    executor Docker image with GPU access, CIFS mounts, and proper env.
+    """
+    # 1) Validate config first
+    valid, msg = validate_min_config(yaml_content)
+    if not valid:
+        return msg or "❌ Configuración inválida"
+
+    # 2) Persist to Redis (so it survives reloads)
+    save_template(yaml_content)
+
+    # 3) Write to shared request directory for executor to pick up
+    request_path = os.path.join(_REQUEST_DIR, "config_train.yaml")
+    try:
+        os.makedirs(_REQUEST_DIR, exist_ok=True)
+        with open(request_path, "w", encoding="utf-8") as f:
+            f.write(yaml_content)
+    except Exception as exc:
+        return f"❌ Failed to write request file: {exc}"
+
+    # 4) Build docker run command (matching micro_train.sh)
+    cmd = [
+        "docker", "run",
+        "--rm",
+        "--name", f"wyolo_executor_{_PRIVATE_QUEUE}",
+        "--privileged",
+        "--network", "host",
+        "--shm-size=16g",
+        "--cpus=8",
+        "--memory=24g",
+        "--cap-add=SYS_ADMIN",
+        "--cap-add=DAC_READ_SEARCH",
+        "--cap-add=NET_ADMIN",
+        "--cap-add=SYS_RESOURCE",
+        "--gpus", "device=0",
+        "-e", "NVIDIA_VISIBLE_DEVICES=0",
+        "-e", "NVIDIA_DRIVER_CAPABILITIES=all",
+        "-e", "TZ=Europe/Madrid",
+        "-e", "PYTHONUNBUFFERED=1",
+        "-e", f"CONTROL_HOST={_CONTROL_HOST}",
+        "-e", "CIFS_USER=wisrovi",
+        "-e", "CIFS_PASS=wyoloservice",
+        "-v", "/home/wyolo/events:/wyolo/worker/events:rw",
+        "-v", "/home/wyolo/train_service_results:/wyolo/worker/train_service_results:rw",
+        "-v", "/home/wyolo/request:/wyolo/worker/request:rw",
+        _EXECUTOR_IMAGE,
+        "bash", "-c",
+        "nvidia-smi && echo \"[EXECUTOR] Starting mount...\" "
+        "&& /usr/local/bin/mount-cifs.sh "
+        "&& echo \"[EXECUTOR] Mount OK. Starting training...\" "
+        "&& python main.py --file /wyolo/worker/request/config_train.yaml",
+    ]
+
+    try:
+        # Run in background (detached) so the UI doesn't block
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        return (
+            "🚀 **Executor launched**\n\n"
+            f"📁 Config written to: `{request_path}`\n"
+            f"🐳 Container: `wyolo_executor_{_PRIVATE_QUEUE}`\n"
+            f"🔍 Monitor logs with: `docker logs -f wyolo_executor_{_PRIVATE_QUEUE}`\n"
+            f"📊 Results in: `/home/wyolo/train_service_results`"
+        )
+    except FileNotFoundError:
+        return "❌ Docker not found. Is Docker installed and running?"
+    except Exception as exc:
+        return f"❌ Failed to launch executor: {exc}"
+
+
 # ── Config validation ──────────────────────────────────────────────
 
 _MIN_REQUIRED_KEYS: dict[str, type] = {
@@ -467,6 +553,83 @@ document.addEventListener('keydown', function(e) {
 });
 </script>"""
 
+_CSS_MODERN: str = """\
+/* Semi-hidden dry-run button */
+#dry-run-btn {
+    opacity: 0.15 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 4px !important;
+    font-size: 0.8rem !important;
+    min-width: 20px !important;
+    width: 20px !important;
+    transition: opacity 0.2s ease !important;
+}
+#dry-run-btn:hover { opacity: 0.6 !important; }
+
+/* Header styling */
+#app-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c5aa0 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(30, 58, 95, 0.3);
+}
+#app-header h1 { margin: 0; font-size: 1.75rem; font-weight: 600; }
+#app-header p { margin: 0.5rem 0 0; opacity: 0.9; font-size: 1rem; }
+
+/* Card panels */
+.mode-card {
+    background: #fafbfc;
+    border: 1px solid #e1e4e8;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s;
+}
+.mode-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+/* Radio buttons styling */
+.gradio-radio { gap: 1rem; }
+.gradio-radio label {
+    background: #fff;
+    border: 2px solid #e1e4e8;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.gradio-radio input:checked + span {
+    background: #1e3a5f;
+    color: white;
+    border-color: #1e3a5f;
+}
+.gradio-radio label:hover { border-color: #2c5aa0; }
+
+/* Status indicators */
+.status-online { color: #28a745; font-weight: 500; }
+.status-offline { color: #dc3545; font-weight: 500; }
+
+/* Button states */
+#train-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Executor advanced section */
+#executor-section {
+    border: 1px solid #e1e4e8;
+    border-radius: 10px;
+    padding: 1rem;
+    background: #f8f9fa;
+    margin-top: 1rem;
+}
+#executor-section summary {
+    font-weight: 600;
+    cursor: pointer;
+    color: #2c5aa0;
+}
+"""
+
 _CSS_HIDDEN_DRY_RUN: str = """\
 #dry-run-btn {
     opacity: 0.15 !important;
@@ -479,37 +642,49 @@ _CSS_HIDDEN_DRY_RUN: str = """\
     width: 20px !important;
     transition: opacity 0.2s ease !important;
 }
-#dry-run-btn:hover {
-    opacity: 0.6 !important;
-}
+#dry-run-btn:hover { opacity: 0.6 !important; }
 """
 
 
 # ── UI construction ─────────────────────────────────────────────────
 
-with gr.Blocks(title="Invoker Launcher") as demo:
-    # -- Status bar --------------------------------------------------
+with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
+    # -- Header --------------------------------------------------------
+    gr.HTML("""
+    <div id="app-header">
+        <h1>🚀 Invoker Launcher</h1>
+        <p>Direct training submission to local GPU invoker • Redis-persisted configs • Queue-aware dispatch</p>
+    </div>
+    """)
+
+    # -- Status & Redis connection ------------------------------------
     status_bar = gr.Markdown(check_redis_connection)
 
-    # -- Main row ----------------------------------------------------
+    # -- Mode selector: Edit vs Upload ---------------------------------
     with gr.Row():
-        # LEFT — YAML editor
-        with gr.Column(scale=2):
+        mode_radio = gr.Radio(
+            choices=[("✏️ Edit YAML", "edit"), ("📤 Upload .yaml", "upload")],
+            value="edit",
+            label="Configuration Mode",
+            elem_classes=["mode-selector"],
+            container=False,
+        )
+
+    # -- Left: YAML Editor (visible in Edit mode) ---------------------
+    with gr.Column(visible=True) as editor_col:
+        with gr.Group(elem_classes=["mode-card"]):
             gr.Markdown("### 📄 YAML Configuration")
-            yaml_file = gr.File(
-                label="Upload .yaml file",
-                file_types=[".yaml", ".yml"],
-            )
             yaml_editor = gr.Code(
                 value=load_template,
                 label="YAML Editor",
                 language="yaml",
-                lines=20,
+                lines=22,
                 interactive=True,
+                elem_id="yaml-editor",
             )
             with gr.Row():
                 save_btn = gr.Button(
-                    "💾 Save",
+                    "💾 Save Template",
                     variant="secondary",
                     size="sm",
                     elem_id="save-btn",
@@ -520,45 +695,82 @@ with gr.Blocks(title="Invoker Launcher") as demo:
                     size="sm",
                 )
 
-        # RIGHT — Send parameters
-        with gr.Column(scale=1):
-            gr.Markdown("### ⚙️ Send Parameters")
-            queue_selector = gr.Dropdown(
-                choices=[
-                    (f"🖥️ Private ({_PRIVATE_QUEUE})", _PRIVATE_QUEUE),
-                    ("⚡ High priority (gpus_high)", "gpus_high"),
-                    ("✏️ Custom...", "__custom__"),
-                ],
-                label="Destination Queue",
-                value=_PRIVATE_QUEUE,
-                info=(
-                    "Default: local invoker's private queue. "
-                    "High priority routes to any available invoker."
-                ),
+    # -- Left: File Upload (visible in Upload mode) -------------------
+    with gr.Column(visible=False) as upload_col:
+        with gr.Group(elem_classes=["mode-card"]):
+            gr.Markdown("### 📤 Upload YAML Configuration")
+            yaml_file = gr.File(
+                label="Select .yaml / .yml file",
+                file_types=[".yaml", ".yml"],
+                file_count="single",
+                elem_id="yaml-upload",
             )
-            custom_queue = gr.Textbox(
-                label="Custom Queue Name",
-                placeholder="gpus_medium",
-                visible=False,
+            upload_preview = gr.Code(
+                label="Preview",
+                language="yaml",
+                lines=12,
+                interactive=False,
+                elem_id="upload-preview",
             )
 
-            output_msg = gr.Markdown("")
-            with gr.Row():
-                launch_btn = gr.Button(
-                    "🔥 Train",
+    # -- Right: Send Parameters ---------------------------------------
+    with gr.Row():
+        with gr.Column(scale=1):
+            with gr.Group(elem_classes=["mode-card"]):
+                gr.Markdown("### ⚙️ Dispatch Parameters")
+
+                queue_selector = gr.Dropdown(
+                    choices=[
+                        (f"🖥️ Private Queue ({_PRIVATE_QUEUE})", _PRIVATE_QUEUE),
+                        ("⚡ High Priority (gpus_high)", "gpus_high"),
+                        ("✏️ Custom Queue...", "__custom__"),
+                    ],
+                    label="Destination Queue",
+                    value=_PRIVATE_QUEUE,
+                    info=(
+                        "Default: local invoker's private queue. "
+                        "High priority routes to any available GPU invoker."
+                    ),
+                )
+                custom_queue = gr.Textbox(
+                    label="Custom Queue Name",
+                    placeholder="gpus_medium",
+                    visible=False,
+                )
+
+                output_msg = gr.Markdown("")
+
+                with gr.Row():
+                    launch_btn = gr.Button(
+                        "🔥 Train",
+                        variant="primary",
+                        size="lg",
+                        interactive=False,
+                        elem_id="train-btn",
+                    )
+                    dry_run_btn = gr.Button(
+                        "🧪",
+                        variant="secondary",
+                        size="sm",
+                        elem_id="dry-run-btn",
+                    )
+
+            # -- Advanced: Executor Direct Run ------------------------
+            with gr.Group(elem_id="executor-section", visible=True):
+                gr.Markdown("### ⚡ Advanced: Direct Executor Run")
+                gr.Markdown(
+                    "*Bypasses Celery queue. Writes config to `/home/wyolo/request` "
+                    "and launches executor container directly with GPU access.*"
+                )
+                executor_btn = gr.Button(
+                    "🚀 Run via Executor",
                     variant="primary",
                     size="lg",
-                    interactive=False,
-                    elem_id="train-btn",
+                    elem_id="executor-btn",
                 )
-                dry_run_btn = gr.Button(
-                    "🧪",
-                    variant="secondary",
-                    size="sm",
-                    elem_id="dry-run-btn",
-                )
+                executor_output = gr.Markdown("")
 
-    # -- Accordions --------------------------------------------------
+    # -- Accordions ----------------------------------------------------
     with gr.Accordion("📋 YAML Reference", open=False):
         gr.Markdown(_YAML_TEMPLATE_DOC)
 
@@ -570,20 +782,54 @@ with gr.Blocks(title="Invoker Launcher") as demo:
                 [_TEMPLATE_SEG],
             ],
             inputs=[yaml_editor],
-            label="Click to load a template",
+            label="Click to load a template into editor",
         )
 
-    # -- Event wiring ------------------------------------------------
+    # -- Event wiring --------------------------------------------------
+
+    # Mode toggle: show/hide editor vs upload
+    def _toggle_mode(mode: str):
+        return (
+            gr.update(visible=(mode == "edit")),
+            gr.update(visible=(mode == "upload")),
+        )
+
+    mode_radio.change(
+        fn=_toggle_mode,
+        inputs=[mode_radio],
+        outputs=[editor_col, upload_col],
+    )
+
+    # File upload → preview + editor (switches to edit mode)
+    def _handle_upload(file: gr.File | None):
+        if file is None:
+            return gr.update(value=""), gr.update(visible=False), gr.update(visible=True)
+        try:
+            with open(file.name, encoding="utf-8") as f:
+                content = f.read()
+            yaml.safe_load(content)  # validate
+            save_template(content)
+            # Switch to edit mode with loaded content
+            return (
+                gr.update(value=content),
+                gr.update(visible=False),
+                gr.update(visible=True),
+            )
+        except Exception as exc:
+            return gr.update(value=f"Error: {exc}"), gr.update(visible=True), gr.update(visible=False)
+
     yaml_file.change(
-        fn=parse_yaml_file,
+        fn=_handle_upload,
         inputs=[yaml_file],
-        outputs=[yaml_editor],
+        outputs=[yaml_editor, upload_col, editor_col],
     )
     yaml_file.change(
         fn=_validate_and_update_btn,
         inputs=[yaml_editor],
         outputs=[output_msg, launch_btn],
     )
+
+    # Editor changes → validate & update train button
     yaml_editor.change(
         fn=_validate_and_update_btn,
         inputs=[yaml_editor],
@@ -612,6 +858,13 @@ with gr.Blocks(title="Invoker Launcher") as demo:
         outputs=[output_msg],
     )
     dry_run_btn.click(fn=launch_dry_run, outputs=[output_msg])
+
+    # Executor direct run
+    executor_btn.click(
+        fn=launch_via_executor,
+        inputs=[yaml_editor],
+        outputs=[executor_output],
+    )
 
 
 # ── Entry point ─────────────────────────────────────────────────────
