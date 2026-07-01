@@ -153,6 +153,21 @@ class RunTraining:
             res_table.add_row("Memoria Compartida (SHM)", limit_shm)
 
             console.print(res_table)
+
+            # Tabla de Samba
+            samba_table = Table(
+                show_header=False,
+                border_style="cyan",
+                title="\n[bold cyan]Credenciales Samba[/bold cyan]"
+            )
+            samba_table.add_column("Parámetro", style="bold")
+            samba_table.add_column("Valor")
+            
+            samba_table.add_row("control_server_HOST", environments.get("CONTROL_HOST", "Desconocido"))
+            samba_table.add_row("USER", environments.get("CIFS_USER", "Desconocido"))
+            samba_table.add_row("PASS", environments.get("CIFS_PASS", "Desconocido"))
+            
+            console.print(samba_table)
         except ImportError:
             print("--- [INVOKER] Please install 'rich' to see the resources table nicely formatted. ---")
 
