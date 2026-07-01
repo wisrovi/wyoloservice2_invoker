@@ -127,6 +127,36 @@ class RunTraining:
         )
 
         try:
+            from rich.console import Console
+            from rich.table import Table
+
+            console = Console()
+            res_table = Table(
+                show_header=True,
+                header_style="bold magenta",
+                title="\n[bold]Recursos Asignados (Límites Docker - Vista Invoker)[/bold]",
+            )
+            res_table.add_column("Recurso", style="dim")
+            res_table.add_column("Asignación", justify="right")
+
+            max_gpu_env = environments.get("MAX_GPU", "-1")
+            gpu_asignada = f"{max_gpu_env}%" if max_gpu_env != "-1" else "Sin límite (100%)"
+            res_table.add_row("Uso máximo VRAM (Autobatch)", gpu_asignada)
+
+            limit_ram = environments.get("WORKER_RAM_MEMORY", "Desconocido")
+            res_table.add_row("RAM Total Disponible", limit_ram)
+
+            limit_cpu = environments.get("WORKER_CPU_CORES", "Desconocido")
+            res_table.add_row("CPU Cores (Afinidad)", limit_cpu)
+
+            limit_shm = environments.get("WORKER_SHM_MEMORY") or environments.get("WORKER_RAM_MEMORY", "Desconocido")
+            res_table.add_row("Memoria Compartida (SHM)", limit_shm)
+
+            console.print(res_table)
+        except ImportError:
+            print("--- [INVOKER] Please install 'rich' to see the resources table nicely formatted. ---")
+
+        try:
             # Clean up stale results before running
             results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
             stale_result_path: str = os.path.join(results_dir, "results.json")
