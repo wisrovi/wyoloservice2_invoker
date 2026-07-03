@@ -189,6 +189,7 @@ class RunTraining:
 
             container = client.containers.run(
                 image=image_name,
+                pull="always",
                 name=executor_name,
                 hostname=environments.get("USER", "default_user"),
                 detach=True,
