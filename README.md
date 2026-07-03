@@ -41,6 +41,17 @@ make start_all || docker-compose up -d
 ```
 
 ---
+
+## 📜 Changelog & Version History
+
+### Version 2.0.0 (Current Release) - 2026-07-03
+*   **Optuna cancellation routing:** Integrated Celery termination listener to intercept `study.stop()` tasks.
+*   **Docker-in-Docker subprocess mounts:** Upgraded Docker API handler to mount Samba CIFS `/wyolo/worker` shares dynamically before launching training trials.
+
+### Version 1.0.0 (Initial Release) - 2026-02-10
+*   FastAPI / Celery task listener pulling classification jobs.
+
+---
 ## Author
 **William Steve Rodriguez Villamizar (wisrovi)**
 Principal Systems & Software Architect / Technology Evangelist
