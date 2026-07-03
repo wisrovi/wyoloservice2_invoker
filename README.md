@@ -45,6 +45,7 @@ make start_all || docker-compose up -d
 ## 📜 Changelog & Version History
 
 ### Version 2.0.0 (Current Release) - 2026-07-03
+*   **Dynamic image pulling:** Configured the container runner state to use `pull="always"` for executor runs, guaranteeing active worker nodes always use the latest built Docker Hub layers.
 *   **Optuna cancellation routing:** Integrated Celery termination listener to intercept `study.stop()` tasks.
 *   **Docker-in-Docker subprocess mounts:** Upgraded Docker API handler to mount Samba CIFS `/wyolo/worker` shares dynamically before launching training trials.
 
