@@ -156,8 +156,26 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
     user_id: str = training_config.get("user_id", "unknown")
     study_id = training_config.get("study_id")
 
-    print("VERSION: {VERSION}")
-    print(f"--- [INVOKER:{invoker_name}] Task {self.request.id} started for user: {user_id} ---")
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+
+    console = Console()
+
+    task_table = Table(show_header=False, box=None)
+    task_table.add_row("[bold cyan]Task ID:[/bold cyan]", self.request.id)
+    task_table.add_row("[bold cyan]User ID:[/bold cyan]", user_id)
+    task_table.add_row("[bold cyan]Study ID:[/bold cyan]", str(study_id))
+    task_table.add_row("[bold cyan]Version:[/bold cyan]", VERSION)
+
+    console.print(
+        Panel(
+            task_table,
+            title=f"[bold yellow]⚡ [INVOKER:{invoker_name}] Task Started[/bold yellow]",
+            border_style="yellow",
+            expand=False
+        )
+    )
 
     redis_client = None
     if study_id:
@@ -194,7 +212,14 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
             print(f"Pipeline fallido: {str(exc)}")
             raise exc
 
-        print(f"--- [INVOKER:{invoker_name}] Task {self.request.id} completed for user: {user_id} ---")
+        console.print(
+            Panel(
+                f"[bold green]✔ Task {self.request.id} completed successfully for user: {user_id}[/bold green]",
+                title=f"[bold green]⚡ [INVOKER:{invoker_name}] Task Completed[/bold green]",
+                border_style="green",
+                expand=False
+            )
+        )
         if study_id and redis_client:
             try:
                 redis_client.delete(f"study:{study_id}:active_trial")
@@ -234,7 +259,27 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
     user_id = training_config.get("user_id", "unknown")
     study_id = training_config.get("study_id")
 
-    print(f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} started for user: {user_id} ---")
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+
+    console = Console()
+
+    task_table = Table(show_header=False, box=None)
+    task_table.add_row("[bold cyan]Task ID:[/bold cyan]", self.request.id)
+    task_table.add_row("[bold cyan]User ID:[/bold cyan]", user_id)
+    task_table.add_row("[bold cyan]Study ID:[/bold cyan]", str(study_id))
+    task_table.add_row("[bold cyan]Mode:[/bold cyan]", "SIMPLE (No Optuna)")
+    task_table.add_row("[bold cyan]Version:[/bold cyan]", VERSION)
+
+    console.print(
+        Panel(
+            task_table,
+            title=f"[bold yellow]⚡ [INVOKER:{invoker_name}] Simple Task Started[/bold yellow]",
+            border_style="yellow",
+            expand=False
+        )
+    )
 
     redis_client = None
     if study_id:
@@ -257,7 +302,14 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
         resultado = run_training(training_config)
 
         accuracy = resultado.get("accuracy", "N/A")
-        print(f"--- [INVOKER:{invoker_name}] SIMPLE Task {self.request.id} completed. Accuracy: {accuracy} ---")
+        console.print(
+            Panel(
+                f"[bold green]✔ Task {self.request.id} completed. Accuracy: {accuracy}[/bold green]",
+                title=f"[bold green]⚡ [INVOKER:{invoker_name}] Simple Task Completed[/bold green]",
+                border_style="green",
+                expand=False
+            )
+        )
         
         if study_id and redis_client:
             try:
