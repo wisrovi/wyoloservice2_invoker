@@ -45,7 +45,7 @@ make start_all || docker-compose up -d
 ## 📜 Changelog & Version History
 
 ### Version 2.0.0 (Current Release) - 2026-07-03
-*   **Rich Log Interface:** Integrated `rich` components (Console, Panel, Table) inside [app/celery_config.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/celery_config.py) and [app/worker_gpu.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/worker_gpu.py) to output beautifully formatted startup parameters and trial execution tables directly to logs.
+*   **Rich Log Interface:** Integrated `rich` components (Console, Panel, Table) inside [app/celery_config.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/celery_config.py) and [app/worker_gpu.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/worker_gpu.py) to output beautifully formatted startup parameters, trial execution details, and critical host configuration environments (like CPU, RAM, and GPU limits) directly to logs.
 *   **Dependency Version Pinning:** Pinned all Python dependencies in [app/requirements.txt](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/requirements.txt) to specific production-tested versions (including `optuna==4.8.0`) to avoid potential version mismatches or breaking changes in future deployments.
 *   **Dynamic image pulling:** Configured the container runner state to use `pull="always"` for executor runs, guaranteeing active worker nodes always use the latest built Docker Hub layers.
 *   **Optuna cancellation routing:** Integrated Celery termination listener to intercept `study.stop()` tasks.
