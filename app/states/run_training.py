@@ -15,6 +15,10 @@ import shutil
 import tempfile
 from datetime import datetime
 from typing import Any, Dict, Tuple
+import threading
+
+
+from requests.exceptions import ReadTimeout, ConnectionError
 
 import docker  # pylint: disable=import-error
 import yaml
@@ -70,6 +74,10 @@ class RunTraining:
             config (Dict[str, Any]): Configuration dictionary containing executor settings.
         """
         self.config = config
+        print(
+            f"Executor timeout configured: "
+            f"{self.config.get('executor_timeout_seconds', 3600)}"
+        )
 
     def docker_run(self, image_name: str, executor_name: str, _temp_dir: str) -> None:
         """Runs a Docker container with the specified configuration.
@@ -80,6 +88,10 @@ class RunTraining:
             _temp_dir (str): The local directory to bind as a volume (unused for now).
         """
         invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
+        timeout_seconds = self.config.get(
+            "executor_timeout_seconds",
+            43200,
+        )
 
         # Calculate hardware limits dynamically from config
         cpu_limit, mem_limit = get_system_limits(self.config)
@@ -87,6 +99,7 @@ class RunTraining:
         print(
             f"--- [INVOKER:{invoker_name}] Launching executor: {executor_name} with limits "
             f"(CPU: {cpu_limit:.2f}, RAM: {mem_limit // (1024**2)}MB) ---"
+            f"Executor timeout: {timeout_seconds}s ---"
         )
 
         try:
@@ -108,7 +121,9 @@ class RunTraining:
                                 if len(key_val) == 2:
                                     envs[key_val[0]] = key_val[1]
                 except Exception as e:
-                    print(f"--- [INVOKER] Warning: Error reading env file {path}: {e} ---")
+                    print(
+                        f"--- [INVOKER] Warning: Error reading env file {path}: {e} ---"
+                    )
             return envs
 
         # Environment priority: Files > os.environ > Defaults
@@ -140,7 +155,9 @@ class RunTraining:
             res_table.add_column("Asignación", justify="right")
 
             max_gpu_env = environments.get("MAX_GPU", "-1")
-            gpu_asignada = f"{max_gpu_env}%" if max_gpu_env != "-1" else "Sin límite (100%)"
+            gpu_asignada = (
+                f"{max_gpu_env}%" if max_gpu_env != "-1" else "Sin límite (100%)"
+            )
             res_table.add_row("Uso máximo VRAM (Autobatch)", gpu_asignada)
 
             limit_ram = environments.get("WORKER_RAM_MEMORY", "Desconocido")
@@ -149,7 +166,9 @@ class RunTraining:
             limit_cpu = environments.get("WORKER_CPU_CORES", "Desconocido")
             res_table.add_row("CPU Cores (Afinidad)", limit_cpu)
 
-            limit_shm = environments.get("WORKER_SHM_MEMORY") or environments.get("WORKER_RAM_MEMORY", "Desconocido")
+            limit_shm = environments.get("WORKER_SHM_MEMORY") or environments.get(
+                "WORKER_RAM_MEMORY", "Desconocido"
+            )
             res_table.add_row("Memoria Compartida (SHM)", limit_shm)
 
             console.print(res_table)
@@ -158,22 +177,28 @@ class RunTraining:
             samba_table = Table(
                 show_header=False,
                 border_style="cyan",
-                title="\n[bold cyan]Credenciales Samba[/bold cyan]"
+                title="\n[bold cyan]Credenciales Samba[/bold cyan]",
             )
             samba_table.add_column("Parámetro", style="bold")
             samba_table.add_column("Valor")
-            
-            samba_table.add_row("control_server_HOST", environments.get("CONTROL_HOST", "Desconocido"))
+
+            samba_table.add_row(
+                "control_server_HOST", environments.get("CONTROL_HOST", "Desconocido")
+            )
             samba_table.add_row("USER", environments.get("CIFS_USER", "Desconocido"))
             samba_table.add_row("PASS", environments.get("CIFS_PASS", "Desconocido"))
-            
+
             console.print(samba_table)
         except ImportError:
-            print("--- [INVOKER] Please install 'rich' to see the resources table nicely formatted. ---")
+            print(
+                "--- [INVOKER] Please install 'rich' to see the resources table nicely formatted. ---"
+            )
 
         try:
             # Clean up stale results before running
-            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
+            results_dir = self.config.get(
+                "results_dir", "/home/wyolo/train_service_results"
+            )
             stale_result_path: str = os.path.join(results_dir, "results.json")
             if os.path.exists(stale_result_path):
                 os.remove(stale_result_path)
@@ -182,14 +207,16 @@ class RunTraining:
             # Force remove any existing container with the same name to prevent conflict
             try:
                 existing_container = client.containers.get(executor_name)
-                print(f"--- [INVOKER] Found existing container {executor_name}. Removing... ---")
+                print(
+                    f"--- [INVOKER] Found existing container {executor_name}. Removing... ---"
+                )
                 existing_container.remove(force=True)
             except Exception:
                 pass
 
             container = client.containers.run(
                 image=image_name,
-                pull="always",
+                # pull="always",  # only for download the image from docker hub (obligatory for first time)
                 name=executor_name,
                 hostname=environments.get("USER", "default_user"),
                 detach=True,
@@ -204,7 +231,9 @@ class RunTraining:
                 # Capabilities
                 cap_add=["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
                 # GPU Configuration
-                device_requests=[docker.types.DeviceRequest(device_ids=["0"], capabilities=[["gpu"]])],
+                device_requests=[
+                    docker.types.DeviceRequest(device_ids=["0"], capabilities=[["gpu"]])
+                ],
                 # Environment
                 environment=environments,
                 # Labels
@@ -235,41 +264,100 @@ class RunTraining:
                 ),
             )
 
-            print(f"--- [INVOKER] Executor {executor_name} started. Streaming logs... ---", flush=True)
+            print(
+                f"--- [INVOKER] Executor {executor_name} started. Streaming logs... ---",
+                flush=True,
+            )
 
             # Prepare log file path in the shared results volume
-            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
+            results_dir = self.config.get(
+                "results_dir", "/home/wyolo/train_service_results"
+            )
             log_file_path = os.path.join(results_dir, f"logs_{executor_name}.txt")
 
             # Stream logs to the invoker's output and save to a file
-            with open(log_file_path, "w", encoding="utf-8") as log_file:
-                # Use a generator to get clean lines from the stream
-                log_stream = container.logs(stream=True, follow=True)
-                for line in log_stream:
-                    try:
-                        decoded_line = line.decode("utf-8", errors="replace").rstrip()
-                        if decoded_line:
-                            formatted_line = f"[{executor_name}] {decoded_line}"
-                            print(formatted_line, flush=True)
-                            log_file.write(decoded_line + "\n")
-                            log_file.flush()
-                    except Exception as e:
-                        print(f"--- [INVOKER] Warning: Error decoding log line: {e} ---")
+            # Prepare log file path in the shared results volume
+            results_dir = self.config.get(
+                "results_dir", "/home/wyolo/train_service_results"
+            )
+            log_file_path = os.path.join(results_dir, f"logs_{executor_name}.txt")
 
-            # Wait for container to exit and check status
-            result = container.wait()
+            def stream_logs():
+                """Stream executor logs while the container is running."""
+                try:
+                    with open(log_file_path, "w", encoding="utf-8") as log_file:
+                        log_stream = container.logs(stream=True, follow=True)
+
+                        for line in log_stream:
+                            try:
+                                decoded_line = line.decode(
+                                    "utf-8", errors="replace"
+                                ).rstrip()
+
+                                if decoded_line:
+                                    formatted_line = f"[{executor_name}] {decoded_line}"
+
+                                    print(formatted_line, flush=True)
+
+                                    log_file.write(decoded_line + "\n")
+                                    log_file.flush()
+
+                            except Exception as exc:
+                                print(
+                                    f"--- [INVOKER] "
+                                    f"Error decoding log line: {exc} ---"
+                                )
+
+                except Exception as exc:
+                    print(f"--- [INVOKER] Error streaming logs: {exc} ---")
+
+            # Start log streaming in background
+            log_thread = threading.Thread(target=stream_logs, daemon=True)
+            log_thread.start()
+
+            # Wait for container with timeout
+            timeout_seconds = self.config.get(
+                "executor_timeout_seconds",
+                3600,
+            )
+
+            try:
+                result = container.wait(timeout=timeout_seconds)
+
+            except (ReadTimeout, ConnectionError):
+                print(
+                    f"--- [INVOKER:{invoker_name}] "
+                    f"Executor timeout after {timeout_seconds}s ---"
+                )
+
+                container.stop(timeout=30)
+                container.remove(force=True)
+
+                raise RuntimeError(
+                    f"Executor exceeded timeout of " f"{timeout_seconds} seconds"
+                )
+
+            finally:
+                log_thread.join(timeout=5)
+
             exit_code = result.get("StatusCode", 0)
 
             # If it failed, try to get the full logs even if stream finished
             if exit_code != 0:
-                print(f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exit_code} ---")
+                print(
+                    f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exit_code} ---"
+                )
                 # Attempt to get full logs for debugging
-                full_logs = container.logs(stdout=True, stderr=True).decode("utf-8", errors="replace")
+                full_logs = container.logs(stdout=True, stderr=True).decode(
+                    "utf-8", errors="replace"
+                )
                 print(f"--- [INVOKER] Full executor logs: ---\n{full_logs}")
 
                 # Cleanup manually since remove=False
                 container.remove()
-                raise RuntimeError(f"Executor failed with exit code {exit_code}. Logs:\n{full_logs[-1000:]}")
+                raise RuntimeError(
+                    f"Executor failed with exit code {exit_code}. Logs:\n{full_logs[-1000:]}"
+                )
 
             # Cleanup manually since remove=False
             container.remove()
@@ -279,7 +367,9 @@ class RunTraining:
             print(f"--- [INVOKER:{private_queue}] Error in docker_run: {exc} ---")
 
             # put -1 in results.json to indicate failure for Optuna
-            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
+            results_dir = self.config.get(
+                "results_dir", "/home/wyolo/train_service_results"
+            )
             os.makedirs(results_dir, exist_ok=True)
 
             final_result_path: str = os.path.join(results_dir, "results.json")
@@ -288,7 +378,11 @@ class RunTraining:
             if not os.path.exists(final_result_path):
                 try:
                     with open(final_result_path, "w", encoding="utf-8") as file:
-                        json.dump({"accuracy": -1.0, "status": "failed", "error": str(exc)}, file, indent=4)
+                        json.dump(
+                            {"accuracy": -1.0, "status": "failed", "error": str(exc)},
+                            file,
+                            indent=4,
+                        )
                 except Exception as e:
                     print(f"--- [INVOKER] Failed to write results.json: {e} ---")
 
@@ -313,9 +407,16 @@ class RunTraining:
         """
         invoker_name = os.getenv("WORKER_NAME", "unknown")
 
-        if training_config.get("dry_run") is True or training_config.get("sweeper", {}).get("dry_run") is True:
+        if (
+            training_config.get("dry_run") is True
+            or training_config.get("sweeper", {}).get("dry_run") is True
+        ):
             import time
-            print(f"--- [INVOKER:{invoker_name}] DRY RUN MODE ENABLED. Simulating training... ---", flush=True)
+
+            print(
+                f"--- [INVOKER:{invoker_name}] DRY RUN MODE ENABLED. Simulating training... ---",
+                flush=True,
+            )
             time.sleep(2)
             return {
                 "status": "done",
@@ -360,7 +461,9 @@ class RunTraining:
                     result: dict[str, Any] = json.load(file)
 
                 accuracy: float = float(result.get("accuracy", 0.0))
-                print(f"--- [INVOKER:{invoker_name}] Trial completed. Metric: {accuracy} ---")
+                print(
+                    f"--- [INVOKER:{invoker_name}] Trial completed. Metric: {accuracy} ---"
+                )
                 return {
                     "status": "done",
                     "accuracy": accuracy,
@@ -374,7 +477,9 @@ class RunTraining:
             )
 
         except docker.errors.ContainerError as exc:
-            print(f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exc.exit_status} ---")
+            print(
+                f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exc.exit_status} ---"
+            )
             raise RuntimeError(f"Executor failed: {exc}") from exc
 
         except Exception as exc:

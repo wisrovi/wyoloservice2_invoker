@@ -40,8 +40,15 @@ start: user.env config.py
 	[ -f "control_host.env" ] && mv control_host.env ./config/ || true
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  --compatibility up -d --build --force-recreate --no-deps  --pull always
 
+build:
+	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  --compatibility up -d --build --force-recreate --no-deps  --pull always
+
 stop:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  down  --remove-orphans
 
 start_gradio:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  --compatibility up -d --build --force-recreate --no-deps  --pull always gradio_launcher
+
+
+publish: stop build start stop
+	docker push wisrovi/train_service:worker_invoker_v1.0.0
