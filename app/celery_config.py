@@ -49,6 +49,27 @@ worker_settings: dict[str, Any] = {
 
 app.conf.update(worker_settings)
 
-print(f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery initialized ---")
-print(f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery configuration: {worker_settings} ---")
-print(f"--- [INVOKER:{os.getenv('PRIVATE_QUEUE', 'unknown')}] Celery broker: {REDIS_URL} ---")
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+console = Console()
+
+init_table = Table(show_header=False, box=None)
+init_table.add_row("[bold cyan]Queue/Node Name:[/bold cyan]", os.getenv('PRIVATE_QUEUE', 'unknown'))
+init_table.add_row("[bold cyan]Broker/Backend URL:[/bold cyan]", REDIS_URL)
+init_table.add_row("[bold cyan]Concurrency Limit:[/bold cyan]", str(worker_settings["worker_concurrency"]))
+init_table.add_row("[bold cyan]Prefetch Multiplier:[/bold cyan]", str(worker_settings["worker_prefetch_multiplier"]))
+init_table.add_row("[bold cyan]Task Routes (Train):[/bold cyan]", worker_settings["task_routes"]["tasks.train_on_gpu"]["queue"])
+init_table.add_row("[bold cyan]Acks Late Config:[/bold cyan]", str(worker_settings["task_acks_late"]))
+init_table.add_row("[bold cyan]Result Expiry (Sec):[/bold cyan]", f"{worker_settings['result_expires']}s")
+
+console.print(
+    Panel(
+        init_table,
+        title="[bold green]⚙️  Hive Worker - Celery Initialized[/bold green]",
+        border_style="green",
+        expand=False
+    )
+)
+
