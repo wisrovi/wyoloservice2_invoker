@@ -56,6 +56,7 @@ from rich.table import Table
 console = Console()
 
 init_table = Table(show_header=False, box=None)
+init_table.add_row("[bold magenta]━━━ CELERY CONFIGURATION ━━━[/bold magenta]", "")
 init_table.add_row("[bold cyan]Queue/Node Name:[/bold cyan]", os.getenv('PRIVATE_QUEUE', 'unknown'))
 init_table.add_row("[bold cyan]Broker/Backend URL:[/bold cyan]", REDIS_URL)
 init_table.add_row("[bold cyan]Concurrency Limit:[/bold cyan]", str(worker_settings["worker_concurrency"]))
@@ -63,11 +64,19 @@ init_table.add_row("[bold cyan]Prefetch Multiplier:[/bold cyan]", str(worker_set
 init_table.add_row("[bold cyan]Task Routes (Train):[/bold cyan]", worker_settings["task_routes"]["tasks.train_on_gpu"]["queue"])
 init_table.add_row("[bold cyan]Acks Late Config:[/bold cyan]", str(worker_settings["task_acks_late"]))
 init_table.add_row("[bold cyan]Result Expiry (Sec):[/bold cyan]", f"{worker_settings['result_expires']}s")
+init_table.add_row("", "")
+init_table.add_row("[bold yellow]━━━ HOST ENVIRONMENT (FOR EXECUTOR) ━━━[/bold yellow]", "")
+init_table.add_row("[bold cyan]Host User (USER):[/bold cyan]", os.getenv('USER', 'N/A'))
+init_table.add_row("[bold cyan]Worker Host IP (WORKER_HOST):[/bold cyan]", os.getenv('WORKER_HOST', 'N/A'))
+init_table.add_row("[bold cyan]CPU Cores (WORKER_CPU_CORES):[/bold cyan]", os.getenv('WORKER_CPU_CORES', 'N/A'))
+init_table.add_row("[bold cyan]RAM Memory (WORKER_RAM_MEMORY):[/bold cyan]", os.getenv('WORKER_RAM_MEMORY', 'N/A'))
+init_table.add_row("[bold cyan]Max GPU Limit % (MAX_GPU):[/bold cyan]", os.getenv('MAX_GPU', 'N/A'))
+init_table.add_row("[bold cyan]Concurrent Trains (NUM_CURRENT_TRAIN):[/bold cyan]", os.getenv('NUM_CURRENT_TRAIN', 'N/A'))
 
 console.print(
     Panel(
         init_table,
-        title="[bold green]⚙️  Hive Worker - Celery Initialized[/bold green]",
+        title="[bold green]⚙️  Hive Worker - Celery & Host Environment[/bold green]",
         border_style="green",
         expand=False
     )
