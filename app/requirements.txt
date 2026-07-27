@@ -1,7 +1,7 @@
 celery
 redis
 pyyaml
-optuna
+optuna==4.8.0
 requests
 pandas
 scikit-learn
