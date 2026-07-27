@@ -1,6 +1,3 @@
-# mypy: ignore-errors
-# pylint: disable=all
-# ruff: noqa
 """Run Training State Module.
 
 This module defines the RunTraining class, which orchestrates the execution
@@ -8,6 +5,8 @@ of training trials within Docker containers. It handles configuration delivery,
 container management, and results recovery.
 """
 
+from rich.console import Console
+from rich.table import Table
 import json
 import multiprocessing
 import os
@@ -41,9 +40,17 @@ def get_system_limits(config: dict[str, Any]) -> tuple[float, int]:
     cpu_pct = float(config.get("cpu_limit_pct", 0.85))
     mem_pct = float(config.get("mem_limit_pct", 0.60))
 
-    # 1. CPU: Percentage of total cores
-    total_cpus = multiprocessing.cpu_count()
-    cpu_limit = float(total_cpus * cpu_pct)
+    # 1. CPU: Priority: Environment variable (WORKER_CPU_CORES_AVAILABLE) > Percentage of total cores
+    cores_env = os.getenv("WORKER_CPU_CORES_AVAILABLE")
+    if cores_env:
+        try:
+            cpu_limit = float(cores_env)
+        except ValueError:
+            total_cpus = multiprocessing.cpu_count()
+            cpu_limit = float(total_cpus * cpu_pct)
+    else:
+        total_cpus = multiprocessing.cpu_count()
+        cpu_limit = float(total_cpus * cpu_pct)
 
     # 2. RAM: Percentage of total host memory
     total_mem_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
@@ -142,8 +149,7 @@ class RunTraining:
         )
 
         try:
-            from rich.console import Console
-            from rich.table import Table
+            
 
             console = Console()
             res_table = Table(
@@ -226,7 +232,7 @@ class RunTraining:
                 shm_size="16g",
                 tty=False,  # Disable TTY to avoid multiplexing issues and ANSI codes
                 # Resource Limits
-                nano_cpus=int(8 * 1e9),  # --cpus=8
+                nano_cpus=int(cpu_limit * 1e9),
                 mem_limit="24g",
                 # Capabilities
                 cap_add=["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
