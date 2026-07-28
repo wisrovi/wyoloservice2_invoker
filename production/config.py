@@ -2,7 +2,7 @@ import customtkinter as ctk
 import subprocess
 import os
 
-if os.path.exists("control_host.env"):
+if os.path.exists("control_host.env") or os.path.exists("config/control_host.env"):
     print("No need to set environment variables, because they are already set.")
     exit()
 
