@@ -38,6 +38,12 @@ Configuration is managed via `control_host.env` and `config.yaml` files. Never c
 ```bash
 # Start the service
 make start_all || docker-compose up -d
+
+# Pause public queues (gpus_high, gpus_medium, gpus_low) to listen ONLY to the private queue
+make pause-public-queues
+
+# Resume public queues to listen to all queues again
+make resume-public-queues
 ```
 
 ---
@@ -45,6 +51,7 @@ make start_all || docker-compose up -d
 ## 📜 Changelog & Version History
 
 ### Version 2.0.0 (Current Release) - 2026-07-03
+*   **Dynamic Queue Consumer Control:** Added shell scripts and Makefile rules (`pause-public-queues`, `resume-public-queues`) to dynamically pause and resume listening to public queues (gpus_high, gpus_medium, gpus_low) using Celery control broadcast commands isolated to the local node hostname.
 *   **Test Environment Alignment:** Updated [test/send_to_invoker_directly.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test/send_to_invoker_directly.py) queue targets and corrected [test_to_send_invoker.yaml](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_to_send_invoker.yaml) dataset paths to point to real Samba storage resources, enabling successful end-to-end integration tests.
 *   **Config Serialization Fix:** Added recursive data serialization/sanitization in [app/states/run_training.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/states/run_training.py) to strip non-serializable objects (like `_thread.RLock` and internal metadata injected by wpipe) before writing to YAML/JSON configs for the executor.
 *   **Optuna Trial Interface Fix:** Patched [app/worker_gpu.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/worker_gpu.py) to correct the signature mismatch where Optuna's `Trial` object was incorrectly passed directly to the pipeline. Implemented dynamic parameter sampling from the YAML search space and configuration merging before executing training runs.
