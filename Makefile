@@ -36,8 +36,8 @@ config.py:
 
 
 start: user.env config.py
-	mv user.env ./config/
-	[ -f "control_host.env" ] && mv control_host.env ./config/ || true
+	cp user.env ./config/
+	[ -f "control_host.env" ] && cp control_host.env ./config/ || true
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  --compatibility up -d --build --force-recreate --no-deps  --pull always
 
 build:
@@ -52,3 +52,9 @@ start_gradio:
 
 publish: stop build start stop
 	docker push wisrovi/train_service:worker_invoker_v1.0.0
+
+pause-public-queues:
+	@sh scripts/pause_public_queues.sh
+
+resume-public-queues:
+	@sh scripts/resume_public_queues.sh
