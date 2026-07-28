@@ -58,22 +58,33 @@ pipe_posttrain.set_steps(
 )
 
 
-def objetive_function(training_config: dict[str, Any]) -> float:
-    """Objective function for Optuna optimization.
+def _suggest_from_space(trial: optuna.trial.Trial, search_space: dict[str, Any], prefix: str = "") -> dict[str, Any]:
+    suggested = {}
+    for key, val in search_space.items():
+        param_name = f"{prefix}{key}"
+        if isinstance(val, dict):
+            suggested[key] = _suggest_from_space(trial, val, prefix=f"{param_name}:")
+        elif isinstance(val, list) and len(val) >= 2:
+            dist_type = val[0]
+            if dist_type == "choice":
+                choices = val[1] if isinstance(val[1], list) else val[1:]
+                suggested[key] = trial.suggest_categorical(param_name, choices)
+            elif dist_type == "uniform" and len(val) >= 3:
+                suggested[key] = trial.suggest_float(param_name, float(val[1]), float(val[2]))
+            elif dist_type == "loguniform" and len(val) >= 3:
+                suggested[key] = trial.suggest_float(param_name, float(val[1]), float(val[2]), log=True)
+            elif dist_type == "intuniform" and len(val) >= 3:
+                suggested[key] = trial.suggest_int(param_name, int(val[1]), int(val[2]))
+    return suggested
 
-    Args:
-        training_config: Configuration for the training trial.
 
-    Returns:
-        float: The accuracy metric achieved in the trial.
-    """
-    try:
-        resultado = pipe_train.run(training_config)
-
-        return float(resultado.get("accuracy", 0.0))
-    except Exception as exc:
-        print(f"Pipeline fallido: {str(exc)}")
-        raise exc
+def _merge_configs(base: dict[str, Any], suggested: dict[str, Any]) -> dict[str, Any]:
+    for key, val in suggested.items():
+        if isinstance(val, dict) and key in base and isinstance(base[key], dict):
+            _merge_configs(base[key], val)
+        else:
+            base[key] = val
+    return base
 
 
 def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
@@ -89,6 +100,7 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
     trials_count = training_config.get("n_trials", CONFIG.get("sweeper", {}).get("n_trials", 1))
     direction_str = training_config.get("direction", CONFIG.get("sweeper", {}).get("direction", "maximize"))
     sampler_name = training_config.get("sampler", CONFIG.get("sweeper", {}).get("sampler", "TPESampler"))
+    search_space = training_config.get("sweeper", {}).get("search_space", {})
 
     # Study Settings (Crucial for distributed scenario)
     study_name = training_config.get("study_name", f"study_{datetime.now().strftime('%Y%m%d')}")
@@ -126,8 +138,22 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
         load_if_exists=True,
     )
 
+    def objective(trial: optuna.trial.Trial) -> float:
+        # Deep copy config to ensure trials are isolated
+        trial_config = json.loads(json.dumps(training_config))
+        if search_space:
+            suggested = _suggest_from_space(trial, search_space)
+            trial_config = _merge_configs(trial_config, suggested)
+        
+        try:
+            resultado = pipe_train.run(trial_config)
+            return float(resultado.get("accuracy", 0.0))
+        except Exception as exc:
+            print(f"Pipeline fallido en trial: {str(exc)}")
+            raise exc
+
     study.optimize(
-        objetive_function,
+        objective,
         n_trials=trials_count,
         show_progress_bar=True,
     )
