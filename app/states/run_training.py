@@ -413,9 +413,26 @@ class RunTraining:
         """
         invoker_name = os.getenv("WORKER_NAME", "unknown")
 
+        # Make the training config 100% clean and serializable to avoid PyYAML/JSON pickling errors (like _thread.RLock)
+        def make_serializable(data: Any) -> Any:
+            if isinstance(data, dict):
+                return {k: make_serializable(v) for k, v in data.items() if not k.startswith("_")}
+            elif isinstance(data, list):
+                return [make_serializable(v) for v in data]
+            elif isinstance(data, (str, int, float, bool, type(None))):
+                return data
+            elif hasattr(data, "model_dump"):
+                return make_serializable(data.model_dump())
+            elif hasattr(data, "dict"):
+                return make_serializable(data.dict())
+            else:
+                return str(data)
+
+        clean_config = make_serializable(training_config)
+
         if (
-            training_config.get("dry_run") is True
-            or training_config.get("sweeper", {}).get("dry_run") is True
+            clean_config.get("dry_run") is True
+            or clean_config.get("sweeper", {}).get("dry_run") is True
         ):
             import time
 
@@ -442,11 +459,11 @@ class RunTraining:
             os.makedirs(os.path.dirname(YAML_PATH), exist_ok=True)
 
             with open(YAML_PATH, "w", encoding="utf-8") as file:
-                yaml.dump(training_config, file)
+                yaml.dump(clean_config, file)
 
             config_path: str = os.path.join(temp_dir, "config.json")
             with open(config_path, "w", encoding="utf-8") as file:
-                json.dump(training_config, file, indent=4)
+                json.dump(clean_config, file, indent=4)
 
             # 2. Run the EXECUTOR
             # name_for_logs = f"wyolo_executor_{invoker_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
