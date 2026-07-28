@@ -44,6 +44,12 @@ make pause-public-queues
 
 # Resume public queues to listen to all queues again
 make resume-public-queues
+
+# Remotely pause public queues for a specific worker node from the outside (Redis connection)
+python3 test/manage_remote_worker.py --ip 192.168.1.68 --action pause
+
+# Remotely resume public queues for a specific worker node from the outside
+python3 test/manage_remote_worker.py --ip 192.168.1.68 --action resume
 ```
 
 ---
@@ -51,6 +57,7 @@ make resume-public-queues
 ## 📜 Changelog & Version History
 
 ### Version 2.0.0 (Current Release) - 2026-07-03
+*   **Remote Worker Management CLI:** Programmed [test/manage_remote_worker.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test/manage_remote_worker.py) to allow administrators and external services (like the Manager) to dynamically add or cancel consumer queues for any worker node in the network by sending targeted Celery control messages via Redis from the outside, without accessing the worker's host or container.
 *   **Dynamic Queue Consumer Control:** Added shell scripts and Makefile rules (`pause-public-queues`, `resume-public-queues`) to dynamically pause and resume listening to public queues (gpus_high, gpus_medium, gpus_low) using Celery control broadcast commands isolated to the local node hostname.
 *   **Test Environment Alignment:** Updated [test/send_to_invoker_directly.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test/send_to_invoker_directly.py) queue targets and corrected [test_to_send_invoker.yaml](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_to_send_invoker.yaml) dataset paths to point to real Samba storage resources, enabling successful end-to-end integration tests.
 *   **Config Serialization Fix:** Added recursive data serialization/sanitization in [app/states/run_training.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/states/run_training.py) to strip non-serializable objects (like `_thread.RLock` and internal metadata injected by wpipe) before writing to YAML/JSON configs for the executor.
