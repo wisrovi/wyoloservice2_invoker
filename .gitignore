@@ -185,3 +185,10 @@ dump.rdb
 
 # Coverage
 coverage.json
+
+# Graphify
+graphify-out/cache/
+graphify-out/manifest.json
+graphify-out/cost.json
+graphify-out/.graphify_*
+
