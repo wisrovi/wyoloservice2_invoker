@@ -1,9 +1,6 @@
-# mypy: ignore-errors
-# pylint: disable=all
-# ruff: noqa
 """Docstring."""
 
-REDIS_HOST = "192.168.1.137"
+REDIS_HOST = "192.168.10.252"
 
 
 import os
@@ -15,18 +12,19 @@ from celery import Celery
 # Modify these variables according to your needs
 REDIS_HOST = os.getenv("CONTROL_HOST", REDIS_HOST)
 REDIS_PORT = "23437"
-QUEUE_NAME = "gpus_high"  # Options: gpus_high, gpus_medium, gpus_low, default
+QUEUE_NAME = "192.168.1.68"  # Options: gpus_high, gpus_medium, gpus_low, default
 
 # Path to your YAML configuration file
 YAML_CONFIG_PATH = "test_to_send_invoker.yaml"
 
 # Internal YAML Template (used if YAML_CONFIG_PATH is not found)
 DEFAULT_CONFIG = {
+    "debug": "192.168.1.68",
     "model": "yolov8n.pt",
     "type": "yolo",
     "train": {
         "batch": -1,
-        "data": "/datasets/examples/classification/colorball.v8i.multiclass/",
+        "data": "/examples/ArchitecturePlan/data.yaml",
         "epochs": 2,
         "imgsz": 640,
     },
