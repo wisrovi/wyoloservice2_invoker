@@ -38,6 +38,19 @@ services:
     networks:
       - train_service
 
+  watchtower:
+    image: containrrr/watchtower
+    restart: always
+    environment:
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_POLL_INTERVAL=600
+      - WATCHTOWER_CLEANUP=true
+      - DOCKER_API_VERSION=1.44
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+
 networks:
   train_service:
     name: train_service
