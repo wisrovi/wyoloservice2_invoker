@@ -46,6 +46,11 @@ build:
 stop:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  down  --remove-orphans
 
+stop-all: stop
+	@echo "Force stopping and removing any other wyolo containers (executors/production nodes)..."
+	@docker ps -a --filter "name=wyolo_" --format "{{.ID}}" | xargs -r docker rm -f
+
+
 start_gradio:
 	docker-compose -f docker-compose.yaml --env-file ./config/user.env  --env-file ./config/control_host.env  --compatibility up -d --build --force-recreate --no-deps  --pull always gradio_launcher
 
