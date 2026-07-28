@@ -63,8 +63,8 @@ def print_table() -> None:
         environments.get("WORKER_HOST", "N/A"),
     )
     init_table.add_row(
-        "[bold cyan]CPU Cores (Total/Available):[/bold cyan]",
-        f"{environments.get('WORKER_CPU_CORES', 'N/A')} / [bold green]{environments.get('WORKER_CPU_CORES_AVAILABLE', 'N/A')}[/bold green]"
+        "[bold cyan]CPU Cores:[/bold cyan]",
+        f"[bold green]{environments.get('WORKER_CPU_CORES_AVAILABLE', 'N/A')}[/bold green]"
     )
     init_table.add_row(
         "[bold cyan]RAM Memory (WORKER_RAM_MEMORY):[/bold cyan]",
