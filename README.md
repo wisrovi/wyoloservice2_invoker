@@ -45,6 +45,7 @@ make start_all || docker-compose up -d
 ## 📜 Changelog & Version History
 
 ### Version 2.0.0 (Current Release) - 2026-07-03
+*   **Optuna Trial Interface Fix:** Patched [app/worker_gpu.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/worker_gpu.py) to correct the signature mismatch where Optuna's `Trial` object was incorrectly passed directly to the pipeline. Implemented dynamic parameter sampling from the YAML search space and configuration merging before executing training runs.
 *   **Startup Logging Markup Fix:** Corrected rich log syntax errors inside [app/celery_config.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/celery_config.py) to prevent container crashes caused by unmatched tags during print_table invocations.
 *   **Start Configuration Fix:** Patched [production/config.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/production/config.py) to look for the control host environment configuration inside the `config/` folder, avoiding GUI locks during execution of headless `make start` routines.
 *   **Dynamic CPU allocations:** Upgraded [app/states/run_training.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/states/run_training.py) to read `WORKER_CPU_CORES_AVAILABLE` dynamically from environment instead of using a hardcoded 8 cores limit, ensuring executor container resource limits are respected.
