@@ -50,6 +50,12 @@ python3 test/manage_remote_worker.py --ip 192.168.1.68 --action pause
 
 # Remotely resume public queues for a specific worker node from the outside
 python3 test/manage_remote_worker.py --ip 192.168.1.68 --action resume
+
+# Stop local development service
+make stop
+
+# Stop local service AND clean up any orphan executors or production containers
+make stop-all
 ```
 
 ---
@@ -57,6 +63,7 @@ python3 test/manage_remote_worker.py --ip 192.168.1.68 --action resume
 ## 📜 Changelog & Version History
 
 ### Version 2.0.0 (Current Release) - 2026-07-03
+*   **Orphan Container Cleanup Rule:** Added the `stop-all` command in the [Makefile](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/Makefile) to force stop and clean up programmatically created executor containers (`wyolo_executor_*`) and instances running under the systemd production scope.
 *   **Celery Node Hostname Fix:** Assigned explicit `hostname: wyolo_invoker_${WORKER_HOST}` in [docker-compose.yaml](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml) to ensure Celery registers the worker with its actual IP address instead of Docker's random short container ID hostname (e.g., `celery@45fa662f178a`).
 *   **Remote Worker Management CLI:** Programmed [test/manage_remote_worker.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test/manage_remote_worker.py) to allow administrators and external services (like the Manager) to dynamically add or cancel consumer queues for any worker node in the network by sending targeted Celery control messages via Redis from the outside, without accessing the worker's host or container.
 *   **Dynamic Queue Consumer Control:** Added shell scripts and Makefile rules (`pause-public-queues`, `resume-public-queues`) to dynamically pause and resume listening to public queues (gpus_high, gpus_medium, gpus_low) using Celery control broadcast commands isolated to the local node hostname.
