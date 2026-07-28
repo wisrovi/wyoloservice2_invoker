@@ -84,7 +84,22 @@ make stop-all
 *   FastAPI / Celery task listener pulling classification jobs.
 
 ---
+## Knowledge Graph (Graphify)
+This project features a Graphify-powered knowledge graph located in the `graphify-out/` directory.
+
+### Commands & Usage
+- **Query the codebase**: Run `graphify query "<your question>"` to trace concepts and code structures.
+- **Explain a concept**: Run `graphify explain "<concept>"` to get a detailed summary.
+- **Find paths**: Run `graphify path "<A>" "<B>"` to discover relationships between two symbols.
+- **Incremental update**: Run `graphify update .` to keep the graph in sync after editing code (AST-only, cost-free).
+
+### Artifacts & Visualizations
+- [graph.html](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/graphify-out/graph.html): Interactive graph visualization. Open directly in any browser.
+- [GRAPH_REPORT.md](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/graphify-out/GRAPH_REPORT.md): Text-based audit report including architectural hubs, communities, and potential knowledge gaps.
+
+---
 ## Author
 **William Steve Rodriguez Villamizar (wisrovi)**
 Principal Systems & Software Architect / Technology Evangelist
 [LinkedIn Profile](https://es.linkedin.com/in/wisrovi-rodriguez)
+
