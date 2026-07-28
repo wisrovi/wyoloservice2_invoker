@@ -229,11 +229,11 @@ class RunTraining:
                 remove=False,  # Don't remove yet so we can check status/logs if needed
                 privileged=True,
                 network_mode="host",
-                shm_size="16g",
+                shm_size=environments.get("WORKER_RAM_MEMORY", "16g"),
                 tty=False,  # Disable TTY to avoid multiplexing issues and ANSI codes
                 # Resource Limits
                 nano_cpus=int(cpu_limit * 1e9),
-                mem_limit="24g",
+                mem_limit=environments.get("WORKER_RAM_MEMORY", "12g"),
                 # Capabilities
                 cap_add=["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
                 # GPU Configuration

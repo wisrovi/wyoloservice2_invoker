@@ -8,5 +8,18 @@
         "run"
       ]
     }
+  },
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "read_file|list_directory",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.venv/bin/graphify hook-guard gemini"
+          }
+        ]
+      }
+    ]
   }
 }

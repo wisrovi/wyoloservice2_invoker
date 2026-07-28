@@ -1,0 +1,739 @@
+{
+  "nodes": [
+    {
+      "id": "docs_faq_faq",
+      "label": "FAQ Documentation",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/faq.rst",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_getting_started_gettingstarted",
+      "label": "Getting Started Documentation",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/getting_started.rst",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_index_index",
+      "label": "Documentation Index",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/index.rst",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_tutorials_tutorials",
+      "label": "Tutorials Documentation",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/tutorials.rst",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_01_architecture_and_backend_core_coreservice",
+      "label": "CoreService",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/01_Architecture_and_Backend_Core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Designed following domain-driven design principles to ensure high cohesion and low coupling."
+    },
+    {
+      "id": "extra_readmes_01_architecture_and_backend_core_databaseadapter",
+      "label": "DatabaseAdapter",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/01_Architecture_and_Backend_Core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_01_architecture_and_backend_core_ddd",
+      "label": "Domain-Driven Design Principles",
+      "file_type": "rationale",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/01_Architecture_and_Backend_Core.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_02_communication_flow_internal_component",
+      "label": "Internal Component",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/02_Communication_Flow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_02_communication_flow_external_service",
+      "label": "External Service",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/02_Communication_Flow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_03_microservice_design_api_boundaries",
+      "label": "API Boundaries",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/03_Microservice_Design.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_04_logic_design_algorithms",
+      "label": "Algorithms and Decision Trees",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/04_Logic_Design.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_05_data_diagrams_and_models_user_task",
+      "label": "User Task Relationship",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/05_Data_Diagrams_and_Models.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_06_usage_and_test_documentation_core_validation",
+      "label": "Invoker Core Validation",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/06_Usage_and_Test_Documentation.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_07_security_hardening_and_resiliency_loguru",
+      "label": "Loguru Integration",
+      "file_type": "rationale",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/07_Security_Hardening_and_Resiliency.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_07_security_hardening_and_resiliency_perimeter_security",
+      "label": "Perimeter Security",
+      "file_type": "rationale",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/07_Security_Hardening_and_Resiliency.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_08_deployment_ops_and_maintenance_deployment",
+      "label": "Docker/Proxmox Deployment Guidelines",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/08_Deployment_Ops_and_Maintenance.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "extra_readmes_09_context_state_of_the_art_and_research_competitive_solutions",
+      "label": "Problem Domain Analysis",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/09_Context_State_of_the_Art_and_Research.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "index_hive_web",
+      "label": "The Hive Portal",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "index_gpu_allocation",
+      "label": "GPU Allocation",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "index_samba_client",
+      "label": "Samba Client",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "index_state_machine",
+      "label": "State Machine",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "production_readme_main",
+      "label": "Production Invoker Readme",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/production/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "production_docker_compose_worker",
+      "label": "Worker Service",
+      "file_type": "code",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/production/docker-compose.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Configured with automatic restart, watchtower for auto-updates, and strict CPU limits (1 CPU, 300MB RAM) for resource isolation on GPU nodes."
+    },
+    {
+      "id": "production_docker_compose_watchtower",
+      "label": "Watchtower Service",
+      "file_type": "code",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/production/docker-compose.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "production_docker_compose_extras_dashboard",
+      "label": "Dashboard Service",
+      "file_type": "code",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/production/docker-compose.extras.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "production_docker_compose_extras_gradio_launcher",
+      "label": "Gradio Launcher Service",
+      "file_type": "code",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/production/docker-compose.extras.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "requirements_requirements",
+      "label": "Root Requirements",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_test_to_send_invoker_config",
+      "label": "Headless Test Configuration",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test/test_to_send_invoker.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "William Rodríguez - wisrovi",
+      "contributor": null
+    },
+    {
+      "id": "test_manual_readme_main",
+      "label": "Manual Test Readme",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_manual_readme_sender",
+      "label": "Test Sender (test_sender)",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_manual_readme_workerinv",
+      "label": "Worker Invoker (Celery Worker)",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_manual_readme_executor",
+      "label": "Worker Executor (YOLO Training)",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "rationale": "Simulates/executes YOLO training in an isolated Docker container managed dynamically by the worker invoker to prevent resource leakage on host."
+    },
+    {
+      "id": "test_manual_readme_redis",
+      "label": "Redis Message Queue",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_manual_readme_optuna",
+      "label": "Optuna DB",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_manual_readme_mlflow",
+      "label": "MLflow Tracking",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_manual_config_redis_celery",
+      "label": "Celery Connection Configuration",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/config.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_manual_docker_compose_sender",
+      "label": "Manual Test Sender Container",
+      "file_type": "code",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/docker-compose.yml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_manual_requirements_packages",
+      "label": "Manual Test Dependencies",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "test_manual_training_config_params",
+      "label": "Simplified Training and Optuna Parameters",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/training_config.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "test_user",
+      "contributor": null
+    },
+    {
+      "id": "test_to_send_invoker_config",
+      "label": "Headless Test Configuration Root",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_to_send_invoker.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "William Rodríguez - wisrovi",
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "docs_index_index",
+      "target": "docs_getting_started_gettingstarted",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/index.rst",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_index_index",
+      "target": "docs_tutorials_tutorials",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/index.rst",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_index_index",
+      "target": "docs_faq_faq",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/index.rst",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docs_index_index",
+      "target": "index_hive_web",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/index.rst",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "extra_readmes_01_architecture_and_backend_core_coreservice",
+      "target": "extra_readmes_01_architecture_and_backend_core_databaseadapter",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/01_Architecture_and_Backend_Core.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "extra_readmes_01_architecture_and_backend_core_coreservice",
+      "target": "extra_readmes_01_architecture_and_backend_core_ddd",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/01_Architecture_and_Backend_Core.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "extra_readmes_02_communication_flow_internal_component",
+      "target": "extra_readmes_02_communication_flow_external_service",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/extra_readmes/02_Communication_Flow.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "index_hive_web",
+      "target": "index_gpu_allocation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/index.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "index_hive_web",
+      "target": "index_samba_client",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/index.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "index_hive_web",
+      "target": "index_state_machine",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/index.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "production_readme_main",
+      "target": "production_docker_compose_worker",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/production/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_readme_main",
+      "target": "test_manual_readme_sender",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_readme_main",
+      "target": "test_manual_readme_workerinv",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_readme_main",
+      "target": "test_manual_readme_executor",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_readme_sender",
+      "target": "test_manual_readme_redis",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_readme_redis",
+      "target": "test_manual_readme_workerinv",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_readme_workerinv",
+      "target": "test_manual_readme_executor",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_readme_executor",
+      "target": "test_manual_readme_workerinv",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_readme_workerinv",
+      "target": "test_manual_readme_optuna",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_readme_workerinv",
+      "target": "test_manual_readme_mlflow",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_config_redis_celery",
+      "target": "test_manual_readme_redis",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/config.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_docker_compose_sender",
+      "target": "test_manual_readme_sender",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/docker-compose.yml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_test_to_send_invoker_config",
+      "target": "test_to_send_invoker_config",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test/test_to_send_invoker.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "test_manual_training_config_params",
+      "target": "test_to_send_invoker_config",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/training_config.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "production_docker_compose_worker",
+      "target": "test_manual_docker_compose_sender",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/production/docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "requirements_requirements",
+      "target": "test_manual_requirements_packages",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/requirements.txt",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "manual_testing_flow",
+      "label": "Manual Invoker-Executor Test Flow",
+      "nodes": [
+        "test_manual_readme_sender",
+        "test_manual_readme_workerinv",
+        "test_manual_readme_executor"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test_manual/README.md"
+    },
+    {
+      "id": "hive_architecture_components",
+      "label": "Hive Invoker Core Responsibilities",
+      "nodes": [
+        "index_gpu_allocation",
+        "index_samba_client",
+        "index_state_machine"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/index.html"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

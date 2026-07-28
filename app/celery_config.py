@@ -56,7 +56,7 @@ def print_table() -> None:
     )
     init_table.add_row(
         "[bold cyan]Host User (USER):[/bold cyan]",
-        environments.get("USER", "N/A"),
+        environments.get("WORKER_HOSTNAME", "N/A"),
     )
     init_table.add_row(
         "[bold cyan]Worker Host IP (WORKER_HOST):[/bold cyan]",
@@ -64,7 +64,7 @@ def print_table() -> None:
     )
     init_table.add_row(
         "[bold cyan]CPU Cores:[/bold cyan]",
-        f"[bold green]{environments.get('WORKER_CPU_CORES_AVAILABLE', 'N/A')}[/bold green]"
+        f"[bold green]{environments.get('WORKER_RAM_MEMORY', 'N/A')}[/bold green]"
     )
     init_table.add_row(
         "[bold cyan]RAM Memory (WORKER_RAM_MEMORY):[/bold cyan]",
@@ -73,6 +73,10 @@ def print_table() -> None:
     init_table.add_row(
         "[bold cyan]Max GPU Limit % (MAX_GPU):[/bold cyan]",
         environments.get("MAX_GPU", "N/A"),
+    )
+    init_table.add_row(
+        "[bold cyan]GPU Ref: % (WORKER_GPU_MODEL):[/bold cyan]",
+        f'{environments.get("WORKER_GPU_MODEL", "N/A")}/{environments.get("WORKER_GPU_MEMORY", "N/A")}',
     )
     init_table.add_row(
         "[bold cyan]Concurrent Trains (NUM_CURRENT_TRAIN):[/bold cyan]",

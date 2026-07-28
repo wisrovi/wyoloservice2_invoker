@@ -1,0 +1,743 @@
+{
+  "nodes": [
+    {
+      "id": "_agents_rules_graphify",
+      "label": "Graphify Rules",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.agents/rules/graphify.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "_agents_workflows_graphify",
+      "label": "Graphify Workflow",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.agents/workflows/graphify.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "_pre_commit_config",
+      "label": "Pre-commit Configuration",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.pre-commit-config.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "_pre_commit_config_mypy",
+      "label": "MyPy Static Type Checker Check",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.pre-commit-config.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "_pre_commit_config_ruff",
+      "label": "Ruff Linter and Formatter Check",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.pre-commit-config.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "_pre_commit_config_pylint",
+      "label": "Pylint Static Analysis Check",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.pre-commit-config.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "_readthedocs",
+      "label": "ReadTheDocs Configuration",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.readthedocs.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "changelog",
+      "label": "Changelog",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/CHANGELOG.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "code_of_conduct",
+      "label": "Contributor Covenant Code of Conduct",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/CODE_OF_CONDUCT.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "contributing",
+      "label": "Contributing Guidelines",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/CONTRIBUTING.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "gemini",
+      "label": "Gemini System Rules",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/GEMINI.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "readme",
+      "label": "GPU Invoker (Hive Worker) README",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "William Steve Rodriguez Villamizar",
+      "contributor": null
+    },
+    {
+      "id": "readme_gpu_invoker",
+      "label": "GPU Invoker Celery Worker",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "William Steve Rodriguez Villamizar",
+      "contributor": null
+    },
+    {
+      "id": "readme_celery_queues",
+      "label": "Celery Queues",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "William Steve Rodriguez Villamizar",
+      "contributor": null
+    },
+    {
+      "id": "roadmap",
+      "label": "GPU Invoker Roadmap",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/ROADMAP.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "security",
+      "label": "Security Policy",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/SECURITY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ui_gradio_launcher_examples_classification_config_train",
+      "label": "YOLO Classification config_train.yaml",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/gradio_launcher/examples/classification/config_train.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "William Rodriguez",
+      "contributor": null
+    },
+    {
+      "id": "ui_gradio_launcher_examples_detection_config_train",
+      "label": "YOLO Detection config_train.yaml",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/gradio_launcher/examples/detection/config_train.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "William Rodriguez",
+      "contributor": null
+    },
+    {
+      "id": "ui_gradio_launcher_examples_segmentation_config_train",
+      "label": "YOLO Segmentation config_train.yaml",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/gradio_launcher/examples/segmentation/config_train.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "Manu G",
+      "contributor": null
+    },
+    {
+      "id": "ui_gradio_launcher_requirements",
+      "label": "Gradio Launcher Requirements",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/gradio_launcher/requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ui_simple_dashboard_readme",
+      "label": "Worker Dashboard README",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/simple_dashboard/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ui_simple_dashboard_requirements",
+      "label": "Worker Dashboard Requirements",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/simple_dashboard/requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ui_simple_dashboard_templates_index",
+      "label": "Dashboard Main Template",
+      "file_type": "code",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/simple_dashboard/templates/index.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "app_readme",
+      "label": "Worker Invoker Component README",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "app_readme_pipeline",
+      "label": "ML Optimization Multi-Stage Pipeline",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "app_config",
+      "label": "Worker Configuration (config.yaml)",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/config.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "app_requirements",
+      "label": "Worker Invoker Requirements",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker_compose",
+      "label": "Docker Compose Orchestration Stack",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker_compose_worker",
+      "label": "Celery Worker Service",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker_compose_dashboard",
+      "label": "Simple Dashboard Service",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker_compose_gradio_launcher",
+      "label": "Gradio Launcher Service",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker_images",
+      "label": "Docker Images Metadata",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker_images.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker_images_worker_invoker",
+      "label": "Worker Invoker Docker Image",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker_images.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docker_images_worker_executor",
+      "label": "Worker Executor Docker Image",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker_images.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_api_reference",
+      "label": "API Reference Documentation RST",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/api_reference.rst",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "docs_bibliography",
+      "label": "Bibliography Documentation RST",
+      "file_type": "document",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docs/bibliography.rst",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_optuna_tpe_sampler",
+      "label": "Optuna TPESampler",
+      "file_type": "concept",
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/gradio_launcher/examples/classification/config_train.yaml",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "_agents_workflows_graphify",
+      "target": "_agents_rules_graphify",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.agents/workflows/graphify.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "gemini",
+      "target": "_agents_rules_graphify",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/GEMINI.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "contributing",
+      "target": "_pre_commit_config",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/CONTRIBUTING.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "_pre_commit_config",
+      "target": "contributing",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.pre-commit-config.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "_pre_commit_config",
+      "target": "_pre_commit_config_mypy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.pre-commit-config.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "_pre_commit_config",
+      "target": "_pre_commit_config_ruff",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.pre-commit-config.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "_pre_commit_config",
+      "target": "_pre_commit_config_pylint",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.pre-commit-config.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "_readthedocs",
+      "target": "docs_api_reference",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.readthedocs.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "_readthedocs",
+      "target": "docs_bibliography",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/.readthedocs.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme",
+      "target": "docker_compose",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme",
+      "target": "changelog",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme",
+      "target": "app_readme",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme",
+      "target": "readme_gpu_invoker",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "readme",
+      "target": "readme_celery_queues",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker_compose",
+      "target": "app_readme",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker_compose",
+      "target": "ui_simple_dashboard_readme",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker_compose",
+      "target": "ui_gradio_launcher_requirements",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker_compose_worker",
+      "target": "app_config",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker_compose_dashboard",
+      "target": "ui_simple_dashboard_readme",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker_compose_gradio_launcher",
+      "target": "ui_gradio_launcher_requirements",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker_images_worker_invoker",
+      "target": "readme",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker_images.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "docker_images_worker_invoker",
+      "target": "docker_compose_worker",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker_images.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_readme_pipeline",
+      "target": "docker_images_worker_executor",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ui_simple_dashboard_readme",
+      "target": "docker_compose",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/simple_dashboard/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ui_simple_dashboard_readme",
+      "target": "readme_celery_queues",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/simple_dashboard/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ui_simple_dashboard_templates_index",
+      "target": "ui_simple_dashboard_readme",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/simple_dashboard/templates/index.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ui_gradio_launcher_examples_classification_config_train",
+      "target": "concept_optuna_tpe_sampler",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/gradio_launcher/examples/classification/config_train.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ui_gradio_launcher_examples_detection_config_train",
+      "target": "concept_optuna_tpe_sampler",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/gradio_launcher/examples/detection/config_train.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "ui_gradio_launcher_examples_segmentation_config_train",
+      "target": "concept_optuna_tpe_sampler",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/gradio_launcher/examples/segmentation/config_train.yaml",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "security",
+      "target": "changelog",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/SECURITY.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "yolo_config_examples",
+      "label": "YOLO Task Configurations",
+      "nodes": [
+        "ui_gradio_launcher_examples_classification_config_train",
+        "ui_gradio_launcher_examples_detection_config_train",
+        "ui_gradio_launcher_examples_segmentation_config_train"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/UI/gradio_launcher/examples/classification/config_train.yaml"
+    },
+    {
+      "id": "docker_compose_services",
+      "label": "Invoker Stack Services",
+      "nodes": [
+        "docker_compose_worker",
+        "docker_compose_dashboard",
+        "docker_compose_gradio_launcher"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
