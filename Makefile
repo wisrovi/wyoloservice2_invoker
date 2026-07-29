@@ -56,7 +56,7 @@ start_gradio:
 
 
 publish: stop build start stop
-	docker push wisrovi/train_service:worker_invoker_v2.1.0
+	docker push wisrovi/train_service:worker_invoker_v1.3.0
 
 pause-public-queues:
 	@sh scripts/pause_public_queues.sh
