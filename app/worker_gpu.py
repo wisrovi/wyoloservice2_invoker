@@ -26,7 +26,7 @@ from states.llm_analizer import LlmAnalizer
 from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
-VERSION = "v1.3.2"
+VERSION = "v1.3.3"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
