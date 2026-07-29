@@ -45,10 +45,11 @@ make pause-public-queues
 # Resume public queues to listen to all queues again
 make resume-public-queues
 
-# Remotely pause public queues for a specific worker node from the outside (Redis connection)
-python3 test/manage_remote_worker.py --ip 192.168.1.68 --action pause
+# Remotely pause public queues for a specific worker node with options (temporal or perpetual)
+python3 test/manage_remote_worker.py --ip 192.168.1.68 --action pause --mode temporal --hours 4
+python3 test/manage_remote_worker.py --ip 192.168.1.68 --action pause --mode perpetual
 
-# Remotely resume public queues for a specific worker node from the outside
+# Remotely resume public queues for a specific worker node
 python3 test/manage_remote_worker.py --ip 192.168.1.68 --action resume
 
 # Stop local development service
@@ -62,7 +63,11 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 2.0.0 (Current Release) - 2026-07-03
+### Version 2.1.0 (Current Release) - 2026-07-29
+*   **Persistent Pause Options (Temporal & Perpetual):** Upgraded [app/worker_gpu.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/worker_gpu.py) to monitor dynamic state keys in Redis. Added support for temporal pause (automatically resuming after X hours, default 4 hours configurable via `pause_duration_hours` in [app/config.yaml](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/config.yaml)) and perpetual pause (which persists across worker restarts).
+*   **Remote Worker Management Upgrade:** Enhanced [test/manage_remote_worker.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test/manage_remote_worker.py) to support `--mode` (`temporal` or `perpetual`) and `--hours` CLI arguments to set persistent pause states in Redis.
+
+### Version 2.0.0 - 2026-07-03
 *   **Watchtower API Compatibility Fix:** Configured `DOCKER_API_VERSION=1.44` for the watchtower service in both active host deployment `/home/wisrovi/scripts/docker-compose.yaml` and repository template [production/docker-compose.yaml](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/production/docker-compose.yaml) to resolve the Docker API protocol version mismatch error.
 *   **Orphan Container Cleanup Rule:** Added the `stop-all` command in the [Makefile](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/Makefile) to force stop and clean up programmatically created executor containers (`wyolo_executor_*`) and instances running under the systemd production scope.
 *   **Celery Node Hostname Fix:** Assigned explicit `hostname: wyolo_invoker_${WORKER_HOST}` in [docker-compose.yaml](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/docker-compose.yaml) to ensure Celery registers the worker with its actual IP address instead of Docker's random short container ID hostname (e.g., `celery@45fa662f178a`).
