@@ -2,6 +2,9 @@
 
 All project images follow a standardized naming pattern for consistency across registries and deployments.
 
+> [!IMPORTANT]
+> The **Worker Invoker** image (`wisrovi/train_service:worker_invoker_v1.0.0`) must ALWAYS keep the `v1.0.0` tag in Docker Hub. This ensures **Watchtower** automatically deploys updates to all 70+ running invoker servers in production. Internal code changes use software version tags (such as `v1.3.0`) in the code, but are always built into the physical `v1.0.0` Docker tag.
+
 ## Pattern
 `wisrovi/train_service:xxx_vzzz`
 
