@@ -28,11 +28,41 @@ FILE = "config_train.yaml"
 YAML_PATH = os.path.join(BASE_DIR, FILE)
 
 
-def get_system_limits(config: dict[str, Any]) -> tuple[float, int]:
+def parse_memory_to_bytes(mem_str: str) -> int:
+    """Parses a memory limit string (e.g., '28g', '512m') to bytes."""
+    mem_str = mem_str.strip().lower()
+    if not mem_str:
+        raise ValueError("Empty memory string")
+    
+    # Extract numeric part and unit
+    units = {
+        'b': 1,
+        'k': 1024,
+        'm': 1024**2,
+        'g': 1024**3,
+        't': 1024**4
+    }
+    
+    # Find where the unit starts (if any)
+    num_chars = []
+    unit_char = 'b'
+    for char in mem_str:
+        if char.isdigit() or char == '.':
+            num_chars.append(char)
+        elif char in units:
+            unit_char = char
+            break
+            
+    num_val = float("".join(num_chars))
+    return int(num_val * units[unit_char])
+
+
+def get_system_limits(config: dict[str, Any], environments: dict[str, str]) -> tuple[float, int]:
     """Calculates the hardware limits based on the host system and config.
 
     Args:
         config (Dict[str, Any]): The worker configuration dictionary.
+        environments (Dict[str, str]): Loaded environment variables.
 
     Returns:
         tuple: (cpu_limit, mem_limit_bytes)
@@ -40,8 +70,13 @@ def get_system_limits(config: dict[str, Any]) -> tuple[float, int]:
     cpu_pct = float(config.get("cpu_limit_pct", 0.85))
     mem_pct = float(config.get("mem_limit_pct", 0.60))
 
-    # 1. CPU: Priority: Environment variable (WORKER_CPU_CORES_AVAILABLE) > Percentage of total cores
-    cores_env = os.getenv("WORKER_CPU_CORES_AVAILABLE")
+    # 1. CPU: Priority: WORKER_CPU_CORES_AVAILABLE > WORKER_CPU_CORES > Percentage of total cores
+    cores_env = (
+        environments.get("WORKER_CPU_CORES_AVAILABLE")
+        or environments.get("WORKER_CPU_CORES")
+        or os.getenv("WORKER_CPU_CORES_AVAILABLE")
+        or os.getenv("WORKER_CPU_CORES")
+    )
     if cores_env:
         try:
             cpu_limit = float(cores_env)
@@ -52,9 +87,20 @@ def get_system_limits(config: dict[str, Any]) -> tuple[float, int]:
         total_cpus = multiprocessing.cpu_count()
         cpu_limit = float(total_cpus * cpu_pct)
 
-    # 2. RAM: Percentage of total host memory
-    total_mem_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
-    mem_limit_bytes = int(total_mem_bytes * mem_pct)
+    # 2. RAM: Priority: WORKER_RAM_MEMORY > Percentage of total host memory
+    ram_env = (
+        environments.get("WORKER_RAM_MEMORY")
+        or os.getenv("WORKER_RAM_MEMORY")
+    )
+    if ram_env:
+        try:
+            mem_limit_bytes = parse_memory_to_bytes(ram_env)
+        except Exception:
+            total_mem_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+            mem_limit_bytes = int(total_mem_bytes * mem_pct)
+    else:
+        total_mem_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+        mem_limit_bytes = int(total_mem_bytes * mem_pct)
 
     return cpu_limit, mem_limit_bytes
 
@@ -100,22 +146,6 @@ class RunTraining:
             43200,
         )
 
-        # Calculate hardware limits dynamically from config
-        cpu_limit, mem_limit = get_system_limits(self.config)
-
-        print(
-            f"--- [INVOKER:{invoker_name}] Launching executor: {executor_name} with limits "
-            f"(CPU: {cpu_limit:.2f}, RAM: {mem_limit // (1024**2)}MB) ---"
-            f"Executor timeout: {timeout_seconds}s ---"
-        )
-
-        try:
-            client = docker.from_env()
-        except Exception as exc:
-            worker_name = os.getenv("WORKER_NAME", "unknown")
-            print(f"--- [INVOKER:{worker_name}] Unexpected error: {exc} ---")
-            raise exc
-
         def load_env_file(path: str) -> dict[str, str]:
             envs = {}
             if os.path.exists(path):
@@ -147,6 +177,22 @@ class RunTraining:
                 "PYTHONUNBUFFERED": "1",
             }
         )
+
+        # Calculate hardware limits dynamically from config and environment variables
+        cpu_limit, mem_limit = get_system_limits(self.config, environments)
+
+        print(
+            f"--- [INVOKER:{invoker_name}] Launching executor: {executor_name} with limits "
+            f"(CPU: {cpu_limit:.2f}, RAM: {mem_limit // (1024**2)}MB) ---"
+            f"Executor timeout: {timeout_seconds}s ---"
+        )
+
+        try:
+            client = docker.from_env()
+        except Exception as exc:
+            worker_name = os.getenv("WORKER_NAME", "unknown")
+            print(f"--- [INVOKER:{worker_name}] Unexpected error: {exc} ---")
+            raise exc
 
         try:
             
@@ -229,11 +275,11 @@ class RunTraining:
                 remove=False,  # Don't remove yet so we can check status/logs if needed
                 privileged=True,
                 network_mode="host",
-                shm_size=environments.get("WORKER_RAM_MEMORY", "16g"),
+                shm_size=mem_limit,
                 tty=False,  # Disable TTY to avoid multiplexing issues and ANSI codes
                 # Resource Limits
                 nano_cpus=int(cpu_limit * 1e9),
-                mem_limit=environments.get("WORKER_RAM_MEMORY", "12g"),
+                mem_limit=mem_limit,
                 # Capabilities
                 cap_add=["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
                 # GPU Configuration
