@@ -19,3 +19,5 @@ worker:
   cpu_limit_pct: 0.85   # Max % of cores to use (0.0 to 1.0)
   mem_limit_pct: 0.60   # Max % of RAM to use (0.0 to 1.0)
   results_dir: "/home/wyolo/train_service_results"
+  pause_duration_hours: 4 # Default duration for temporal pause
+
