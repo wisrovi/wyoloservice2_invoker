@@ -34,6 +34,9 @@ make install || pip install -r requirements.txt
 ## Configuration
 Configuration is managed via `control_host.env` and `config.yaml` files. Never commit secrets directly to the codebase.
 
+> [!IMPORTANT]
+> For compatibility with **Watchtower** and auto-updates across the 70+ active host deployments, the physical Docker Hub image tag must remain strictly **`wisrovi/train_service:worker_invoker_v1.0.0`**, regardless of the internal logical version (e.g. `v1.3.0`).
+
 ## Usage
 ```bash
 # Start the service
