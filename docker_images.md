@@ -14,7 +14,7 @@ All project images follow a standardized naming pattern for consistency across r
 | :--- | :--- | :--- |
 | **Control Server** | `wisrovi/train_service:control_server_v1.0.0` | FastAPI Gateway + Gradio Interface |
 | **Manager** | `wisrovi/train_service/manager:orchestrator_v1.0.0` | Optuna-based orchestrator (Celery worker) |
-| **Worker Invoker** | `wisrovi/train_service:worker_invoker_v1.0.0` | Celery worker that manages Docker containers |
+| **Worker Invoker** | `wisrovi/train_service:worker_invoker_v2.1.0` | Celery worker that manages Docker containers |
 | **Worker Executor** | `wisrovi/train_service:worker_executor_v1.0.0` | Ephemeral container for YOLO training |
 | **NeuralForgeAI** | `wisrovi/train_service:w_darwin_ops_frontend_v1.1.0` | React frontend UI |
 | **Redis** | `redis:7.2` | Message broker (standard image) |
@@ -33,8 +33,8 @@ docker build -t wisrovi/train_service/manager:orchestrator_v1.0.0 ./wyoloservice
 docker push wisrovi/train_service/manager:orchestrator_v1.0.0
 
 # Worker Invoker
-docker build -t wisrovi/train_service:worker_invoker_v1.0.0 ./wyoloservice2_invoker
-docker push wisrovi/train_service:worker_invoker_v1.0.0
+docker build -t wisrovi/train_service:worker_invoker_v2.1.0 ./wyoloservice2_invoker
+docker push wisrovi/train_service:worker_invoker_v2.1.0
 
 # Worker Executor (YOLO Training Container)
 docker build -t wisrovi/train_service:worker_executor_v1.0.0 ./wyoloservice2_worker/executor
@@ -57,7 +57,7 @@ services:
     image: wisrovi/train_service/manager:orchestrator_v1.0.0
 
   worker:
-    image: wisrovi/train_service:worker_invoker_v1.0.0
+    image: wisrovi/train_service:worker_invoker_v2.1.0
 
   executor:
     image: wisrovi/train_service:worker_executor_v1.0.0
