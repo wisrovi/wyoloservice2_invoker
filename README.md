@@ -66,7 +66,7 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.3.0 (Current Release) - 2026-07-29
+### Version 1.3.1 (Current Release) - 2026-07-29
 *   **Persistent Pause Options (Temporal & Perpetual):** Upgraded [app/worker_gpu.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/worker_gpu.py) to monitor dynamic state keys in Redis. Added support for temporal pause (automatically resuming after X hours, default 4 hours configurable via `pause_duration_hours` in [app/config.yaml](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/config.yaml)) and perpetual pause (which persists across worker restarts).
 *   **Remote Worker Management Upgrade:** Enhanced [test/manage_remote_worker.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/test/manage_remote_worker.py) to support `--mode` (`temporal` or `perpetual`) and `--hours` CLI arguments to set persistent pause states in Redis.
 
