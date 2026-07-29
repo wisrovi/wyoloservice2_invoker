@@ -66,7 +66,10 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.3.2 (Current Release) - 2026-07-29
+### Version 1.3.3 (Current Release) - 2026-07-29
+*   **Enforce Minimum SHM Memory Rule:** Implemented specific business logic to set shared memory (`shm_size`) to a minimum of 16 GB. If the user allocates more RAM in `WORKER_RAM_MEMORY` within `user.env` (e.g. `28g`), that larger value is applied for both RAM and SHM; otherwise, SHM defaults to `16g` while RAM respects the custom lower limit.
+
+### Version 1.3.2 - 2026-07-29
 *   **Executor Resource Allocation Fix:** Resolved inconsistencies when mapping CPU and RAM limits to the ephemeral Executor container in [app/states/run_training.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/states/run_training.py). Unified resource detection to support both `WORKER_CPU_CORES_AVAILABLE` and `WORKER_CPU_CORES` across development and production hosts. Integrated robust memory parsing (supporting units like `28g`) to pass strict byte counts for container limits (`mem_limit` and `shm_size`), aligning logs with Docker runtime restrictions.
 
 ### Version 1.3.1 - 2026-07-29
