@@ -266,16 +266,20 @@ class RunTraining:
             except Exception:
                 pass
 
+            # Calculate shm_size: minimum 16g (17179869184 bytes), or use mem_limit if mem_limit > 16g
+            min_shm_bytes = 16 * 1024**3
+            shm_size_bytes = max(min_shm_bytes, mem_limit)
+
             container = client.containers.run(
                 image=image_name,
-                # pull="always",  # only for download the image from docker hub (obligatory for first time)
+                # pull="always",  # only for download the image from docker hub (obligatory for first time)
                 name=executor_name,
                 hostname=environments.get("USER", "default_user"),
                 detach=True,
                 remove=False,  # Don't remove yet so we can check status/logs if needed
                 privileged=True,
                 network_mode="host",
-                shm_size=mem_limit,
+                shm_size=shm_size_bytes,
                 tty=False,  # Disable TTY to avoid multiplexing issues and ANSI codes
                 # Resource Limits
                 nano_cpus=int(cpu_limit * 1e9),
