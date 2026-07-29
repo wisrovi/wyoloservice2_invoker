@@ -8,6 +8,8 @@ It only requires network access to the central Redis broker.
 import argparse
 import os
 import sys
+import time
+import redis
 from celery import Celery
 
 # Default settings
@@ -23,8 +25,8 @@ def get_celery_app(redis_host, redis_port, redis_db):
     return Celery("ml_cluster", broker=redis_url, backend=redis_url)
 
 
-def manage_worker(worker_ip, action, redis_host, redis_port, redis_db):
-    """Sends cancel_consumer or add_consumer commands to a specific worker node."""
+def manage_worker(worker_ip, action, redis_host, redis_port, redis_db, mode="temporal", hours=4):
+    """Sends cancel_consumer or add_consumer commands to a specific worker node and updates state in Redis."""
     app = get_celery_app(redis_host, redis_port, redis_db)
     
     # Format the target node name
@@ -36,10 +38,40 @@ def manage_worker(worker_ip, action, redis_host, redis_port, redis_db):
     print(f"📡 Remote Queue Controller")
     print(f"   Redis Broker : redis://{redis_host}:{redis_port}/{redis_db}")
     print(f"   Target Node  : {node_name}")
-    print(f"   Action       : {'PAUSE (Private Only)' if action == 'pause' else 'RESUME (Listen to All)'}")
+    if action == "pause":
+        action_desc = f"PAUSE (Private Only - Mode: {mode.upper()}"
+        if mode == "temporal":
+            action_desc += f", Duration: {hours} hours"
+        action_desc += ")"
+    else:
+        action_desc = "RESUME (Listen to All)"
+    print(f"   Action       : {action_desc}")
     print("=" * 60)
     
-    # Send control command to destination node
+    # 1. Update State in Redis
+    try:
+        redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
+        state_key = f"invoker:{worker_ip}:pause_state"
+        until_key = f"invoker:{worker_ip}:pause_until"
+        
+        if action == "pause":
+            if mode == "temporal":
+                pause_until = time.time() + (hours * 3600)
+                redis_client.set(state_key, "paused_temporal")
+                redis_client.set(until_key, str(pause_until))
+                print(f"   [Redis] Set state to 'paused_temporal' until timestamp {pause_until}")
+            else:
+                redis_client.set(state_key, "paused_perpetual")
+                redis_client.delete(until_key)
+                print(f"   [Redis] Set state to 'paused_perpetual'")
+        else:
+            redis_client.set(state_key, "active")
+            redis_client.delete(until_key)
+            print(f"   [Redis] Set state to 'active' (resumed)")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not update pause state in Redis: {e}")
+        
+    # 2. Send control command to destination node (for immediate effect if online)
     results = []
     for queue in public_queues:
         if action == "pause":
@@ -74,18 +106,24 @@ def manage_worker(worker_ip, action, redis_host, redis_port, redis_db):
                     print(f"   • Queue '{queue}': {item}")
                     success = True
         else:
-            print(f"   • Queue '{queue}': No response from node (node might be offline)")
+            print(f"   • Queue '{queue}': No response from node (node might be offline, state saved in Redis)")
+            # If the node is offline, we consider it a soft success because the state is persisted in Redis
+            # and the node will apply the pause upon startup.
+            success = True
             
     print("-" * 60)
     if success:
         if action == "pause":
-            print(f"✅ Success: Node '{node_name}' is now OUT of public circulation.")
+            if mode == "temporal":
+                print(f"✅ Success: Node '{node_name}' is now OUT of public circulation (Temporal: {hours}h).")
+            else:
+                print(f"✅ Success: Node '{node_name}' is now OUT of public circulation (Perpetual).")
             print(f"   It will only consume from its private queue ({worker_ip}).")
         else:
             print(f"✅ Success: Node '{node_name}' is now BACK in public circulation.")
             print(f"   It will consume from both public and private queues.")
     else:
-        print("❌ Failed: No responsive workers found. Check the worker IP and connection.")
+        print("❌ Failed: Could not process request. Check connection.")
         sys.exit(1)
 
 
@@ -103,6 +141,18 @@ def main():
         choices=["pause", "resume"],
         required=True,
         help="Action to perform: 'pause' (out of public queues) or 'resume' (back to public queues)"
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["temporal", "perpetual"],
+        default="temporal",
+        help="Pause mode: 'temporal' (resume after X hours) or 'perpetual' (wait for manual resume)"
+    )
+    parser.add_argument(
+        "--hours",
+        type=float,
+        default=4.0,
+        help="Number of hours for temporal pause (default: 4.0)"
     )
     parser.add_argument(
         "--redis-host",
@@ -129,7 +179,9 @@ def main():
         action=args.action,
         redis_host=args.redis_host,
         redis_port=args.redis_port,
-        redis_db=args.redis_db
+        redis_db=args.redis_db,
+        mode=args.mode,
+        hours=args.hours
     )
 
 
