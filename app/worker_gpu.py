@@ -7,6 +7,7 @@ Executor container, and reports results back to the Manager.
 
 import json
 import os
+import threading
 import time
 from datetime import datetime
 from typing import Any, Dict
@@ -15,6 +16,7 @@ import optuna
 import redis
 import yaml
 from celery import Task
+from celery.signals import worker_ready
 from celery_config import app
 from rich.console import Console
 from rich.panel import Panel
@@ -413,3 +415,83 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
             except Exception as e:
                 print(f"Warning: Could not log error to Redis: {e}")
         raise exc
+
+
+def pause_monitor_thread(app_inst, node_name: str, private_queue_ip: str, default_hours: float):
+    """Monitors the pause state in Redis and cancels/adds public queues dynamically."""
+    print(f"[PAUSE MONITOR] Starting monitor thread for node: {node_name} (IP: {private_queue_ip})")
+    
+    # Celery public queues to manage
+    public_queues = ["gpus_high", "gpus_medium", "gpus_low"]
+    
+    # Start as active
+    public_queues_active = True
+    
+    while True:
+        try:
+            # We connect/reconnect each time or reuse connection
+            redis_client = redis.from_url(app_inst.conf.broker_url)
+            
+            state_key = f"invoker:{private_queue_ip}:pause_state"
+            until_key = f"invoker:{private_queue_ip}:pause_until"
+            
+            state_bytes = redis_client.get(state_key)
+            state = state_bytes.decode("utf-8") if state_bytes else "active"
+            
+            now = time.time()
+            
+            # Check temporal pause expiration
+            if state == "paused_temporal":
+                until_bytes = redis_client.get(until_key)
+                if until_bytes:
+                    pause_until = float(until_bytes.decode("utf-8"))
+                    if now >= pause_until:
+                        # Expiró la pausa temporal
+                        redis_client.set(state_key, "active")
+                        redis_client.delete(until_key)
+                        state = "active"
+                        print(f"[PAUSE MONITOR] Temporal pause expired. Activating node {node_name}")
+                else:
+                    # Si está en paused_temporal pero no tiene hasta cuándo,
+                    # por seguridad lo reactivamos.
+                    redis_client.set(state_key, "active")
+                    state = "active"
+            
+            # Apply pause or active state
+            if state in ("paused_perpetual", "paused_temporal"):
+                if public_queues_active:
+                    print(f"[PAUSE MONITOR] Node {node_name} entering PAUSE. Cancelling public queues...")
+                    for q in public_queues:
+                        app_inst.control.cancel_consumer(q, destination=[node_name])
+                    public_queues_active = False
+            else:  # active o cualquier otra cosa
+                if not public_queues_active:
+                    print(f"[PAUSE MONITOR] Node {node_name} entering ACTIVE. Resuming public queues...")
+                    for q in public_queues:
+                        app_inst.control.add_consumer(q, destination=[node_name])
+                    public_queues_active = True
+                    
+        except Exception as e:
+            print(f"[PAUSE MONITOR] Error in monitor loop: {e}")
+            
+        time.sleep(10)
+
+
+@worker_ready.connect
+def setup_pause_monitor(sender=None, **kwargs):
+    """Initializes the background pause monitor thread when the worker is ready."""
+    if sender is None:
+        return
+        
+    node_name = sender.hostname
+    # Get the worker host IP from PRIVATE_QUEUE environment or sender name
+    private_queue_ip = os.getenv("WORKER_HOST", "unknown")
+    default_hours = float(CONFIG.get("pause_duration_hours", 4))
+    
+    t = threading.Thread(
+        target=pause_monitor_thread,
+        args=(app, node_name, private_queue_ip, default_hours),
+        daemon=True
+    )
+    t.start()
+
