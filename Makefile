@@ -31,7 +31,7 @@ user.env:
 
 
 config.py:
-	python3 -m pip install customtkinter
+	python3 -m pip install customtkinter --break-system-packages
 	python3 production/config.py
 
 
