@@ -256,15 +256,40 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
     if study_id:
         try:
             redis_client = redis.from_url(app.conf.broker_url)
+            # Retrieve host environment variables for richer telemetry
+            worker_host = os.getenv("WORKER_HOST", "unknown")
+            worker_hostname = os.getenv("WORKER_HOSTNAME", "unknown")
+            worker_os = os.getenv("WORKER_OS", "unknown")
+            worker_cpus = os.getenv("WORKER_CPU_CORES", "unknown")
+            worker_gpu_count = os.getenv("WORKER_GPU_COUNT", "0")
+            worker_gpu_model = os.getenv("WORKER_GPU_MODEL", "unknown")
+
+            invoker_details = {
+                "invoker_queue": invoker_name,
+                "worker_host": worker_host,
+                "worker_hostname": worker_hostname,
+                "worker_os": worker_os,
+                "worker_cpu_cores": worker_cpus,
+                "worker_gpu_count": worker_gpu_count,
+                "worker_gpu_model": worker_gpu_model,
+                "timestamp": time.time(),
+            }
+
             active_info = {
                 "invoker": invoker_name,
                 "trial_id": self.request.id,
                 "start_time": time.time(),
+                "details": invoker_details,
             }
             redis_client.set(
                 f"study:{study_id}:active_trial", json.dumps(active_info), ex=3600
             )
-            redis_client.set(f"study:{study_id}:invoker", invoker_name, ex=86400)
+            # Store full JSON details in a dedicated key
+            redis_client.set(f"study:{study_id}:invoker_details", json.dumps(invoker_details), ex=86400)
+            # Store an enriched, readable string in the classic key for UI compatibility
+            invoker_readable = f"{invoker_name} (IP: {worker_host} | Host: {worker_hostname})"
+            redis_client.set(f"study:{study_id}:invoker", invoker_readable, ex=86400)
+
             redis_client.sadd(f"study:{study_id}:all_invokers", invoker_name)
             redis_client.expire(f"study:{study_id}:all_invokers", 86400)
         except Exception as e:
@@ -362,15 +387,40 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
     if study_id:
         try:
             redis_client = redis.from_url(app.conf.broker_url)
+            # Retrieve host environment variables for richer telemetry
+            worker_host = os.getenv("WORKER_HOST", "unknown")
+            worker_hostname = os.getenv("WORKER_HOSTNAME", "unknown")
+            worker_os = os.getenv("WORKER_OS", "unknown")
+            worker_cpus = os.getenv("WORKER_CPU_CORES", "unknown")
+            worker_gpu_count = os.getenv("WORKER_GPU_COUNT", "0")
+            worker_gpu_model = os.getenv("WORKER_GPU_MODEL", "unknown")
+
+            invoker_details = {
+                "invoker_queue": invoker_name,
+                "worker_host": worker_host,
+                "worker_hostname": worker_hostname,
+                "worker_os": worker_os,
+                "worker_cpu_cores": worker_cpus,
+                "worker_gpu_count": worker_gpu_count,
+                "worker_gpu_model": worker_gpu_model,
+                "timestamp": time.time(),
+            }
+
             active_info = {
                 "invoker": invoker_name,
                 "trial_id": self.request.id,
                 "start_time": time.time(),
+                "details": invoker_details,
             }
             redis_client.set(
                 f"study:{study_id}:active_trial", json.dumps(active_info), ex=3600
             )
-            redis_client.set(f"study:{study_id}:invoker", invoker_name, ex=86400)
+            # Store full JSON details in a dedicated key
+            redis_client.set(f"study:{study_id}:invoker_details", json.dumps(invoker_details), ex=86400)
+            # Store an enriched, readable string in the classic key for UI compatibility
+            invoker_readable = f"{invoker_name} (IP: {worker_host} | Host: {worker_hostname})"
+            redis_client.set(f"study:{study_id}:invoker", invoker_readable, ex=86400)
+
             redis_client.sadd(f"study:{study_id}:all_invokers", invoker_name)
             redis_client.expire(f"study:{study_id}:all_invokers", 86400)
         except Exception as e:
