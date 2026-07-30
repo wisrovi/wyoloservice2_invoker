@@ -77,6 +77,7 @@ make stop-all
 
 ### Version 1.3.3 (Current Release) - 2026-07-29
 *   **Enforce Minimum SHM Memory Rule:** Implemented specific business logic to set shared memory (`shm_size`) to a minimum of 16 GB. If the user allocates more RAM in `WORKER_RAM_MEMORY` within `user.env` (e.g. `28g`), that larger value is applied for both RAM and SHM; otherwise, SHM defaults to `16g` while RAM respects the custom lower limit.
+*   **Rich Telemetry Registration in Redis:** Upgraded task startup blocks to retrieve detailed host environment configurations (`WORKER_HOST`, `WORKER_HOSTNAME`, `WORKER_OS`, `WORKER_CPU_CORES`, `WORKER_GPU_COUNT`, `WORKER_GPU_MODEL`) and store them in Redis under the dedicated `study:<study_id>:invoker_details` key as JSON, as well as embedding these details in the `active_trial` metadata and classic `invoker` string.
 
 ### Version 1.3.2 - 2026-07-29
 *   **Executor Resource Allocation Fix:** Resolved inconsistencies when mapping CPU and RAM limits to the ephemeral Executor container in [app/states/run_training.py](file:///home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker/app/states/run_training.py). Unified resource detection to support both `WORKER_CPU_CORES_AVAILABLE` and `WORKER_CPU_CORES` across development and production hosts. Integrated robust memory parsing (supporting units like `28g`) to pass strict byte counts for container limits (`mem_limit` and `shm_size`), aligning logs with Docker runtime restrictions.
