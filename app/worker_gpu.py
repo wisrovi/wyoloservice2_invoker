@@ -595,3 +595,34 @@ def setup_pause_monitor(sender=None, **kwargs):
     )
     t.start()
 
+
+from celery.worker.control import control_command
+
+@control_command(
+    args=[("image_name", str)],
+    signature="Forces the worker to execute a docker pull on the specified image.",
+)
+def force_docker_pull(state, image_name):
+    """Executes a docker pull command on the worker host for the specified image."""
+    import subprocess
+    print(f"[CONTROL COMMAND] Received force_docker_pull request for: {image_name}")
+    try:
+        # Run docker pull command to download the updated image from Docker Hub
+        result = subprocess.run(
+            ["docker", "pull", image_name],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        output_str = result.stdout.strip()
+        print(f"[CONTROL COMMAND] Successfully pulled image: {image_name}")
+        return {"status": "success", "image": image_name, "output": output_str}
+    except subprocess.CalledProcessError as err:
+        error_msg = f"Docker pull failed: {err.stderr.strip()}"
+        print(f"[CONTROL COMMAND] Error: {error_msg}")
+        return {"status": "failed", "image": image_name, "error": error_msg}
+    except Exception as exc:
+        error_msg = f"Unexpected error: {str(exc)}"
+        print(f"[CONTROL COMMAND] Error: {error_msg}")
+        return {"status": "failed", "image": image_name, "error": error_msg}
+
