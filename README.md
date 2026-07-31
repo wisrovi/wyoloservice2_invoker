@@ -78,6 +78,9 @@ make stop-all
 ### Version 1.5.0 (Current Release) - 2026-07-31
 *   **Version Update to v1.5.0:** Bumped core invoker version to reflect recent telemetry, startup registry, and micro-train features.
 
+### Version 1.3.4 (Current Release) - 2026-07-31
+*   **Massive Docker Broadcast Pull Command:** Registered a new custom Celery remote control handler (`force_docker_pull`) inside the worker invoker to enable fast, massive cluster-wide image pulling.
+
 ### Version 1.3.3 - 2026-07-29
 *   **Enforce Minimum SHM Memory Rule:** Implemented specific business logic to set shared memory (`shm_size`) to a minimum of 16 GB. If the user allocates more RAM in `WORKER_RAM_MEMORY` within `user.env` (e.g. `28g`), that larger value is applied for both RAM and SHM; otherwise, SHM defaults to `16g` while RAM respects the custom lower limit.
 *   **Rich Telemetry Registration in Redis:** Upgraded task startup blocks to retrieve detailed host environment configurations (`WORKER_HOST`, `WORKER_HOSTNAME`, `WORKER_OS`, `WORKER_CPU_CORES`, `WORKER_GPU_COUNT`, `WORKER_GPU_MODEL`) and store them in Redis under the dedicated `study:<study_id>:invoker_details` key as JSON, as well as embedding these details in the `active_trial` metadata and classic `invoker` string.
