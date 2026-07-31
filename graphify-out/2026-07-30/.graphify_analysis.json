@@ -1,0 +1,674 @@
+{
+  "communities": {
+    "0": [
+      "file",
+      "ui_gradio_launcher_gradio_app",
+      "ui_gradio_launcher_gradio_app_handle_upload",
+      "ui_gradio_launcher_gradio_app_launch_via_executor",
+      "ui_gradio_launcher_gradio_app_parse_yaml_file",
+      "ui_gradio_launcher_gradio_app_rationale_128",
+      "ui_gradio_launcher_gradio_app_rationale_155",
+      "ui_gradio_launcher_gradio_app_rationale_166",
+      "ui_gradio_launcher_gradio_app_rationale_311",
+      "ui_gradio_launcher_gradio_app_rationale_441",
+      "ui_gradio_launcher_gradio_app_rationale_447",
+      "ui_gradio_launcher_gradio_app_save_template",
+      "ui_gradio_launcher_gradio_app_save_with_feedback",
+      "ui_gradio_launcher_gradio_app_toggle_custom",
+      "ui_gradio_launcher_gradio_app_toggle_mode",
+      "ui_gradio_launcher_gradio_app_validate_and_update_btn",
+      "ui_gradio_launcher_tests_test_gradio_app",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_326",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_330",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_338",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_350",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_359",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_369",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_378",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_382",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_390",
+      "ui_gradio_launcher_tests_test_gradio_app_testsavetemplate",
+      "ui_gradio_launcher_tests_test_gradio_app_testsavetemplate_test_non_dict_fallback",
+      "ui_gradio_launcher_tests_test_gradio_app_testsavetemplate_test_offline",
+      "ui_gradio_launcher_tests_test_gradio_app_testsavetemplate_test_redis_exception",
+      "ui_gradio_launcher_tests_test_gradio_app_testsavetemplate_test_success",
+      "ui_gradio_launcher_tests_test_gradio_app_testsavetemplate_test_yaml_parse_error",
+      "ui_gradio_launcher_tests_test_gradio_app_testsavewithfeedback",
+      "ui_gradio_launcher_tests_test_gradio_app_testsavewithfeedback_test_error_passthrough",
+      "ui_gradio_launcher_tests_test_gradio_app_testsavewithfeedback_test_success"
+    ],
+    "1": [
+      "redishashmanager",
+      "ui_gradio_launcher_gradio_app_check_redis_connection",
+      "ui_gradio_launcher_gradio_app_get_hm",
+      "ui_gradio_launcher_gradio_app_load_template",
+      "ui_gradio_launcher_gradio_app_rationale_62",
+      "ui_gradio_launcher_gradio_app_rationale_73",
+      "ui_gradio_launcher_gradio_app_rationale_89",
+      "ui_gradio_launcher_tests_test_gradio_app_py_patch",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_300",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_304",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_312",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_318",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_396",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_400",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_406",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_416",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_426",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_436",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_444",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_452",
+      "ui_gradio_launcher_tests_test_gradio_app_testcheckredisconnection",
+      "ui_gradio_launcher_tests_test_gradio_app_testcheckredisconnection_test_exception",
+      "ui_gradio_launcher_tests_test_gradio_app_testcheckredisconnection_test_offline",
+      "ui_gradio_launcher_tests_test_gradio_app_testcheckredisconnection_test_ok",
+      "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate",
+      "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_empty_dict",
+      "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_empty_string",
+      "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_key_not_found",
+      "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_legacy_json_string",
+      "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_legacy_yaml_string",
+      "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_new_format_dict",
+      "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_offline"
+    ],
+    "2": [
+      "app_states_run_training",
+      "app_states_run_training_get_system_limits",
+      "app_states_run_training_parse_memory_to_bytes",
+      "app_states_run_training_py_any",
+      "app_states_run_training_rationale_1",
+      "app_states_run_training_rationale_109",
+      "app_states_run_training_rationale_124",
+      "app_states_run_training_rationale_136",
+      "app_states_run_training_rationale_32",
+      "app_states_run_training_rationale_448",
+      "app_states_run_training_rationale_61",
+      "app_states_run_training_runtraining",
+      "app_states_run_training_runtraining_call",
+      "app_states_run_training_runtraining_docker_run",
+      "app_states_run_training_runtraining_init",
+      "app_tests_test_run_training",
+      "app_tests_test_run_training_py_patch",
+      "app_tests_test_run_training_rationale_17",
+      "app_tests_test_run_training_rationale_25",
+      "app_tests_test_run_training_rationale_33",
+      "app_tests_test_run_training_rationale_38",
+      "app_tests_test_run_training_rationale_43",
+      "app_tests_test_run_training_rationale_74",
+      "app_tests_test_run_training_testruntraining",
+      "app_tests_test_run_training_testruntraining_config",
+      "app_tests_test_run_training_testruntraining_temp_results_dir",
+      "app_tests_test_run_training_testruntraining_test_call_results_not_found",
+      "app_tests_test_run_training_testruntraining_test_call_success",
+      "app_tests_test_run_training_testruntraining_training_config",
+      "fixture"
+    ],
+    "3": [
+      "get",
+      "request",
+      "ui_simple_dashboard_dashboard_app",
+      "ui_simple_dashboard_dashboard_app_dashboard_home",
+      "ui_simple_dashboard_dashboard_app_get_active_tasks",
+      "ui_simple_dashboard_dashboard_app_get_best_trial",
+      "ui_simple_dashboard_dashboard_app_get_optuna_db",
+      "ui_simple_dashboard_dashboard_app_get_overall_stats",
+      "ui_simple_dashboard_dashboard_app_get_queues",
+      "ui_simple_dashboard_dashboard_app_get_running_trials",
+      "ui_simple_dashboard_dashboard_app_get_study",
+      "ui_simple_dashboard_dashboard_app_get_study_trials",
+      "ui_simple_dashboard_dashboard_app_get_workers",
+      "ui_simple_dashboard_dashboard_app_health_check",
+      "ui_simple_dashboard_dashboard_app_list_studies",
+      "ui_simple_dashboard_dashboard_app_py_any",
+      "ui_simple_dashboard_dashboard_app_rationale_118",
+      "ui_simple_dashboard_dashboard_app_rationale_149",
+      "ui_simple_dashboard_dashboard_app_rationale_190",
+      "ui_simple_dashboard_dashboard_app_rationale_241",
+      "ui_simple_dashboard_dashboard_app_rationale_279",
+      "ui_simple_dashboard_dashboard_app_rationale_306",
+      "ui_simple_dashboard_dashboard_app_rationale_332",
+      "ui_simple_dashboard_dashboard_app_rationale_356",
+      "ui_simple_dashboard_dashboard_app_rationale_63",
+      "ui_simple_dashboard_dashboard_app_rationale_73",
+      "ui_simple_dashboard_dashboard_app_rationale_79",
+      "ui_simple_dashboard_dashboard_app_rationale_85"
+    ],
+    "4": [
+      "ui_gradio_launcher_gradio_app_rationale_214",
+      "ui_gradio_launcher_gradio_app_validate_and_launch",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_138",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_147",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_161",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_184",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_202",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_206",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_218",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_230",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_245",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch_test_celery_error",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch_test_empty_yaml",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch_test_invalid_yaml_syntax",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch_test_missing_model",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch_test_missing_type",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch_test_respects_existing_user_id",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch_test_user_id_filled_from_metadata",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch_test_valid_yaml"
+    ],
+    "5": [
+      "app_worker_gpu",
+      "app_worker_gpu_merge_configs",
+      "app_worker_gpu_optuna_search",
+      "app_worker_gpu_pause_monitor_thread",
+      "app_worker_gpu_py_any",
+      "app_worker_gpu_rationale_1",
+      "app_worker_gpu_rationale_218",
+      "app_worker_gpu_rationale_328",
+      "app_worker_gpu_rationale_421",
+      "app_worker_gpu_rationale_482",
+      "app_worker_gpu_rationale_98",
+      "app_worker_gpu_setup_pause_monitor",
+      "app_worker_gpu_suggest_from_space",
+      "app_worker_gpu_train_on_gpu",
+      "app_worker_gpu_train_on_gpu_simple",
+      "app_worker_gpu_welcome",
+      "connect",
+      "task",
+      "trial"
+    ],
+    "6": [
+      "ui_gradio_launcher_gradio_app_rationale_404",
+      "ui_gradio_launcher_gradio_app_validate_min_config",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_46",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_49",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_55",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_59",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_71",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_84",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_97",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateminconfig",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateminconfig_test_empty",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateminconfig_test_empty_train",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateminconfig_test_missing_author",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateminconfig_test_missing_fitness",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateminconfig_test_missing_model",
+      "ui_gradio_launcher_tests_test_gradio_app_testvalidateminconfig_test_valid"
+    ],
+    "7": [
+      "app_config",
+      "app_readme",
+      "changelog",
+      "docker_compose",
+      "docker_compose_dashboard",
+      "docker_compose_gradio_launcher",
+      "docker_compose_worker",
+      "docker_images_worker_invoker",
+      "readme",
+      "readme_celery_queues",
+      "readme_gpu_invoker",
+      "security",
+      "ui_gradio_launcher_requirements",
+      "ui_simple_dashboard_readme",
+      "ui_simple_dashboard_templates_index"
+    ],
+    "8": [
+      "ui_gradio_launcher_gradio_app_rationale_191",
+      "ui_gradio_launcher_gradio_app_resolve_queue",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_111",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_114",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_118",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_122",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_126",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_130",
+      "ui_gradio_launcher_tests_test_gradio_app_testresolvequeue",
+      "ui_gradio_launcher_tests_test_gradio_app_testresolvequeue_test_custom_empty_fallback",
+      "ui_gradio_launcher_tests_test_gradio_app_testresolvequeue_test_custom_non_empty",
+      "ui_gradio_launcher_tests_test_gradio_app_testresolvequeue_test_custom_whitespace_fallback",
+      "ui_gradio_launcher_tests_test_gradio_app_testresolvequeue_test_gpus_high",
+      "ui_gradio_launcher_tests_test_gradio_app_testresolvequeue_test_private_queue"
+    ],
+    "9": [
+      "ui_gradio_launcher_gradio_app_launch_dry_run",
+      "ui_gradio_launcher_gradio_app_rationale_260",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_255",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_259",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_270",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_279",
+      "ui_gradio_launcher_tests_test_gradio_app_rationale_290",
+      "ui_gradio_launcher_tests_test_gradio_app_testlaunchdryrun",
+      "ui_gradio_launcher_tests_test_gradio_app_testlaunchdryrun_test_dry_run_celery_error",
+      "ui_gradio_launcher_tests_test_gradio_app_testlaunchdryrun_test_dry_run_payload_has_dry_run_flag",
+      "ui_gradio_launcher_tests_test_gradio_app_testlaunchdryrun_test_dry_run_success",
+      "ui_gradio_launcher_tests_test_gradio_app_testlaunchdryrun_test_dry_run_uses_private_queue"
+    ],
+    "10": [
+      "production_docker_compose_worker",
+      "production_readme_main",
+      "test_manual_config_redis_celery",
+      "test_manual_docker_compose_sender",
+      "test_manual_readme_executor",
+      "test_manual_readme_main",
+      "test_manual_readme_mlflow",
+      "test_manual_readme_optuna",
+      "test_manual_readme_redis",
+      "test_manual_readme_sender",
+      "test_manual_readme_workerinv"
+    ],
+    "11": [
+      "ui_simple_dashboard_static_app",
+      "ui_simple_dashboard_static_app_fetchjson",
+      "ui_simple_dashboard_static_app_loadall",
+      "ui_simple_dashboard_static_app_loadqueues",
+      "ui_simple_dashboard_static_app_loadstats",
+      "ui_simple_dashboard_static_app_loadstudies",
+      "ui_simple_dashboard_static_app_loadtasks",
+      "ui_simple_dashboard_static_app_loadworkers",
+      "ui_simple_dashboard_static_app_showstudydetails",
+      "ui_simple_dashboard_static_app_state"
+    ],
+    "12": [
+      "app_states_eda",
+      "app_states_eda_eda",
+      "app_states_eda_eda_call",
+      "app_states_eda_eda_init",
+      "app_states_eda_py_any",
+      "app_states_eda_rationale_13",
+      "app_states_eda_rationale_19",
+      "app_states_eda_rationale_27"
+    ],
+    "13": [
+      "app_states_llm_analizer",
+      "app_states_llm_analizer_llmanalizer",
+      "app_states_llm_analizer_llmanalizer_call",
+      "app_states_llm_analizer_llmanalizer_init",
+      "app_states_llm_analizer_py_any",
+      "app_states_llm_analizer_rationale_13",
+      "app_states_llm_analizer_rationale_19",
+      "app_states_llm_analizer_rationale_27"
+    ],
+    "14": [
+      "docs_faq_faq",
+      "docs_getting_started_gettingstarted",
+      "docs_index_index",
+      "docs_tutorials_tutorials",
+      "index_gpu_allocation",
+      "index_hive_web",
+      "index_samba_client",
+      "index_state_machine"
+    ],
+    "15": [
+      "test_manage_remote_worker",
+      "test_manage_remote_worker_get_celery_app",
+      "test_manage_remote_worker_main",
+      "test_manage_remote_worker_manage_worker",
+      "test_manage_remote_worker_rationale_22",
+      "test_manage_remote_worker_rationale_29"
+    ],
+    "16": [
+      "_pre_commit_config",
+      "_pre_commit_config_mypy",
+      "_pre_commit_config_pylint",
+      "_pre_commit_config_ruff",
+      "contributing"
+    ],
+    "17": [
+      "production_config",
+      "production_config_crear_archivo",
+      "production_config_obtener_usuario",
+      "production_config_rationale_11",
+      "production_config_toggle_opciones_avanzadas"
+    ],
+    "18": [
+      "app_celery_config",
+      "app_celery_config_print_table",
+      "app_celery_config_rationale_1",
+      "app_celery_config_rationale_18"
+    ],
+    "19": [
+      "concept_optuna_tpe_sampler",
+      "ui_gradio_launcher_examples_classification_config_train",
+      "ui_gradio_launcher_examples_detection_config_train",
+      "ui_gradio_launcher_examples_segmentation_config_train"
+    ],
+    "20": [
+      "test_manual_send_task",
+      "test_manual_send_task_load_config",
+      "test_manual_send_task_main",
+      "test_manual_send_task_rationale_44"
+    ],
+    "21": [
+      "test_send_to_invoker_directly",
+      "test_send_to_invoker_directly_launch_task",
+      "test_send_to_invoker_directly_load_config",
+      "test_send_to_invoker_directly_rationale_47"
+    ],
+    "22": [
+      "_agents_rules_graphify",
+      "_agents_workflows_graphify",
+      "gemini"
+    ],
+    "23": [
+      "_readthedocs",
+      "docs_api_reference",
+      "docs_bibliography"
+    ],
+    "24": [
+      "app_minimal_worker",
+      "app_minimal_worker_add",
+      "app_minimal_worker_py_task"
+    ],
+    "25": [
+      "extra_readmes_01_architecture_and_backend_core_coreservice",
+      "extra_readmes_01_architecture_and_backend_core_databaseadapter",
+      "extra_readmes_01_architecture_and_backend_core_ddd"
+    ],
+    "26": [
+      "opencode_plugins_graphify",
+      "opencode_plugins_graphify_graphifyplugin",
+      "opencode_plugins_graphify_rationale_4"
+    ],
+    "27": [
+      "production_install",
+      "production_install_is_valid_env",
+      "production_install_sh__entry"
+    ],
+    "28": [
+      "production_launcher_invoker",
+      "production_launcher_invoker_sh__entry",
+      "production_launcher_invoker_worker_name"
+    ],
+    "29": [
+      "test_manual_send_task_simple",
+      "test_manual_send_task_simple_load_config",
+      "test_manual_send_task_simple_main"
+    ],
+    "30": [
+      "test_manual_training_config_params",
+      "test_test_to_send_invoker_config",
+      "test_to_send_invoker_config"
+    ],
+    "31": [
+      "app_coverage",
+      "app_coverage_sh__entry"
+    ],
+    "32": [
+      "app_readme_pipeline",
+      "docker_images_worker_executor"
+    ],
+    "33": [
+      "app_run_tests",
+      "app_run_tests_sh__entry"
+    ],
+    "34": [
+      "extra_readmes_02_communication_flow_external_service",
+      "extra_readmes_02_communication_flow_internal_component"
+    ],
+    "35": [
+      "production_uninstall",
+      "production_uninstall_sh__entry"
+    ],
+    "36": [
+      "requirements_requirements",
+      "test_manual_requirements_packages"
+    ],
+    "37": [
+      "scripts_pause_public_queues",
+      "scripts_pause_public_queues_sh__entry"
+    ],
+    "38": [
+      "scripts_resume_public_queues",
+      "scripts_resume_public_queues_sh__entry"
+    ],
+    "39": [
+      "test_manual_send_task_docker",
+      "test_manual_send_task_docker_main"
+    ],
+    "40": [
+      "app_init"
+    ],
+    "41": [
+      "app_requirements"
+    ],
+    "42": [
+      "app_states_init"
+    ],
+    "43": [
+      "app_worker_gpu_py_task"
+    ],
+    "44": [
+      "code_of_conduct"
+    ],
+    "45": [
+      "docker_images"
+    ],
+    "46": [
+      "docs_conf"
+    ],
+    "47": [
+      "extra_readmes_03_microservice_design_api_boundaries"
+    ],
+    "48": [
+      "extra_readmes_04_logic_design_algorithms"
+    ],
+    "49": [
+      "extra_readmes_05_data_diagrams_and_models_user_task"
+    ],
+    "50": [
+      "extra_readmes_06_usage_and_test_documentation_core_validation"
+    ],
+    "51": [
+      "extra_readmes_07_security_hardening_and_resiliency_loguru"
+    ],
+    "52": [
+      "extra_readmes_07_security_hardening_and_resiliency_perimeter_security"
+    ],
+    "53": [
+      "extra_readmes_08_deployment_ops_and_maintenance_deployment"
+    ],
+    "54": [
+      "extra_readmes_09_context_state_of_the_art_and_research_competitive_solutions"
+    ],
+    "55": [
+      "pkg_invoker_launcher"
+    ],
+    "56": [
+      "production_docker_compose_extras_dashboard"
+    ],
+    "57": [
+      "production_docker_compose_extras_gradio_launcher"
+    ],
+    "58": [
+      "production_docker_compose_watchtower"
+    ],
+    "59": [
+      "roadmap"
+    ],
+    "60": [
+      "test_manual_celery_config"
+    ],
+    "61": [
+      "ui_gradio_launcher_tests_init"
+    ],
+    "62": [
+      "ui_simple_dashboard_requirements"
+    ]
+  },
+  "cohesion": {
+    "0": 0.08067226890756303,
+    "1": 0.0967741935483871,
+    "2": 0.09195402298850575,
+    "3": 0.12169312169312169,
+    "4": 0.1368421052631579,
+    "5": 0.14619883040935672,
+    "6": 0.16666666666666666,
+    "7": 0.1523809523809524,
+    "8": 0.18681318681318682,
+    "9": 0.21212121212121213,
+    "10": 0.21818181818181817,
+    "11": 0.4444444444444444,
+    "12": 0.2857142857142857,
+    "13": 0.2857142857142857,
+    "14": 0.25,
+    "15": 0.4666666666666667,
+    "16": 0.4,
+    "17": 0.5,
+    "18": 0.5,
+    "19": 0.5,
+    "20": 0.6666666666666666,
+    "21": 0.6666666666666666,
+    "22": 0.6666666666666666,
+    "23": 0.6666666666666666,
+    "24": 0.6666666666666666,
+    "25": 0.6666666666666666,
+    "26": 0.6666666666666666,
+    "27": 1.0,
+    "28": 0.6666666666666666,
+    "29": 1.0,
+    "30": 0.6666666666666666,
+    "31": 1.0,
+    "32": 1.0,
+    "33": 1.0,
+    "34": 1.0,
+    "35": 1.0,
+    "36": 1.0,
+    "37": 1.0,
+    "38": 1.0,
+    "39": 1.0,
+    "40": 1.0,
+    "41": 1.0,
+    "42": 1.0,
+    "43": 1.0,
+    "44": 1.0,
+    "45": 1.0,
+    "46": 1.0,
+    "47": 1.0,
+    "48": 1.0,
+    "49": 1.0,
+    "50": 1.0,
+    "51": 1.0,
+    "52": 1.0,
+    "53": 1.0,
+    "54": 1.0,
+    "55": 1.0,
+    "56": 1.0,
+    "57": 1.0,
+    "58": 1.0,
+    "59": 1.0,
+    "60": 1.0,
+    "61": 1.0,
+    "62": 1.0
+  },
+  "gods": [
+    {
+      "id": "ui_gradio_launcher_gradio_app_save_template",
+      "label": "save_template()",
+      "degree": 14
+    },
+    {
+      "id": "ui_gradio_launcher_gradio_app_validate_and_launch",
+      "label": "validate_and_launch()",
+      "degree": 14
+    },
+    {
+      "id": "ui_gradio_launcher_gradio_app_load_template",
+      "label": "load_template()",
+      "degree": 12
+    },
+    {
+      "id": "ui_gradio_launcher_gradio_app_validate_min_config",
+      "label": "validate_min_config()",
+      "degree": 12
+    },
+    {
+      "id": "ui_gradio_launcher_tests_test_gradio_app_testvalidateandlaunch",
+      "label": "TestValidateAndLaunch",
+      "degree": 10
+    },
+    {
+      "id": "ui_gradio_launcher_gradio_app_resolve_queue",
+      "label": "resolve_queue()",
+      "degree": 9
+    },
+    {
+      "id": "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate",
+      "label": "TestLoadTemplate",
+      "degree": 9
+    },
+    {
+      "id": "app_states_run_training_runtraining",
+      "label": "RunTraining",
+      "degree": 9
+    },
+    {
+      "id": "ui_gradio_launcher_tests_test_gradio_app_testvalidateminconfig",
+      "label": "TestValidateMinConfig",
+      "degree": 8
+    },
+    {
+      "id": "app_tests_test_run_training_testruntraining",
+      "label": "TestRunTraining",
+      "degree": 8
+    }
+  ],
+  "surprises": [
+    {
+      "source": "Worker Service",
+      "target": "Manual Test Sender Container",
+      "source_files": [
+        "production/docker-compose.yaml",
+        "test_manual/docker-compose.yml"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "Root Requirements",
+      "target": "Manual Test Dependencies",
+      "source_files": [
+        "requirements.txt",
+        "test_manual/requirements.txt"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "Headless Test Configuration",
+      "target": "Headless Test Configuration Root",
+      "source_files": [
+        "test/test_to_send_invoker.yaml",
+        "test_to_send_invoker.yaml"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "Simplified Training and Optuna Parameters",
+      "target": "Headless Test Configuration Root",
+      "source_files": [
+        "test_manual/training_config.yaml",
+        "test_to_send_invoker.yaml"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "Worker Invoker Docker Image",
+      "target": "GPU Invoker (Hive Worker) README",
+      "source_files": [
+        "docker_images.md",
+        "README.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "references",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; peripheral node `Worker Invoker Docker Image` unexpectedly reaches hub `GPU Invoker (Hive Worker) README`"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
