@@ -529,7 +529,7 @@ def pause_monitor_thread(app_inst, node_name: str, private_queue_ip: str, defaul
 
 @worker_ready.connect
 def setup_pause_monitor(sender=None, **kwargs):
-    """Initializes the background pause monitor thread when the worker is ready."""
+    """Initializes the background pause monitor thread and registers worker telemetry when ready."""
     if sender is None:
         return
         
@@ -538,6 +538,56 @@ def setup_pause_monitor(sender=None, **kwargs):
     private_queue_ip = os.getenv("WORKER_HOST", "unknown")
     default_hours = float(CONFIG.get("pause_duration_hours", 4))
     
+    # Register invoker metadata in Redis on startup
+    try:
+        redis_client = redis.from_url(app.conf.broker_url)
+        worker_host = os.getenv("WORKER_HOST", "unknown")
+        worker_hostname = os.getenv("WORKER_HOSTNAME", "unknown")
+        worker_os = os.getenv("WORKER_OS", "unknown")
+        worker_cpus = os.getenv("WORKER_CPU_CORES", "unknown")
+        worker_gpu_count = os.getenv("WORKER_GPU_COUNT", "0")
+        worker_gpu_model = os.getenv("WORKER_GPU_MODEL", "unknown")
+        
+        # Calculate limits allocated for the executor
+        import multiprocessing
+        cpu_pct = float(CONFIG.get("cpu_limit_pct", 0.85))
+        mem_pct = float(CONFIG.get("mem_limit_pct", 0.60))
+        
+        # CPU allocation calculation
+        cores_env = os.getenv("WORKER_CPU_CORES_AVAILABLE") or os.getenv("WORKER_CPU_CORES")
+        if cores_env:
+            try:
+                allocated_cpus = float(cores_env)
+            except ValueError:
+                allocated_cpus = float(multiprocessing.cpu_count() * cpu_pct)
+        else:
+            allocated_cpus = float(multiprocessing.cpu_count() * cpu_pct)
+            
+        # RAM allocation calculation
+        ram_env = os.getenv("WORKER_RAM_MEMORY")
+        allocated_ram = ram_env if ram_env else f"{int(mem_pct * 100)}% of total host RAM"
+
+        metadata = {
+            "version": VERSION,
+            "worker_host": worker_host,
+            "worker_hostname": worker_hostname,
+            "worker_os": worker_os,
+            "worker_cpu_cores": worker_cpus,
+            "worker_gpu_count": worker_gpu_count,
+            "worker_gpu_model": worker_gpu_model,
+            "executor_allocated_cpus": f"{allocated_cpus:.2f}",
+            "executor_allocated_ram": allocated_ram,
+            "executor_cpu_limit_pct": cpu_pct,
+            "executor_mem_limit_pct": mem_pct,
+            "startup_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            "status": "online"
+        }
+        
+        redis_client.set(f"invoker:{worker_host}:version", json.dumps(metadata))
+        print(f"[METADATA REGISTRATION] Saved host metadata to Redis key 'invoker:{worker_host}:version'")
+    except Exception as e:
+        print(f"[METADATA REGISTRATION] Warning: Failed to save host metadata to Redis: {e}")
+
     t = threading.Thread(
         target=pause_monitor_thread,
         args=(app, node_name, private_queue_ip, default_hours),
