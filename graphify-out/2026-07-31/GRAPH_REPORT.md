@@ -1,22 +1,16 @@
-# Graph Report - wyoloservice2_invoker  (2026-07-31)
+# Graph Report - /home/william.rodriguez/Documents/w_libraries/train_service2/wyoloservice2_invoker  (2026-07-30)
 
 ## Corpus Check
-- 68 files · ~33,247 words
-- Verdict: corpus is large enough that graph structure adds value.
+- cluster-only mode — file stats not available
 
 ## Summary
-- 440 nodes · 521 edges · 73 communities (39 shown, 34 thin omitted)
+- 366 nodes · 459 edges · 63 communities (32 shown, 31 thin omitted)
 - Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 24 edges (avg confidence: 0.84)
 - Token cost: 0 input · 0 output
 
-## Graph Freshness
-- Built from commit: `a38cb0bc`
-- Run `git rev-parse HEAD` and compare to check if the graph is stale.
-- Run `graphify update .` after code changes (no API cost).
-
 ## Community Hubs (Navigation)
+- test_gradio_app.py
 - patch
-- What You Must Do When Invoked
 - RunTraining
 - dashboard_app.py
 - validate_and_launch
@@ -28,7 +22,7 @@
 - Worker Invoker (Celery Worker)
 - app.js
 - EDA
-- graphify reference: extra exports and benchmark
+- LlmAnalizer
 - Documentation Index
 - manage_worker
 - Pre-commit Configuration
@@ -55,7 +49,7 @@
 - pause_public_queues.sh
 - resume_public_queues.sh
 - Worker Invoker Requirements
-- graphify reference: query, path, explain
+- task
 - Contributor Covenant Code of Conduct
 - Docker Images Metadata
 - API Boundaries
@@ -72,27 +66,18 @@
 - Watchtower Service
 - GPU Invoker Roadmap
 - Worker Dashboard Requirements
-- wyoloservice2_invoker — codegraph + graphify
-- opencode.json
-- graphify reference: add a URL and watch a folder
-- graphify reference: commit hook and native CLAUDE.md integration
-- graphify reference: incremental update and cluster-only
-- graphify reference: GitHub clone and cross-repo merge
-- graphify reference: transcribe video and audio
-- micro_train.sh
-- extraction-spec.md
 
 ## God Nodes (most connected - your core abstractions)
 1. `save_template()` - 14 edges
 2. `validate_and_launch()` - 14 edges
 3. `load_template()` - 12 edges
 4. `validate_min_config()` - 12 edges
-5. `What You Must Do When Invoked` - 12 edges
-6. `TestValidateAndLaunch` - 10 edges
-7. `/graphify` - 10 edges
-8. `resolve_queue()` - 9 edges
-9. `TestLoadTemplate` - 9 edges
-10. `RunTraining` - 9 edges
+5. `TestValidateAndLaunch` - 10 edges
+6. `resolve_queue()` - 9 edges
+7. `TestLoadTemplate` - 9 edges
+8. `RunTraining` - 9 edges
+9. `TestValidateMinConfig` - 8 edges
+10. `TestRunTraining` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Worker Service` --semantically_similar_to--> `Manual Test Sender Container`  [INFERRED] [semantically similar]
@@ -115,15 +100,15 @@
 - **Manual Invoker-Executor Test Flow** — test_manual_readme_sender, test_manual_readme_workerinv, test_manual_readme_executor [EXTRACTED 1.00]
 - **Hive Invoker Core Responsibilities** — index_gpu_allocation, index_samba_client, index_state_machine [EXTRACTED 1.00]
 
-## Communities (73 total, 34 thin omitted)
+## Communities (63 total, 31 thin omitted)
 
-### Community 0 - "patch"
-Cohesion: 0.05
-Nodes (47): File, RedisHashManager, check_redis_connection(), _get_hm(), _handle_upload(), launch_via_executor(), load_template(), parse_yaml_file() (+39 more)
-
-### Community 1 - "What You Must Do When Invoked"
+### Community 0 - "test_gradio_app.py"
 Cohesion: 0.08
-Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
+Nodes (25): File, _handle_upload(), launch_via_executor(), parse_yaml_file(), Parse YAML and store the resulting dict directly in the Redis hash. ``wredis``…, Wrap ``save_template`` with a user-facing status message., Read an uploaded YAML file, validate, persist to Redis, return content. Args:…, Write config to /home/wyolo/request and launch executor container. This… (+17 more)
+
+### Community 1 - "patch"
+Cohesion: 0.10
+Nodes (22): RedisHashManager, check_redis_connection(), _get_hm(), load_template(), Lazy-init and return the RedisHashManager singleton., Check Redis connectivity and return a human-readable status. Returns: str:…, Load the last saved template from the Redis hash. Supports both formats: a dict…, patch (+14 more)
 
 ### Community 2 - "RunTraining"
 Cohesion: 0.09
@@ -138,8 +123,8 @@ Cohesion: 0.14
 Nodes (12): Validate YAML, persist it, and send a Celery task. Args: yaml_content: The YAML…, validate_and_launch(), Tests for the main train-submission function., A fully-valid YAML is accepted and sent., user_id defaults to metadata.author when absent., Existing user_id is preserved., Empty content returns an error., YAML without a model field is rejected. (+4 more)
 
 ### Community 5 - "worker_gpu.py"
-Cohesion: 0.09
-Nodes (25): LlmAnalizer, Any, State class for performing post-training analysis with LLMs., Initialize LLM Analyzer with configuration. Args: config: Worker configuration…, Execute LLM analysis process. Args: training_config: Training configuration and…, force_docker_pull(), _merge_configs(), optuna_search() (+17 more)
+Cohesion: 0.15
+Nodes (17): _merge_configs(), optuna_search(), pause_monitor_thread(), Any, Worker Invoker Module. This module acts as a bridge between Celery and the…, Orchestrates the execution of the training EXECUTOR container. This task…, Simplified task that runs the Executor directly without Optuna. Useful for…, Monitors the pause state in Redis and cancels/adds public queues dynamically. (+9 more)
 
 ### Community 6 - "validate_min_config"
 Cohesion: 0.17
@@ -169,9 +154,9 @@ Nodes (9): fetchJSON(), loadAll(), loadQueues(), loadStats(), loadStudies(), loa
 Cohesion: 0.29
 Nodes (5): EDA, Any, State class for performing Exploratory Data Analysis., Initialize EDA with configuration. Args: config: Worker configuration…, Execute EDA process. Args: training_config: Training configuration. Returns:…
 
-### Community 13 - "graphify reference: extra exports and benchmark"
-Cohesion: 0.22
-Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
+### Community 13 - "LlmAnalizer"
+Cohesion: 0.29
+Nodes (5): LlmAnalizer, Any, State class for performing post-training analysis with LLMs., Initialize LLM Analyzer with configuration. Args: config: Worker configuration…, Execute LLM analysis process. Args: training_config: Training configuration and…
 
 ### Community 14 - "Documentation Index"
 Cohesion: 0.25
@@ -221,49 +206,25 @@ Nodes (3): CoreService, DatabaseAdapter, Domain-Driven Design Principles
 Cohesion: 0.67
 Nodes (3): Simplified Training and Optuna Parameters, Headless Test Configuration, Headless Test Configuration Root
 
-### Community 43 - "graphify reference: query, path, explain"
-Cohesion: 0.33
-Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
-
-### Community 63 - "wyoloservice2_invoker — codegraph + graphify"
-Cohesion: 0.40
-Nodes (4): Estado, graphify, Sync automático, wyoloservice2_invoker — codegraph + graphify
-
-### Community 64 - "opencode.json"
-Cohesion: 0.50
-Nodes (3): plugin, $schema, .opencode/plugins/graphify.js
-
-### Community 65 - "graphify reference: add a URL and watch a folder"
-Cohesion: 0.50
-Nodes (3): For /graphify add, For --watch, graphify reference: add a URL and watch a folder
-
-### Community 66 - "graphify reference: commit hook and native CLAUDE.md integration"
-Cohesion: 0.50
-Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify reference: commit hook and native CLAUDE.md integration
-
-### Community 67 - "graphify reference: incremental update and cluster-only"
-Cohesion: 0.50
-Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
-
 ## Knowledge Gaps
-- **106 isolated node(s):** `$schema`, `.opencode/plugins/graphify.js`, `invoker_launcher`, `state`, `coverage.sh script` (+101 more)
+- **59 isolated node(s):** `invoker_launcher`, `state`, `coverage.sh script`, `run_tests.sh script`, `launcher_invoker.sh script` (+54 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **34 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **31 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `validate_and_launch()` connect `validate_and_launch` to `patch`, `resolve_queue`, `validate_min_config`?**
-  _High betweenness centrality (0.014) - this node is a cross-community bridge._
-- **Why does `validate_min_config()` connect `validate_min_config` to `patch`, `validate_and_launch`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
-- **Why does `resolve_queue()` connect `resolve_queue` to `patch`, `validate_and_launch`?**
-  _High betweenness centrality (0.010) - this node is a cross-community bridge._
-- **What connects `$schema`, `.opencode/plugins/graphify.js`, `invoker_launcher` to the rest of the system?**
-  _106 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `validate_and_launch()` connect `validate_and_launch` to `test_gradio_app.py`, `resolve_queue`, `validate_min_config`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
+- **Why does `validate_min_config()` connect `validate_min_config` to `test_gradio_app.py`, `validate_and_launch`?**
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+- **Why does `resolve_queue()` connect `resolve_queue` to `test_gradio_app.py`, `validate_and_launch`?**
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+- **What connects `invoker_launcher`, `state`, `coverage.sh script` to the rest of the system?**
+  _59 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `test_gradio_app.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.08067226890756303 - nodes in this community are weakly interconnected._
 - **Should `patch` be split into smaller, more focused modules?**
-  _Cohesion score 0.0506558118498417 - nodes in this community are weakly interconnected._
-- **Should `What You Must Do When Invoked` be split into smaller, more focused modules?**
-  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0967741935483871 - nodes in this community are weakly interconnected._
 - **Should `RunTraining` be split into smaller, more focused modules?**
   _Cohesion score 0.09195402298850575 - nodes in this community are weakly interconnected._

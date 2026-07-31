@@ -31,8 +31,13 @@ user.env:
 
 
 config.py:
-	python3 -m pip install customtkinter --break-system-packages
-	python3 production/config.py
+	@if [ -f "user.env" ] && [ -f "control_host.env" ]; then \
+		echo "Config already set, skipping config generator."; \
+		touch config.py; \
+	else \
+		python3 -m pip install customtkinter --break-system-packages; \
+		python3 production/config.py; \
+	fi
 
 
 start: user.env config.py
