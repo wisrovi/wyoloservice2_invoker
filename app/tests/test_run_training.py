@@ -38,48 +38,54 @@ class TestRunTraining:
         """Provides a basic training configuration."""
         return {"lr": 0.01, "epochs": 10}
 
-    @patch("states.run_training.docker.from_env")
-    def test_call_success(self, mock_docker, config, training_config, temp_results_dir):
-        """Validates a successful training execution.
+    @patch.object(RunTraining, "docker_run")
+    def test_call_success(self, mock_docker_run, config, training_config, temp_results_dir):
+        """Validates a successful training trial execution.
 
-        Steps:
-        1. Mocks the docker client.
-        2. Simulates the creation of results.json by the executor.
-        3. Checks if the returned accuracy matches the one in results.json.
+        This test verifies that:
+        1. The RunTraining class correctly delegates container execution to docker_run.
+        2. When the executor successfully writes a results.json file, the class recovers
+           and returns the metrics (accuracy) and status correctly.
+        
+        To achieve this cleanly, we mock the `docker_run` method. In the mocked method's
+        side effect, we simulate the container writing the `results.json` output file to
+        the shared results directory. This prevents the real `docker_run` from executing and
+        deleting the file we set up before it runs.
         """
-        # Mock docker client and run
-        mock_client = MagicMock()
-        mock_docker.return_value = mock_client
-        mock_container = MagicMock()
-        mock_client.containers.run.return_value = mock_container
-        mock_container.wait.return_value = {"StatusCode": 0}
-        mock_container.logs.return_value = [b"log line 1", b"log line 2"]
+        # Set up side effect to create results.json inside the temp results dir
+        # simulating the docker executor writing the results on completion
+        def create_results_file(*args, **kwargs):
+            results_path = os.path.join(temp_results_dir, "results.json")
+            with open(results_path, "w", encoding="utf-8") as f:
+                json.dump({"accuracy": 0.95}, f)
 
-        # Instantiate and call
+        mock_docker_run.side_effect = create_results_file
+
+        # Instantiate RunTraining and execute it
         run_training = RunTraining(config)
-
-        # Simulate results.json creation before it's read
-        results_path = os.path.join(temp_results_dir, "results.json")
-        with open(results_path, "w") as f:
-            json.dump({"accuracy": 0.95}, f)
-
         result = run_training(training_config)
 
+        # Assertions
         assert result["status"] == "done"
         assert result["accuracy"] == 0.95
-        assert mock_client.containers.run.called
+        assert mock_docker_run.called
 
-    @patch("states.run_training.docker.from_env")
-    def test_call_results_not_found(self, mock_docker, config, training_config):
-        """Validates that a FileNotFoundError is raised if results.json is missing."""
-        mock_client = MagicMock()
-        mock_docker.return_value = mock_client
-        mock_container = MagicMock()
-        mock_client.containers.run.return_value = mock_container
-        mock_container.wait.return_value = {"StatusCode": 0}
-        mock_container.logs.return_value = [b"log line 1"]
+    @patch.object(RunTraining, "docker_run")
+    def test_call_results_not_found(self, mock_docker_run, config, training_config):
+        """Validates that a FileNotFoundError is raised if results.json is missing.
 
+        This test verifies that if the executor fails to write results.json (for example, if
+        it crashes or is misconfigured), the RunTraining class detects the missing file
+        and raises a FileNotFoundError with a descriptive error message.
+
+        By mocking `docker_run` to do nothing, we simulate an execution that exits without
+        producing the results.json file in the shared directory.
+        """
         run_training = RunTraining(config)
 
-        with pytest.raises(FileNotFoundError, match="results.json not found"):
+        # Execute and assert that FileNotFoundError is raised with the expected error message
+        with pytest.raises(
+            FileNotFoundError,
+            match="Executor finished but 'results.json' was not found in the shared volume",
+        ):
             run_training(training_config)
