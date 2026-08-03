@@ -90,12 +90,16 @@ class EDA:
                         "mode": "rw",
                     },
                 },
-                command=(
-                    f"bash -c '/usr/local/bin/mount-cifs.sh && "
-                    f"python -c \"import sys; sys.path.append(''/app''); "
-                    f"from states.utils.dataset_analyzer import DatasetAnalyzer; "
-                    f"import json; print(json.dumps(DatasetAnalyzer().analyze(''{dataset_path}'')))\"'"
-                ),
+                command=[
+                    "bash",
+                    "-c",
+                    (
+                        f"/usr/local/bin/mount-cifs.sh && "
+                        f"python -c \"import sys; sys.path.append('/app'); "
+                        f"from states.utils.dataset_analyzer import DatasetAnalyzer; "
+                        f"import json; print(json.dumps(DatasetAnalyzer().analyze('{dataset_path}')))\""
+                    )
+                ],
                 remove=True
             )
 
