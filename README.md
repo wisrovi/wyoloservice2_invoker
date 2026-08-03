@@ -87,7 +87,11 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.4 (Current Release) - 2026-08-03
+### Version 1.7.5 (Current Release) - 2026-08-03
+*   **EDA Python command fix:** Resolved syntax error in docker command by changing container command structure to a clean argv list.
+*   **Version Update to v1.7.5:** Bumped version to `v1.7.5`.
+
+### Version 1.7.4 - 2026-08-03
 *   **EDA Temporary Executor Container:** Runs dataset analysis in a short-lived sibling executor container to safely mount network folders and analyze datasets before training.
 *   **Version Update to v1.7.4:** Bumped version to `v1.7.4`.
 
