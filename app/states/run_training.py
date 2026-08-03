@@ -12,9 +12,14 @@ import multiprocessing
 import os
 import shutil
 import tempfile
+import time
+import subprocess
+import re
 from datetime import datetime
 from typing import Any, Dict, Tuple
 import threading
+
+import redis
 
 
 from requests.exceptions import ReadTimeout, ConnectionError
@@ -98,6 +103,22 @@ def get_system_limits(
     return cpu_limit, mem_limit_bytes
 
 
+def get_gpu_usage() -> float:
+    """Get current GPU utilization percentage."""
+    try:
+        result = subprocess.check_output(
+            [
+                "nvidia-smi",
+                "--query-gpu=utilization.gpu",
+                "--format=csv,noheader,nounits",
+            ],
+            text=True,
+        )
+        return float(result.strip().split("\n")[0])
+    except Exception:
+        return 0.0
+
+
 class RunTraining:
     """Orchestrates the execution of a training trial in a Docker container.
 
@@ -125,14 +146,20 @@ class RunTraining:
             f"{self.config.get('executor_timeout_seconds', 43200)}"
         )
 
-    def docker_run(self, image_name: str, executor_name: str, _temp_dir: str) -> None:
+    def docker_run(self, image_name: str, executor_name: str, _temp_dir: str, study_id: str | None = None) -> None:
         """Runs a Docker container with the specified configuration.
 
         Args:
             image_name (str): The name of the Docker image to run.
             executor_name (str): The name to assign to the running container.
             _temp_dir (str): The local directory to bind as a volume (unused for now).
+            study_id (str): Optional Optuna study identifier.
         """
+        results_dir = self.config.get(
+            "results_dir", "/home/wyolo/train_service_results"
+        )
+        telemetry_file = os.path.join(results_dir, "telemetry.json")
+
         invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
         timeout_seconds = self.config.get(
             "executor_timeout_seconds",
@@ -248,6 +275,11 @@ class RunTraining:
                 os.remove(stale_result_path)
                 print("--- [INVOKER] Stale results.json removed. ---")
 
+            # Clean up stale telemetry before running
+            if os.path.exists(telemetry_file):
+                os.remove(telemetry_file)
+                print("--- [INVOKER] Stale telemetry.json removed. ---")
+
             # Force remove any existing container with the same name to prevent conflict
             try:
                 existing_container = client.containers.get(executor_name)
@@ -316,6 +348,84 @@ class RunTraining:
                 f"--- [INVOKER] Executor {executor_name} started. Streaming logs... ---",
                 flush=True,
             )
+
+            # Start resource monitoring thread
+            stop_monitor = False
+            redis_client = redis.from_url(
+                self.config.get("redis_url", "redis://localhost:23437/0")
+            )
+
+            def get_current_epoch(container) -> str:
+                """Extract current training epoch from executor logs."""
+                try:
+                    logs = container.logs(tail=100).decode("utf-8", errors="ignore")
+                    matches = re.findall(r"\s+(\d+)/\d+\s+\d+\.\d+G", logs)
+                    if matches:
+                        return matches[-1]
+                except Exception as exc:
+                    print(f"[MONITOR] Epoch extraction error: {exc}")
+                return "N/A"
+
+            def monitor_resources():
+                while not stop_monitor:
+                    try:
+                        container.reload()
+                        stats = container.stats(stream=False)
+                        cpu_stats = stats.get("cpu_stats", {})
+                        precpu_stats = stats.get("precpu_stats", {})
+
+                        cpu_delta = (
+                            cpu_stats.get("cpu_usage", {}).get("total_usage", 0)
+                            - precpu_stats.get("cpu_usage", {}).get("total_usage", 0)
+                        )
+                        system_delta = (
+                            cpu_stats.get("system_cpu_usage", 0)
+                            - precpu_stats.get("system_cpu_usage", 0)
+                        )
+
+                        if system_delta > 0:
+                            cpu_percent = round(
+                                (cpu_delta / system_delta)
+                                * len(cpu_stats.get("cpu_usage", {}).get("percpu_usage", [1]))
+                                * 100,
+                                2,
+                            )
+                        else:
+                            cpu_percent = 0.0
+
+                        memory_usage = stats["memory_stats"].get("usage", 0)
+                        mem_mb = round(memory_usage / (1024 * 1024), 2)
+                        gpu_percent = get_gpu_usage()
+                        epoch = get_current_epoch(container)
+
+                        telemetry = {
+                            "status": "running",
+                            "cpu": cpu_percent,
+                            "ram_mb": mem_mb,
+                            "gpu": gpu_percent,
+                            "epoch": epoch,
+                            "timestamp": time.time(),
+                        }
+                        print(
+                            f"[REDIS MONITOR] Writing executor:{executor_name}:stats -> {telemetry}",
+                            flush=True,
+                        )
+
+                        tmp_telemetry_file = telemetry_file + ".tmp"
+                        with open(tmp_telemetry_file, "w", encoding="utf-8") as file:
+                            json.dump(telemetry, file, indent=4)
+                        os.replace(tmp_telemetry_file, telemetry_file)
+
+                        print(
+                            f"[MONITOR] CPU={cpu_percent}% RAM={mem_mb}MB GPU={gpu_percent}%",
+                            flush=True,
+                        )
+                    except Exception as exc:
+                        print(f"[MONITOR] Error: {exc}")
+                    time.sleep(5)
+
+            monitor_thread = threading.Thread(target=monitor_resources, daemon=True)
+            monitor_thread.start()
 
             # Prepare log file path in the shared results volume
             results_dir = self.config.get(
@@ -386,6 +496,8 @@ class RunTraining:
                 )
 
             finally:
+                stop_monitor = True
+                monitor_thread.join(timeout=2)
                 log_thread.join(timeout=5)
 
             exit_code = result.get("StatusCode", 0)
@@ -409,6 +521,23 @@ class RunTraining:
 
             # Cleanup manually since remove=False
             container.remove()
+
+            # Cleanup telemetry after successful execution
+            try:
+                with open(telemetry_file, "w", encoding="utf-8") as file:
+                    json.dump(
+                        {
+                            "status": "finished",
+                            "cpu": 0,
+                            "ram_mb": 0,
+                            "gpu": 0.0,
+                            "timestamp": time.time(),
+                        },
+                        file,
+                        indent=4,
+                    )
+            except Exception as e:
+                print(f"--- [INVOKER] Failed to write final telemetry: {e} ---")
 
         except Exception as exc:
             private_queue = os.getenv("WORKER_NAME", "unknown")
@@ -514,10 +643,12 @@ class RunTraining:
             # 2. Run the EXECUTOR
             # name_for_logs = f"wyolo_executor_{invoker_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             name_for_logs = f"wyolo_executor_{invoker_name}"
+            study_id = training_config.get("study_id")
             self.docker_run(
                 image_name=self.config.get("executor_image", DEFAULT_TRAIN_IMAGE),
                 executor_name=name_for_logs,
                 _temp_dir=temp_dir,
+                study_id=study_id,
             )
 
             # 3. Recover Metric: Optuna needs the accuracy to proceed
@@ -533,10 +664,20 @@ class RunTraining:
                 print(
                     f"--- [INVOKER:{invoker_name}] Trial completed. Metric: {accuracy} ---"
                 )
+                evaluation_dir = os.path.join(
+                    self.config.get(
+                        "results_dir",
+                        "/home/wyolo/train_service_results"
+                    ),
+                    "evaluation_metrics"
+                )
                 return {
                     "status": "done",
                     "accuracy": accuracy,
                     "invoker": invoker_name,
+                    "results_image": os.path.join(evaluation_dir, "results.png"),
+                    "confusion_matrix_image": os.path.join(evaluation_dir, "confusion_matrix.png"),
+                    "results_csv": os.path.join(evaluation_dir, "results.csv"),
                 }
 
             raise FileNotFoundError(
