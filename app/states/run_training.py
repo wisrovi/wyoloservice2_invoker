@@ -33,31 +33,27 @@ def parse_memory_to_bytes(mem_str: str) -> int:
     mem_str = mem_str.strip().lower()
     if not mem_str:
         raise ValueError("Empty memory string")
-    
+
     # Extract numeric part and unit
-    units = {
-        'b': 1,
-        'k': 1024,
-        'm': 1024**2,
-        'g': 1024**3,
-        't': 1024**4
-    }
-    
+    units = {"b": 1, "k": 1024, "m": 1024**2, "g": 1024**3, "t": 1024**4}
+
     # Find where the unit starts (if any)
     num_chars = []
-    unit_char = 'b'
+    unit_char = "b"
     for char in mem_str:
-        if char.isdigit() or char == '.':
+        if char.isdigit() or char == ".":
             num_chars.append(char)
         elif char in units:
             unit_char = char
             break
-            
+
     num_val = float("".join(num_chars))
     return int(num_val * units[unit_char])
 
 
-def get_system_limits(config: dict[str, Any], environments: dict[str, str]) -> tuple[float, int]:
+def get_system_limits(
+    config: dict[str, Any], environments: dict[str, str]
+) -> tuple[float, int]:
     """Calculates the hardware limits based on the host system and config.
 
     Args:
@@ -88,10 +84,7 @@ def get_system_limits(config: dict[str, Any], environments: dict[str, str]) -> t
         cpu_limit = float(total_cpus * cpu_pct)
 
     # 2. RAM: Priority: WORKER_RAM_MEMORY > Percentage of total host memory
-    ram_env = (
-        environments.get("WORKER_RAM_MEMORY")
-        or os.getenv("WORKER_RAM_MEMORY")
-    )
+    ram_env = environments.get("WORKER_RAM_MEMORY") or os.getenv("WORKER_RAM_MEMORY")
     if ram_env:
         try:
             mem_limit_bytes = parse_memory_to_bytes(ram_env)
@@ -195,7 +188,6 @@ class RunTraining:
             raise exc
 
         try:
-            
 
             console = Console()
             res_table = Table(
@@ -466,7 +458,11 @@ class RunTraining:
         # Make the training config 100% clean and serializable to avoid PyYAML/JSON pickling errors (like _thread.RLock)
         def make_serializable(data: Any) -> Any:
             if isinstance(data, dict):
-                return {k: make_serializable(v) for k, v in data.items() if not k.startswith("_")}
+                return {
+                    k: make_serializable(v)
+                    for k, v in data.items()
+                    if not k.startswith("_")
+                }
             elif isinstance(data, list):
                 return [make_serializable(v) for v in data]
             elif isinstance(data, (str, int, float, bool, type(None))):
