@@ -1,5 +1,10 @@
 # Changelog - GPU Invoker (Hive)
 
+## [1.7.3] - 2026-08-03
+### Changed
+- Configured `TrainingReportAnalyzer` to explicitly use `opencode/deepseek-v4-flash-free` LLM model.
+- Added diagnostics stdout/stderr logging outputs for OpenCode execution.
+
 ## [1.7.2] - 2026-08-03
 ### Added
 - Integrated Dataset Imbalance and Type Detector (`DatasetAnalyzer`) in `EDA` state.
