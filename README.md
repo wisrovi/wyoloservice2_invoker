@@ -87,7 +87,12 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.2 (Current Release) - 2026-08-03
+### Version 1.7.3 (Current Release) - 2026-08-03
+*   **OpenCode LLM Model Tuning:** Configured `TrainingReportAnalyzer` to use `opencode/deepseek-v4-flash-free` for report generation.
+*   **OpenCode Diagnostics Logs:** Prints exit codes and output logs (stdout/stderr) during OpenCode execution.
+*   **Version Update to v1.7.3:** Bumped version to `v1.7.3`.
+
+### Version 1.7.2 - 2026-08-03
 *   **Dataset Analyzer & OpenCode AI Reports:** Integrated `DatasetAnalyzer` in `EDA` and `TrainingReportAnalyzer` (via OpenCode local LLM execution) in `LlmAnalizer`.
 *   **Live Resource Telemetry:** Spawns a background thread in `docker_run` to monitor container CPU, RAM, and GPU stats, exporting them to `telemetry.json` in the results directory.
 *   **Gradio Task Checker Panel:** Restructured the Gradio launcher UI to add Live Telemetry readout and a Task Status verification tab (querying Celery AsyncResult).
