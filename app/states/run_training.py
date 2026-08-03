@@ -111,7 +111,7 @@ class RunTraining:
     """
 
     NAME: str = __name__
-    VERSION: str = "1.0.0"
+    VERSION: str = "1.0.1"
 
     def __init__(self, config: dict[str, Any]):
         """Initializes the RunTraining instance.
@@ -122,7 +122,7 @@ class RunTraining:
         self.config = config
         print(
             f"Executor timeout configured: "
-            f"{self.config.get('executor_timeout_seconds', 3600)}"
+            f"{self.config.get('executor_timeout_seconds', 43200)}"
         )
 
     def docker_run(self, image_name: str, executor_name: str, _temp_dir: str) -> None:
@@ -366,7 +366,7 @@ class RunTraining:
             # Wait for container with timeout
             timeout_seconds = self.config.get(
                 "executor_timeout_seconds",
-                3600,
+                43200,
             )
 
             try:
