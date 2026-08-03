@@ -87,7 +87,11 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.3 (Current Release) - 2026-08-03
+### Version 1.7.4 (Current Release) - 2026-08-03
+*   **EDA Temporary Executor Container:** Runs dataset analysis in a short-lived sibling executor container to safely mount network folders and analyze datasets before training.
+*   **Version Update to v1.7.4:** Bumped version to `v1.7.4`.
+
+### Version 1.7.3 - 2026-08-03
 *   **OpenCode LLM Model Tuning:** Configured `TrainingReportAnalyzer` to use `opencode/deepseek-v4-flash-free` for report generation.
 *   **OpenCode Diagnostics Logs:** Prints exit codes and output logs (stdout/stderr) during OpenCode execution.
 *   **Version Update to v1.7.3:** Bumped version to `v1.7.3`.
