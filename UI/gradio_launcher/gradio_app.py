@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 from typing import Any
 
@@ -27,11 +28,45 @@ import yaml
 from celery import Celery
 from wredis import RedisHashManager
 
+import socket
+
+from celery.result import AsyncResult
+
+
+def get_host_ip() -> str:
+    """Get host machine IP from inside Docker."""
+    try:
+        return socket.gethostbyname(
+            "host.docker.internal"
+        )
+    except Exception:
+        return "127.0.0.1"
+
+def build_status_table(epoch, cpu, ram, gpu):
+    return (
+        f"🖥️ **CPU:** {cpu}% &nbsp;&nbsp;|&nbsp;&nbsp; "
+        f"💾 **RAM:** {ram} MB &nbsp;&nbsp;|&nbsp;&nbsp; "
+        f"🎮 **GPU:** {gpu}% &nbsp;&nbsp;|&nbsp;&nbsp; "
+        f"🔄 **Epoch:** {epoch}"
+    )
+
 # ── Constants for Executor ───────────────────────────────────────────
 _EXECUTOR_IMAGE: str = "wisrovi/train_service:worker_executor_v1.0.0"
 _REQUEST_DIR: str = "/home/wyolo/request"
 _EVENTS_DIR: str = "/home/wyolo/events"
-_RESULTS_DIR: str = "/home/wyolo/train_service_results"
+_RESULTS_DIR: str = "/results"
+_EVALUATION_DIR: str = "/results/evaluation_metrics"
+_RESULTS_IMAGE: str = os.path.join(
+    _EVALUATION_DIR,
+    "results.png",
+)
+
+_CONFUSION_MATRIX_IMAGE: str = os.path.join(
+    _EVALUATION_DIR,
+    "confusion_matrix.png",
+)
+
+
 
 # ── Constants ──────────────────────────────────────────────────────
 _CONTROL_HOST: str = os.getenv("CONTROL_HOST", "127.0.0.1")
@@ -40,8 +75,6 @@ _REDIS_URL: str = f"redis://{_CONTROL_HOST}:{_REDIS_PORT}/0"
 
 _PRIVATE_QUEUE: str = (
     os.getenv("PRIVATE_QUEUE")
-    or os.getenv("WORKER_HOST")
-    or subprocess.getoutput("hostname -I").split()[0]
     or "default"
 )
 
@@ -53,6 +86,7 @@ _celery_app: Celery = Celery(
     backend=_REDIS_URL,
 )
 _hm: RedisHashManager | None = None
+
 
 
 # ── Redis ──────────────────────────────────────────────────────────
@@ -67,6 +101,25 @@ def _get_hm() -> RedisHashManager | None:
         except Exception:
             _hm = None
     return _hm
+
+def get_telemetry():
+    try:
+        if not os.path.exists(TELEMETRY_FILE):
+            return "Esperando entrenamiento..."
+
+        with open(
+            TELEMETRY_FILE,
+            encoding="utf-8"
+        ) as file:
+            data = json.load(file)
+
+        return (
+            f"CPU: {data.get('cpu', 0):.2f}%\n"
+            f"RAM: {data.get('ram_mb', 0):.2f} MB"
+        )
+
+    except Exception as exc:
+        return f"Error leyendo telemetría: {exc}"
 
 
 def check_redis_connection() -> str:
@@ -187,20 +240,20 @@ def parse_yaml_file(file: gr.File | None) -> str:
 # ── Queue resolution ────────────────────────────────────────────────
 
 
-def resolve_queue(queue_val: str, custom_val: str) -> str:
-    """Resolve the effective queue name from the UI selector.
+# def resolve_queue(queue_val: str, custom_val: str) -> str:
+#     """Resolve the effective queue name from the UI selector.
 
-    Args:
-        queue_val: The dropdown selection value.
-        custom_val: The custom queue textbox value (used when
-            ``queue_val == "__custom__"``).
+#     Args:
+#         queue_val: The dropdown selection value.
+#         custom_val: The custom queue textbox value (used when
+#             ``queue_val == "__custom__"``).
 
-    Returns:
-        str: The resolved queue name.
-    """
-    if queue_val == "__custom__":
-        return custom_val.strip() or "gpus_high"
-    return queue_val
+#     Returns:
+#         str: The resolved queue name.
+#     """
+#     if queue_val == "__custom__":
+#         return custom_val.strip() or "gpus_high"
+#     return queue_val
 
 
 # ── Task submission ─────────────────────────────────────────────────
@@ -208,8 +261,7 @@ def resolve_queue(queue_val: str, custom_val: str) -> str:
 
 def validate_and_launch(
     yaml_content: str,
-    queue_val: str,
-    custom_val: str,
+    execution_mode: str,
 ) -> str:
     """Validate YAML, persist it, and send a Celery task.
 
@@ -226,7 +278,7 @@ def validate_and_launch(
         return msg or "❌ Configuración inválida"
 
     save_template(yaml_content)
-    queue = resolve_queue(queue_val, custom_val)
+    queue = _PRIVATE_QUEUE
 
     try:
         payload: dict[str, Any] = yaml.safe_load(yaml_content)
@@ -237,11 +289,18 @@ def validate_and_launch(
         payload["user_id"] = payload.get("metadata", {}).get("author", "unknown_user")
 
     try:
+        task_name = (
+            "tasks.train_on_gpu"
+            if execution_mode == "full"
+            else "tasks.train_on_gpu_simple"
+        )
+
         result = _celery_app.send_task(
-            "tasks.train_on_gpu_simple",
+            task_name,
             args=[payload],
             queue=queue,
         )
+
     except Exception as exc:
         return f"❌ Celery error: {exc}"
 
@@ -250,11 +309,126 @@ def validate_and_launch(
     return (
         "✅ **Training sent**\n\n"
         f"📋 **Task ID:** `{result.id}`\n"
+        f"⚙️ **Mode:** `{execution_mode}`\n"
         f"🎯 **Queue:** `{queue}`\n"
         f"📦 **Model:** `{model_name}`\n"
         f"🏷️ **Type:** `{type_name}`"
     )
 
+def check_task_status(task_id: str) -> tuple[str, str]:
+    """
+    Check the status of a Celery task.
+
+    Args:
+        task_id: Celery task identifier.
+
+    Returns:
+        Tuple containing:
+            - Human-readable task status.
+            - LLM analysis text (if available).
+    """
+    if not task_id.strip():
+        return "❌ Task ID required", ""
+
+    try:
+        result = AsyncResult(task_id, app=_celery_app)
+
+        info = result.info
+
+        message = (
+            f"📋 Task ID: `{task_id}`\n\n"
+            f"📡 State: **{result.state}**\n\n"
+        )
+
+        llm_text = ""
+
+        if isinstance(info, dict):
+
+            # Extract LLM report separately
+            llm_text = (
+                info.get("llm_report")
+                or info.get("llm_analysis")
+                or info.get("analysis")
+                or ""
+            )
+
+            # Remove LLM content from the info block
+            info_clean = dict(info)
+            info_clean.pop("llm_report", None)
+            info_clean.pop("llm_analysis", None)
+            info_clean.pop("analysis", None)
+
+            if info_clean:
+                message += f"ℹ️ Info: `{info_clean}`"
+
+        else:
+            message += f"ℹ️ Info: `{info}`"
+
+        return message, llm_text
+
+    except Exception as exc:
+        return f"❌ Error: {exc}", ""
+
+
+def get_executor_stats() -> str:
+    """
+    Read executor telemetry written by RunTraining.
+    """
+
+    telemetry_file = (
+        "/results/telemetry.json"
+    )
+
+    if not os.path.exists(telemetry_file):
+        return "⚪ Waiting for executor telemetry..."
+
+    try:
+        with open(
+            telemetry_file,
+            encoding="utf-8"
+        ) as file:
+            telemetry = json.load(file)
+
+        status = telemetry.get("status", "unknown")
+
+        if status != "running":
+            return (
+                "### 📊 Hardware Usage\n\n"
+                "⚪ No active training\n\n"
+                "CPU: N/A\n\n"
+                "RAM: N/A\n\n"
+                "GPU: N/A"
+            )
+
+        cpu = telemetry.get("cpu", 0)
+        ram = telemetry.get("ram_mb", 0)
+        gpu = telemetry.get("gpu", 0)
+        epoch = telemetry.get("epoch", "N/A")
+
+        return build_status_table(
+            epoch=epoch,
+            cpu=f"{cpu:.2f}",
+            ram=f"{ram:.2f}",
+            gpu=gpu,
+        )
+
+    except Exception as exc:
+        return f"❌ Telemetry error: {exc}"
+
+def get_training_artifacts():
+
+    print("GET TRAINING ARTIFACTS")
+
+    print(_RESULTS_IMAGE)
+    print(os.path.exists(_RESULTS_IMAGE))
+
+    print(_CONFUSION_MATRIX_IMAGE)
+    print(os.path.exists(_CONFUSION_MATRIX_IMAGE))
+
+    return (
+        _RESULTS_IMAGE if os.path.exists(_RESULTS_IMAGE) else None,
+        _CONFUSION_MATRIX_IMAGE if os.path.exists(_CONFUSION_MATRIX_IMAGE) else None,
+    )
 
 def launch_dry_run() -> str:
     """Send a hardcoded dry-run smoke test directly to the invoker.
@@ -394,7 +568,7 @@ _MIN_REQUIRED_KEYS: dict[str, type] = {
     "sweeper": dict,
 }
 
-_MIN_NESTED: dict[str, dict[str, type]] = {
+_MIN_NESTED: dict[str, dict[str, Any]] = {
     "metadata": {"author": str},
     "sweeper": {"fitness": str, "study_name": str},
 }
@@ -430,10 +604,34 @@ def validate_min_config(yaml_content: str) -> tuple[bool, str]:
                 return False, f"❌ Missing *{parent}.{key}*"
             val = cfg[parent][key]
             if not isinstance(val, expected):
-                return False, f"❌ *{parent}.{key}* debe ser un ``{expected.__name__}``"
-            if expected is str and not val.strip():
-                return False, f"❌ *{parent}.{key}* no puede estar vacío"
+                if isinstance(expected, tuple):
+                    expected_name = " or ".join(
+                        t.__name__ for t in expected
+                    )
+                else:
+                    expected_name = expected.__name__
 
+                return (
+                    False,
+                    f"❌ *{parent}.{key}* debe ser {expected_name}"
+                )
+                if expected is str and not val.strip():
+                    return False, f"❌ *{parent}.{key}* no puede estar vacío"
+
+    train_cfg = cfg.get("train", {})
+
+    if "epochs" in train_cfg and train_cfg["epochs"] <= 0:
+        return False, "❌ train.epochs must be > 0"
+
+    if "imgsz" in train_cfg and train_cfg["imgsz"] <= 0:
+        return False, "❌ train.imgsz must be > 0"
+
+    if "batch" in train_cfg and train_cfg["batch"] == 0:
+        return False, "❌ train.batch cannot be 0"
+    if "data" in train_cfg:
+        if not train_cfg["data"].strip():
+            return False, "❌ train.data cannot be empty"
+    
     return True, "✅ Configuración mínima válida"
 
 
@@ -443,16 +641,16 @@ def _validate_and_update_btn(yaml_content: str) -> tuple[str, dict]:
     return msg, gr.update(interactive=valid)
 
 
-def toggle_custom(queue_val: str) -> dict:
-    """Show or hide the custom queue textbox based on dropdown selection.
+# def toggle_custom(queue_val: str) -> dict:
+#     """Show or hide the custom queue textbox based on dropdown selection.
 
-    Args:
-        queue_val: The current dropdown value.
+#     Args:
+#         queue_val: The current dropdown value.
 
-    Returns:
-        dict: An ``gr.update`` dictionary for the textbox visibility.
-    """
-    return gr.update(visible=(queue_val == "__custom__"))
+#     Returns:
+#         dict: An ``gr.update`` dictionary for the textbox visibility.
+#     """
+#     return gr.update(visible=(queue_val == "__custom__"))
 
 
 # ── YAML template reference (shown in the accordion) ────────────────
@@ -570,24 +768,51 @@ _CSS_MODERN: str = """\
 
 /* Header styling */
 #app-header {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2c5aa0 100%);
+    background: linear-gradient(
+        135deg,
+        #7c3aed 0%,
+        #9333ea 50%,
+        #a855f7 100%
+    );
+
     color: white;
-    padding: 1.5rem 2rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 20px rgba(30, 58, 95, 0.3);
+
+    padding: 2rem 2rem;
+
+    margin-bottom: 2rem;
+
+    text-align: center;
+
+    border-radius: 0 0 24px 24px;
+
+    box-shadow: 0 8px 24px rgba(
+        124,
+        58,
+        237,
+        0.35
+    );
 }
-#app-header h1 { margin: 0; font-size: 1.75rem; font-weight: 600; }
-#app-header p { margin: 0.5rem 0 0; opacity: 0.9; font-size: 1rem; }
+
+#app-header h1 {
+    margin: 0;
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+#app-header p {
+    margin-top: 0.75rem;
+    opacity: 0.95;
+    font-size: 1rem;
+    font-weight: 400;
+}
 
 /* Card panels */
 .mode-card {
-    background: #fafbfc;
-    border: 1px solid #e1e4e8;
-    border-radius: 10px;
-    padding: 1.25rem;
+    background: transparent;
+    border: none;
+    padding: 0;
     margin-bottom: 1rem;
-    transition: box-shadow 0.2s;
+    box-shadow: none;
 }
 .mode-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
 
@@ -617,11 +842,11 @@ _CSS_MODERN: str = """\
 
 /* Executor advanced section */
 #executor-section {
-    border: 1px solid #e1e4e8;
-    border-radius: 10px;
-    padding: 1rem;
-    background: #f8f9fa;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
     margin-top: 1rem;
+    box-shadow: none !important;
 }
 #executor-section summary {
     font-weight: 600;
@@ -649,93 +874,103 @@ _CSS_HIDDEN_DRY_RUN: str = """\
 # ── UI construction ─────────────────────────────────────────────────
 
 with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
-    # -- Header --------------------------------------------------------
+    status_timer = gr.Timer(2)
+
     gr.HTML("""
     <div id="app-header">
         <h1>🚀 Invoker Launcher</h1>
-        <p>Direct training submission to local GPU invoker • Redis-persisted configs • Queue-aware dispatch</p>
+        <p>
+            Direct training submission to local GPU invoker • 
+            Redis-persisted configs • 
+            Queue-aware dispatch
+        </p>
     </div>
     """)
 
-    # -- Status & Redis connection ------------------------------------
     status_bar = gr.Markdown(check_redis_connection)
 
-    # -- Mode selector: Edit vs Upload ---------------------------------
-    with gr.Row():
-        mode_radio = gr.Radio(
-            choices=[("✏️ Edit YAML", "edit"), ("📤 Upload .yaml", "upload")],
-            value="edit",
-            label="Configuration Mode",
-            elem_classes=["mode-selector"],
-            container=False,
-        )
+    with gr.Tabs():
 
-    # -- Left: YAML Editor (visible in Edit mode) ---------------------
-    with gr.Column(visible=True) as editor_col:
-        with gr.Group(elem_classes=["mode-card"]):
-            gr.Markdown("### 📄 YAML Configuration")
-            yaml_editor = gr.Code(
-                value=load_template,
-                label="YAML Editor",
-                language="yaml",
-                lines=22,
-                interactive=True,
-                elem_id="yaml-editor",
-            )
+        # ============================================================
+        # TRAINING TAB
+        # ============================================================
+
+        with gr.Tab("🚀 Training"):
+
             with gr.Row():
-                save_btn = gr.Button(
-                    "💾 Save Template",
-                    variant="secondary",
-                    size="sm",
-                    elem_id="save-btn",
-                )
-                clear_btn = gr.Button(
-                    "🗑 Clear",
-                    variant="secondary",
-                    size="sm",
+                mode_radio = gr.Radio(
+                    choices=[
+                        ("✏️ Edit YAML", "edit"),
+                        ("📤 Upload .yaml", "upload")
+                    ],
+                    value="edit",
+                    label="Configuration Mode",
+                    elem_classes=["mode-selector"],
+                    container=False,
                 )
 
-    # -- Left: File Upload (visible in Upload mode) -------------------
-    with gr.Column(visible=False) as upload_col:
-        with gr.Group(elem_classes=["mode-card"]):
-            gr.Markdown("### 📤 Upload YAML Configuration")
-            yaml_file = gr.File(
-                label="Select .yaml / .yml file",
-                file_types=[".yaml", ".yml"],
-                file_count="single",
-                elem_id="yaml-upload",
-            )
-            upload_preview = gr.Code(
-                label="Preview",
-                language="yaml",
-                lines=12,
-                interactive=False,
-                elem_id="upload-preview",
-            )
+            with gr.Column(visible=True) as editor_col:
+                with gr.Group(elem_classes=["mode-card"]):
+                    gr.Markdown("### 📄 YAML Configuration")
 
-    # -- Right: Send Parameters ---------------------------------------
-    with gr.Row():
-        with gr.Column(scale=1):
+                    yaml_editor = gr.Code(
+                        value=load_template,
+                        label="YAML Editor",
+                        language="yaml",
+                        lines=22,
+                        interactive=True,
+                        elem_id="yaml-editor",
+                    )
+
+                    with gr.Row():
+                        save_btn = gr.Button(
+                            "💾 Save Template",
+                            variant="secondary",
+                            size="sm",
+                            elem_id="save-btn",
+                        )
+
+                        clear_btn = gr.Button(
+                            "🗑 Clear",
+                            variant="secondary",
+                            size="sm",
+                        )
+
+            with gr.Column(visible=False) as upload_col:
+                with gr.Group(elem_classes=["mode-card"]):
+
+                    gr.Markdown("### 📤 Upload YAML Configuration")
+
+                    yaml_file = gr.File(
+                        label="Select .yaml / .yml file",
+                        file_types=[".yaml", ".yml"],
+                        file_count="single",
+                        elem_id="yaml-upload",
+                    )
+
+                    upload_preview = gr.Code(
+                        label="Preview",
+                        language="yaml",
+                        lines=12,
+                        interactive=False,
+                        elem_id="upload-preview",
+                    )
+
             with gr.Group(elem_classes=["mode-card"]):
+
                 gr.Markdown("### ⚙️ Dispatch Parameters")
 
-                queue_selector = gr.Dropdown(
+                execution_mode = gr.Radio(
                     choices=[
-                        (f"🖥️ Private Queue ({_PRIVATE_QUEUE})", _PRIVATE_QUEUE),
-                        ("⚡ High Priority (gpus_high)", "gpus_high"),
-                        ("✏️ Custom Queue...", "__custom__"),
+                        ("⚡ Simple Training", "simple"),
+                        ("🔬 Full Pipeline", "full"),
                     ],
-                    label="Destination Queue",
-                    value=_PRIVATE_QUEUE,
-                    info=(
-                        "Default: local invoker's private queue. "
-                        "High priority routes to any available GPU invoker."
-                    ),
+                    value="simple",
+                    label="Execution Mode",
                 )
-                custom_queue = gr.Textbox(
-                    label="Custom Queue Name",
-                    placeholder="gpus_medium",
-                    visible=False,
+
+                gr.Markdown(
+                    f"🎯 **Destination Queue:** `{_PRIVATE_QUEUE}`"
                 )
 
                 output_msg = gr.Markdown("")
@@ -748,6 +983,7 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
                         interactive=False,
                         elem_id="train-btn",
                     )
+
                     dry_run_btn = gr.Button(
                         "🧪",
                         variant="secondary",
@@ -755,35 +991,91 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
                         elem_id="dry-run-btn",
                     )
 
-            # -- Advanced: Executor Direct Run ------------------------
-            with gr.Group(elem_id="executor-section", visible=True):
-                gr.Markdown("### ⚡ Advanced: Direct Executor Run")
-                gr.Markdown(
-                    "*Bypasses Celery queue. Writes config to `/home/wyolo/request` "
-                    "and launches executor container directly with GPU access.*"
+            with gr.Accordion("📋 YAML Reference", open=False):
+                gr.Markdown(_YAML_TEMPLATE_DOC)
+
+            with gr.Accordion("💡 Quick Templates", open=False):
+                gr.Examples(
+                    examples=[
+                        [_TEMPLATE_CLS],
+                        [_TEMPLATE_DET],
+                        [_TEMPLATE_SEG],
+                    ],
+                    inputs=[yaml_editor],
+                    label="Click to load a template into editor",
                 )
+
+        # ============================================================
+        # MONITORING TAB
+        # ============================================================
+
+        with gr.Tab("📊 Monitoring"):
+
+            hardware_output = gr.Markdown(
+                build_status_table("-", "-", "-", "-")
+            )
+
+            task_id_box = gr.Textbox(
+                label="Task ID",
+                interactive=True,
+                placeholder="Paste task id here...",
+            )
+
+            with gr.Row():
+                check_btn = gr.Button(
+                    "🔍 Check Status",
+                    variant="secondary",
+                    size="sm",
+                )
+
+                refresh_results_btn = gr.Button(
+                    "🔄 Refresh Results",
+                    size="sm",
+                )
+
+            status_output = gr.Markdown("")
+
+            llm_output = gr.Textbox(
+                label="LLM Analysis",
+                lines=15,
+                interactive=False,
+            )
+
+            with gr.Accordion(
+                "📈 Training Results",
+                open=True,
+            ):
+                with gr.Row():
+                    results_plot = gr.Image(
+                        label="Training Metrics"
+                    )
+
+                    confusion_matrix_plot = gr.Image(
+                        label="Confusion Matrix"
+                    )
+
+            with gr.Group(
+                elem_id="executor-section",
+                visible=True,
+            ):
+                gr.Markdown(
+                    "### ⚡ Advanced: Direct Executor Run"
+                )
+
+                gr.Markdown(
+                    "*Bypasses Celery queue. Writes config to "
+                    "`/home/wyolo/request` and launches executor "
+                    "container directly with GPU access.*"
+                )
+
                 executor_btn = gr.Button(
                     "🚀 Run via Executor",
                     variant="primary",
                     size="lg",
                     elem_id="executor-btn",
                 )
+
                 executor_output = gr.Markdown("")
-
-    # -- Accordions ----------------------------------------------------
-    with gr.Accordion("📋 YAML Reference", open=False):
-        gr.Markdown(_YAML_TEMPLATE_DOC)
-
-    with gr.Accordion("💡 Quick Templates", open=False):
-        gr.Examples(
-            examples=[
-                [_TEMPLATE_CLS],
-                [_TEMPLATE_DET],
-                [_TEMPLATE_SEG],
-            ],
-            inputs=[yaml_editor],
-            label="Click to load a template into editor",
-        )
 
     # -- Event wiring --------------------------------------------------
 
@@ -846,18 +1138,44 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
         outputs=[output_msg, launch_btn],
     )
 
-    queue_selector.change(
-        fn=toggle_custom,
-        inputs=[queue_selector],
-        outputs=[custom_queue],
-    )
+    # queue_selector.change(
+    #     fn=toggle_custom,
+    #     inputs=[queue_selector],
+    #     outputs=[custom_queue],
+    # )
 
     launch_btn.click(
         fn=validate_and_launch,
-        inputs=[yaml_editor, queue_selector, custom_queue],
+        inputs=[yaml_editor, execution_mode],
         outputs=[output_msg],
     )
     dry_run_btn.click(fn=launch_dry_run, outputs=[output_msg])
+
+    check_btn.click(
+        fn=check_task_status,
+        inputs=[task_id_box],
+        outputs=[status_output, llm_output,],
+    )
+    # def test_timer():
+    #     return "⏱️ Timer funcionando"
+    status_timer.tick(
+        fn=check_task_status,
+        inputs=[task_id_box],
+        outputs=[status_output, llm_output,],
+    )
+
+    status_timer.tick(
+        fn=get_executor_stats,
+        outputs=[hardware_output],
+    )
+
+    refresh_results_btn.click(
+        fn=get_training_artifacts,
+        outputs=[
+            results_plot,
+            confusion_matrix_plot,
+        ],
+    )
 
     # Executor direct run
     executor_btn.click(
@@ -873,7 +1191,10 @@ if __name__ == "__main__":
     demo.launch(  # noqa: S104
         server_name="0.0.0.0",
         server_port=7860,
-        theme=_THEME,
+        # theme=_THEME,
         head=_JS_SHORTCUTS,
-        css=_CSS_HIDDEN_DRY_RUN,
+        # css=_CSS_HIDDEN_DRY_RUN,
+        allowed_paths=[
+            "/results"
+        ]      
     )
