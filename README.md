@@ -87,7 +87,13 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.1 (Current Release) - 2026-08-03
+### Version 1.7.2 (Current Release) - 2026-08-03
+*   **Dataset Analyzer & OpenCode AI Reports:** Integrated `DatasetAnalyzer` in `EDA` and `TrainingReportAnalyzer` (via OpenCode local LLM execution) in `LlmAnalizer`.
+*   **Live Resource Telemetry:** Spawns a background thread in `docker_run` to monitor container CPU, RAM, and GPU stats, exporting them to `telemetry.json` in the results directory.
+*   **Gradio Task Checker Panel:** Restructured the Gradio launcher UI to add Live Telemetry readout and a Task Status verification tab (querying Celery AsyncResult).
+*   **Version Update to v1.7.2:** Bumped version to `v1.7.2`.
+
+### Version 1.7.1 - 2026-08-03
 *   **Fix Default Timeout Inconsistency:** Synchronized default executor timeout to 12 hours (43200 seconds) in `run_training.py` and added configurable option `executor_timeout_seconds` in `config.yaml`. Bumped global version to `v1.7.1`.
 
 ### Version 1.5.0 - 2026-07-31
