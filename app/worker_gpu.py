@@ -27,7 +27,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.7.1"
+VERSION = "v1.7.2"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -236,6 +236,14 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
     user_id: str = training_config.get("user_id", "unknown")
     study_id = training_config.get("study_id")
 
+    self.update_state(
+        state="RUNNING",
+        meta={
+            "status": "Starting Executor",
+            "invoker": invoker_name,
+        },
+    )
+
     console = Console()
 
     task_table = Table(show_header=False, box=None)
@@ -442,8 +450,37 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
             )
 
     try:
+        self.update_state(
+            state="RUNNING",
+            meta={
+                "status": "Launching Docker Executor",
+                "invoker": invoker_name,
+            },
+        )
         run_training = RunTraining(CONFIG)
+        training_config["task_id"] = self.request.id
+        self.update_state(
+            state="PROGRESS",
+            meta={
+                "status": "Starting executor",
+                "epoch": 0,
+                "gpu": "N/A",
+                "ram": "N/A",
+                "cpu": "N/A",
+            },
+        )
         resultado = run_training(training_config)
+
+        self.update_state(
+            state="PROGRESS",
+            meta={
+                "status": "Executor finished",
+                "epoch": "Done",
+                "gpu": "N/A",
+                "ram": "N/A",
+                "cpu": "N/A",
+            },
+        )
 
         accuracy = resultado.get("accuracy", "N/A")
         console.print(
