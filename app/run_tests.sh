@@ -3,9 +3,10 @@
 # This ensures a clean and consistent testing environment.
 
 IMAGE_NAME="worker-test-env"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Build a temporary image for testing
-docker build -t $IMAGE_NAME -f - . <<EOF
+docker build -t $IMAGE_NAME -f - "$DIR" <<EOF
 FROM python:3.13-slim
 WORKDIR /app
 COPY requirements.txt .
