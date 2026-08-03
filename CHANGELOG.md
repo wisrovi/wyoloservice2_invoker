@@ -1,5 +1,9 @@
 # Changelog - GPU Invoker (Hive)
 
+## [1.7.5] - 2026-08-03
+### Fixed
+- Corrected python command list structure inside the docker container call in `EDA` to avoid syntax errors with single quotes.
+
 ## [1.7.4] - 2026-08-03
 ### Added
 - Implemented Option A (Temporary Container execution) for the `EDA` state dataset analysis.
