@@ -31,6 +31,18 @@ source .venv/bin/activate
 make install || pip install -r requirements.txt
 ```
 
+## Running Tests
+To run the unit tests in a clean and consistent Docker environment:
+```bash
+bash app/run_tests.sh
+```
+
+To calculate code coverage using `pytest-cov` locally:
+```bash
+cd app
+bash coverage.sh
+```
+
 ## Configuration
 Configuration is managed via `control_host.env` and `config.yaml` files. Never commit secrets directly to the codebase.
 
@@ -75,7 +87,10 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.5.0 (Current Release) - 2026-07-31
+### Version 1.7.1 (Current Release) - 2026-08-03
+*   **Fix Default Timeout Inconsistency:** Synchronized default executor timeout to 12 hours (43200 seconds) in `run_training.py` and added configurable option `executor_timeout_seconds` in `config.yaml`. Bumped global version to `v1.7.1`.
+
+### Version 1.5.0 - 2026-07-31
 *   **Version Update to v1.5.0:** Bumped core invoker version to reflect recent telemetry, startup registry, and micro-train features.
 
 ### Version 1.3.4 (Current Release) - 2026-07-31
