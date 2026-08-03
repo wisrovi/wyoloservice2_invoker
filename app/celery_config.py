@@ -64,7 +64,7 @@ def print_table() -> None:
     )
     init_table.add_row(
         "[bold cyan]CPU Cores:[/bold cyan]",
-        f"[bold green]{environments.get('WORKER_RAM_MEMORY', 'N/A')}[/bold green]"
+        f"[bold green]{environments.get('WORKER_CPU_CORES_AVAILABLE', 'N/A')}[/bold green]",
     )
     init_table.add_row(
         "[bold cyan]RAM Memory (WORKER_RAM_MEMORY):[/bold cyan]",
