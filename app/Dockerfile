@@ -1,11 +1,14 @@
 FROM python:3.10-slim
 WORKDIR /app
 
-# Install Docker CLI client
+# Install Docker CLI client and curl
 RUN apt-get update && apt-get install -y \
     curl \
     && curl -fsSL https://get.docker.com/ | sh \
     && rm -rf /var/lib/apt/lists/*
+
+# Install OpenCode
+RUN curl -fsSL https://opencode.ai/install | bash
 
 # The build context will be the 'invoker' folder
 COPY requirements.txt ./requirements.txt
