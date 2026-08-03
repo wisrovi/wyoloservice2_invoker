@@ -27,7 +27,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.6.1"
+VERSION = "v1.7.0"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -286,9 +286,15 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
                 f"study:{study_id}:active_trial", json.dumps(active_info), ex=3600
             )
             # Store full JSON details in a dedicated key
-            redis_client.set(f"study:{study_id}:invoker_details", json.dumps(invoker_details), ex=86400)
+            redis_client.set(
+                f"study:{study_id}:invoker_details",
+                json.dumps(invoker_details),
+                ex=86400,
+            )
             # Store an enriched, readable string in the classic key for UI compatibility
-            invoker_readable = f"{invoker_name} (IP: {worker_host} | Host: {worker_hostname})"
+            invoker_readable = (
+                f"{invoker_name} (IP: {worker_host} | Host: {worker_hostname})"
+            )
             redis_client.set(f"study:{study_id}:invoker", invoker_readable, ex=86400)
 
             redis_client.sadd(f"study:{study_id}:all_invokers", invoker_name)
@@ -417,9 +423,15 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
                 f"study:{study_id}:active_trial", json.dumps(active_info), ex=3600
             )
             # Store full JSON details in a dedicated key
-            redis_client.set(f"study:{study_id}:invoker_details", json.dumps(invoker_details), ex=86400)
+            redis_client.set(
+                f"study:{study_id}:invoker_details",
+                json.dumps(invoker_details),
+                ex=86400,
+            )
             # Store an enriched, readable string in the classic key for UI compatibility
-            invoker_readable = f"{invoker_name} (IP: {worker_host} | Host: {worker_hostname})"
+            invoker_readable = (
+                f"{invoker_name} (IP: {worker_host} | Host: {worker_hostname})"
+            )
             redis_client.set(f"study:{study_id}:invoker", invoker_readable, ex=86400)
 
             redis_client.sadd(f"study:{study_id}:all_invokers", invoker_name)
@@ -468,29 +480,33 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
         raise exc
 
 
-def pause_monitor_thread(app_inst, node_name: str, private_queue_ip: str, default_hours: float):
+def pause_monitor_thread(
+    app_inst, node_name: str, private_queue_ip: str, default_hours: float
+):
     """Monitors the pause state in Redis and cancels/adds public queues dynamically."""
-    print(f"[PAUSE MONITOR] Starting monitor thread for node: {node_name} (IP: {private_queue_ip})")
-    
+    print(
+        f"[PAUSE MONITOR] Starting monitor thread for node: {node_name} (IP: {private_queue_ip})"
+    )
+
     # Celery public queues to manage
     public_queues = ["gpus_high", "gpus_medium", "gpus_low"]
-    
+
     # Start as active
     public_queues_active = True
-    
+
     while True:
         try:
             # We connect/reconnect each time or reuse connection
             redis_client = redis.from_url(app_inst.conf.broker_url)
-            
+
             state_key = f"invoker:{private_queue_ip}:pause_state"
             until_key = f"invoker:{private_queue_ip}:pause_until"
-            
+
             state_bytes = redis_client.get(state_key)
             state = state_bytes.decode("utf-8") if state_bytes else "active"
-            
+
             now = time.time()
-            
+
             # Check temporal pause expiration
             if state == "paused_temporal":
                 until_bytes = redis_client.get(until_key)
@@ -501,30 +517,36 @@ def pause_monitor_thread(app_inst, node_name: str, private_queue_ip: str, defaul
                         redis_client.set(state_key, "active")
                         redis_client.delete(until_key)
                         state = "active"
-                        print(f"[PAUSE MONITOR] Temporal pause expired. Activating node {node_name}")
+                        print(
+                            f"[PAUSE MONITOR] Temporal pause expired. Activating node {node_name}"
+                        )
                 else:
                     # Si está en paused_temporal pero no tiene hasta cuándo,
                     # por seguridad lo reactivamos.
                     redis_client.set(state_key, "active")
                     state = "active"
-            
+
             # Apply pause or active state
             if state in ("paused_perpetual", "paused_temporal"):
                 if public_queues_active:
-                    print(f"[PAUSE MONITOR] Node {node_name} entering PAUSE. Cancelling public queues...")
+                    print(
+                        f"[PAUSE MONITOR] Node {node_name} entering PAUSE. Cancelling public queues..."
+                    )
                     for q in public_queues:
                         app_inst.control.cancel_consumer(q, destination=[node_name])
                     public_queues_active = False
             else:  # active o cualquier otra cosa
                 if not public_queues_active:
-                    print(f"[PAUSE MONITOR] Node {node_name} entering ACTIVE. Resuming public queues...")
+                    print(
+                        f"[PAUSE MONITOR] Node {node_name} entering ACTIVE. Resuming public queues..."
+                    )
                     for q in public_queues:
                         app_inst.control.add_consumer(q, destination=[node_name])
                     public_queues_active = True
-                    
+
         except Exception as e:
             print(f"[PAUSE MONITOR] Error in monitor loop: {e}")
-            
+
         time.sleep(10)
 
 
@@ -533,12 +555,12 @@ def setup_pause_monitor(sender=None, **kwargs):
     """Initializes the background pause monitor thread and registers worker telemetry when ready."""
     if sender is None:
         return
-        
+
     node_name = sender.hostname
     # Get the worker host IP from PRIVATE_QUEUE environment or sender name
     private_queue_ip = os.getenv("WORKER_HOST", "unknown")
     default_hours = float(CONFIG.get("pause_duration_hours", 4))
-    
+
     # Register invoker metadata in Redis on startup
     try:
         redis_client = redis.from_url(app.conf.broker_url)
@@ -548,14 +570,17 @@ def setup_pause_monitor(sender=None, **kwargs):
         worker_cpus = os.getenv("WORKER_CPU_CORES", "unknown")
         worker_gpu_count = os.getenv("WORKER_GPU_COUNT", "0")
         worker_gpu_model = os.getenv("WORKER_GPU_MODEL", "unknown")
-        
+
         # Calculate limits allocated for the executor
         import multiprocessing
+
         cpu_pct = float(CONFIG.get("cpu_limit_pct", 0.85))
         mem_pct = float(CONFIG.get("mem_limit_pct", 0.60))
-        
+
         # CPU allocation calculation
-        cores_env = os.getenv("WORKER_CPU_CORES_AVAILABLE") or os.getenv("WORKER_CPU_CORES")
+        cores_env = os.getenv("WORKER_CPU_CORES_AVAILABLE") or os.getenv(
+            "WORKER_CPU_CORES"
+        )
         if cores_env:
             try:
                 allocated_cpus = float(cores_env)
@@ -563,10 +588,12 @@ def setup_pause_monitor(sender=None, **kwargs):
                 allocated_cpus = float(multiprocessing.cpu_count() * cpu_pct)
         else:
             allocated_cpus = float(multiprocessing.cpu_count() * cpu_pct)
-            
+
         # RAM allocation calculation
         ram_env = os.getenv("WORKER_RAM_MEMORY")
-        allocated_ram = ram_env if ram_env else f"{int(mem_pct * 100)}% of total host RAM"
+        allocated_ram = (
+            ram_env if ram_env else f"{int(mem_pct * 100)}% of total host RAM"
+        )
 
         metadata = {
             "version": VERSION,
@@ -580,24 +607,29 @@ def setup_pause_monitor(sender=None, **kwargs):
             "executor_allocated_ram": allocated_ram,
             "executor_cpu_limit_pct": cpu_pct,
             "executor_mem_limit_pct": mem_pct,
-            "startup_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            "status": "online"
+            "startup_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "online",
         }
-        
+
         redis_client.set(f"invoker:{worker_host}:version", json.dumps(metadata))
-        print(f"[METADATA REGISTRATION] Saved host metadata to Redis key 'invoker:{worker_host}:version'")
+        print(
+            f"[METADATA REGISTRATION] Saved host metadata to Redis key 'invoker:{worker_host}:version'"
+        )
     except Exception as e:
-        print(f"[METADATA REGISTRATION] Warning: Failed to save host metadata to Redis: {e}")
+        print(
+            f"[METADATA REGISTRATION] Warning: Failed to save host metadata to Redis: {e}"
+        )
 
     t = threading.Thread(
         target=pause_monitor_thread,
         args=(app, node_name, private_queue_ip, default_hours),
-        daemon=True
+        daemon=True,
     )
     t.start()
 
 
 from celery.worker.control import control_command
+
 
 @control_command(
     args=[("image_name", str)],
@@ -606,14 +638,12 @@ from celery.worker.control import control_command
 def force_docker_pull(state, image_name):
     """Executes a docker pull command on the worker host for the specified image."""
     import subprocess
+
     print(f"[CONTROL COMMAND] Received force_docker_pull request for: {image_name}")
     try:
         # Run docker pull command to download the updated image from Docker Hub
         result = subprocess.run(
-            ["docker", "pull", image_name],
-            capture_output=True,
-            text=True,
-            check=True
+            ["docker", "pull", image_name], capture_output=True, text=True, check=True
         )
         output_str = result.stdout.strip()
         print(f"[CONTROL COMMAND] Successfully pulled image: {image_name}")
@@ -626,4 +656,3 @@ def force_docker_pull(state, image_name):
         error_msg = f"Unexpected error: {str(exc)}"
         print(f"[CONTROL COMMAND] Error: {error_msg}")
         return {"status": "failed", "image": image_name, "error": error_msg}
-
