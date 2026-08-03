@@ -1,5 +1,9 @@
 # Changelog - GPU Invoker (Hive)
 
+## [1.7.4] - 2026-08-03
+### Added
+- Implemented Option A (Temporary Container execution) for the `EDA` state dataset analysis.
+
 ## [1.7.3] - 2026-08-03
 ### Changed
 - Configured `TrainingReportAnalyzer` to explicitly use `opencode/deepseek-v4-flash-free` LLM model.
