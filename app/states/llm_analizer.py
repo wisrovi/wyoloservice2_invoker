@@ -7,6 +7,7 @@ This module provides the LlmAnalizer class for post-training analysis using LLMs
 """
 
 from typing import Any, Dict
+from utils.training_report_analyzer import TrainingReportAnalyzer
 
 
 class LlmAnalizer:
@@ -33,4 +34,18 @@ class LlmAnalizer:
             Dict[str, Any]: Analysis results.
         """
         print(f"--- [STATE:{self.NAME}] Running LLM Analysis... ---")
-        return {"status": "success", "analysis": "Model performed well."}
+        results_file = "/home/wyolo/train_service_results/evaluation_metrics/results.csv"
+
+        try:
+            report = TrainingReportAnalyzer().analyze(results_file)
+            return {
+                "status": "success",
+                "llm_report": report,
+            }
+        except Exception as exc:
+            print(f"LLM Analyzer failed: {exc}")
+            return {
+                "status": "failed",
+                "llm_report": "",
+                "error": str(exc),
+            }
