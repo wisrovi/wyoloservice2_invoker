@@ -72,6 +72,8 @@ class TrainingReportAnalyzer:
             [
                 OPENCODE_BIN,
                 "run",
+                "--model",
+                "opencode/deepseek-v4-flash-free",
                 prompt,
                 "-f",
                 str(results_file)
@@ -82,6 +84,15 @@ class TrainingReportAnalyzer:
 
         print("PATH:", os.environ.get("PATH"))
         print("WHICH OPENCODE:", shutil.which("opencode"))
+
+        print("STDOUT:")
+        print(result.stdout)
+
+        print("STDERR:")
+        print(result.stderr)
+
+        print("RETURN CODE:")
+        print(result.returncode)
 
         if result.returncode != 0:
             raise RuntimeError(
