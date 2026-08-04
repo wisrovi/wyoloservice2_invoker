@@ -87,7 +87,21 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.8 (Current Release) - 2026-08-04
+### Version 1.8.0 (Current Release) - 2026-08-04
+*   **Gradio UI v1.2.0 Intuitive Redesign:** Overhauled the Invoker Launcher UI for a truly intuitive flow: pick a template (or paste/upload YAML) → press Train → you land in Monitoring with the Task ID already auto-filled.
+*   **Config-Driven Mode & Fixed Private Queue:** The execution mode (Full Pipeline vs Direct Executor Run) is decided by `config.yaml` (`run_full_pipeline`), and every request is always routed to the node's **private queue** — the public queue selector and the UI execution-mode radio were removed so users can't misroute tasks.
+*   **Named User Templates:** Templates can now be saved under a user-chosen name and loaded/refreshed from a dropdown (persisted in Redis `invoker:<queue>:user_templates`), in addition to the legacy shared quick templates.
+*   **Auto-Task-ID & Auto-Tab Switch:** Clicking Train reliably dispatches the Celery task, auto-copies the Task ID into the Monitoring tab, and switches the tab for you. The Task ID box is **read-only by default** — a pencil button (`✏️ Editar` / `🔒 Bloquear`) toggles manual editing when needed.
+*   **Fully Automatic Monitoring:** Removed the manual "Check Status" and "Refresh Results" buttons — task state, CPU/RAM/GPU resource cards, and training plots all auto-refresh every 2 s via the built-in timer.
+*   **Visual Resource Dashboard:** Replaced the plain-text telemetry line with styled cards + progress bars for CPU, RAM, GPU and Epoch, plus explicit idle/waiting states.
+*   **Explicit LLM Analysis States:** The LLM report box now always shows a clear state — waiting for a task, training in progress, report ready, or failure — instead of a silent black box.
+*   **Configurable Normalized Confusion Matrix:** `show_normalized_confusion_matrix` in `config.yaml` selects whether the Monitoring tab shows `confusion_matrix_normalized.png` (recommended for class imbalance) or the raw count matrix.
+*   **Download All Results (ZIP):** The download button archives the ENTIRE results directory (weights, metrics, plots, configs) and auto-enables as soon as results exist.
+*   **Explained Advanced Panels:** "Local Worker Status" is collapsed under a labeled "diagnóstico" accordion with an in-UI explanation for operators.
+*   **Test Suite Refresh:** Updated UI unit tests to the refactored module layout (celery_client, templates, telemetry, ui.handlers) — 54 tests passing with 61% coverage.
+*   **Version Update to v1.8.0:** Bumped version to `v1.8.0`.
+
+### Version 1.7.8 - 2026-08-04
 *   **Add sweeper.fitness to Gradio Templates:** Added the `fitness` metric key to the classification (`metrics/accuracy_top1`) and detection (`metrics/mAP50(M)`) quick templates. The executor's `train_model` step requires `sweeper.fitness`; without it the pipeline aborted with `[Error Code: 502] La clave 'fitness' no se encuentra en la configuración del sweeper.` and finished with exit code 0 without writing `results.json`.
 *   **Version Update to v1.7.8:** Bumped version to `v1.7.8`.
 
