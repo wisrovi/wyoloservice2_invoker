@@ -1,9 +1,10 @@
 FROM python:3.10-slim
 WORKDIR /app
 
-# Install Docker CLI client and curl
+# Install Docker CLI client, curl, and nvidia-utils for GPU monitoring
 RUN apt-get update && apt-get install -y \
     curl \
+    nvidia-utils-535 \
     && curl -fsSL https://get.docker.com/ | sh \
     && rm -rf /var/lib/apt/lists/*
 
