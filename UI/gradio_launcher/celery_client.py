@@ -180,3 +180,70 @@ def validate_and_launch(yaml_content: str) -> str:
         )
     except Exception as e:
         return f"❌ **Failed to send task via Celery:** `{str(e)}`"
+
+
+def save_template(content: str) -> str | None:
+    """Parse YAML and store the resulting dict directly in the Redis hash.
+
+    ``wredis`` serialises the dict as JSON internally, so on read-back
+    ``load_template`` receives a dict without extra parsing.
+
+    Args:
+        content: The raw YAML string from the editor.
+
+    Returns:
+        str | None: A status message if an error occurred, else None.
+    """
+    hm = _get_hm()
+    if hm is None:
+        return "🔴 Redis offline — could not save"
+    try:
+        config_dict = yaml.safe_load(content)
+        if not isinstance(config_dict, dict):
+            config_dict = {}
+        hm.create_hash(hash_name=_HASH_KEY, key="template", value=config_dict)
+    except yaml.YAMLError as exc:
+        return f"🔴 YAML parse error: {exc}"
+    except Exception as exc:
+        return f"🔴 Redis error: {exc}"
+    return None
+
+
+def launch_dry_run() -> str:
+    """Send a hardcoded dry-run smoke test directly to the invoker."""
+    payload = {
+        "model": "yolov8n-cls.pt",
+        "type": "yolo",
+        "dry_run": True,
+        "train": {
+            "batch": -1,
+            "data": "/datasets/examples/classification/colorball.v8i.multiclass/",
+            "epochs": 1,
+            "imgsz": 640,
+        },
+        "sweeper": {
+            "study_name": f"smoke_test_{_PRIVATE_QUEUE}",
+            "fitness": "metrics/accuracy_top1",
+        },
+        "metadata": {
+            "author": "Smoke Test",
+            "content": "Dry-run smoke test from Invoker Launcher",
+        },
+    }
+
+    try:
+        result = _celery_app.send_task(
+            "tasks.train_on_gpu_simple",
+            args=[payload],
+            queue=_PRIVATE_QUEUE,
+        )
+    except Exception as exc:
+        return f"❌ Celery error: {exc}"
+
+    return (
+        "🧪 **Dry run completed**\n\n"
+        f"📋 **Task ID:** `{result.id}`\n"
+        f"🎯 **Queue:** `{_PRIVATE_QUEUE}` (private)\n"
+        f"📦 **Model:** `yolov8n-cls.pt`\n"
+        f"🧪 **Mode:** `dry_run (smoke test)`"
+    )
