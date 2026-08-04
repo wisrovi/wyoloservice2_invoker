@@ -31,12 +31,12 @@ def build_layout() -> gr.Blocks:
 
         status_bar = gr.Markdown(celery_client.check_redis_connection)
 
-        with gr.Tabs():
+        with gr.Tabs() as tabs:
 
             # ============================================================
             # TRAINING TAB
             # ============================================================
-            with gr.Tab("🚀 Training"):
+            with gr.Tab("🚀 Training", id="training_tab"):
 
                 with gr.Row():
                     mode_radio = gr.Radio(
@@ -71,12 +71,6 @@ def build_layout() -> gr.Blocks:
                                 variant="secondary",
                                 size="sm",
                                 elem_id="save-btn",
-                            )
-
-                            clear_btn = gr.Button(
-                                "🗑 Clear",
-                                variant="secondary",
-                                size="sm",
                             )
 
                 with gr.Column(visible=False) as upload_col:
@@ -121,7 +115,7 @@ def build_layout() -> gr.Blocks:
             # ============================================================
             # MONITORING TAB
             # ============================================================
-            with gr.Tab("📊 Monitoring"):
+            with gr.Tab("📊 Monitoring", id="monitoring_tab"):
 
                 hardware_output = gr.Markdown(telemetry.build_status_table("-", "-", "-", "-"))
 
@@ -143,12 +137,20 @@ def build_layout() -> gr.Blocks:
                         size="sm",
                     )
 
+                    download_btn = gr.DownloadButton(
+                        "📥 Download Results ZIP",
+                        variant="secondary",
+                        size="sm",
+                    )
+
                 status_output = gr.Markdown("")
 
                 llm_output = gr.Textbox(
                     label="LLM Analysis",
                     lines=15,
                     interactive=False,
+                    value="⏳ Awaiting training completion to generate LLM analysis report...",
+                    placeholder="⏳ Awaiting training completion to generate LLM analysis report...",
                 )
 
                 with gr.Accordion("📈 Training Results", open=True):
@@ -156,7 +158,7 @@ def build_layout() -> gr.Blocks:
                         results_plot = gr.Image(label="Training Metrics")
                         confusion_matrix_plot = gr.Image(label="Confusion Matrix")
 
-                with gr.Accordion("🖥️ Local Worker Status", open=True):
+                with gr.Accordion("⚙️ Local Worker Status (Advanced Debugging)", open=False):
                     local_worker_stats = gr.Markdown()
                     refresh_worker_btn = gr.Button("🔄 Refresh Worker Status")
 
@@ -172,7 +174,6 @@ def build_layout() -> gr.Blocks:
                     
                     study_history_output = gr.Markdown("Select a study above to load history.")
                     refresh_history_btn = gr.Button("🔄 Refresh Study History")
-
 
         # ── Event wiring ──────────────────────────────────────────────
 
@@ -210,16 +211,11 @@ def build_layout() -> gr.Blocks:
             outputs=[status_bar],
         )
 
-        clear_btn.click(
-            fn=lambda: ("", gr.update(interactive=False)),
-            outputs=[output_msg, launch_btn],
-        )
-
-        # Train submit bindings
+        # Train submit bindings (handles execution dispatch, ID updates, and auto-switching tab)
         launch_btn.click(
-            fn=celery_client.validate_and_launch,
+            fn=handlers.handle_train_click,
             inputs=[yaml_editor],
-            outputs=[output_msg],
+            outputs=[output_msg, task_id_box, tabs],
         )
 
         # Dry run / Smoke test
@@ -235,7 +231,13 @@ def build_layout() -> gr.Blocks:
             outputs=[status_output, llm_output],
         )
 
-        # Timer ticks
+        # Results ZIP download trigger
+        download_btn.click(
+            fn=telemetry.get_results_zip,
+            outputs=[download_btn],
+        )
+
+        # Timer ticks (hands-free auto-refresh metrics & status monitoring)
         status_timer.tick(
             fn=telemetry.check_task_status,
             inputs=[task_id_box],
@@ -252,7 +254,13 @@ def build_layout() -> gr.Blocks:
             outputs=[local_worker_stats],
         )
 
-        # Refresh metric plots
+        # Auto-refresh metric plots on every tick
+        status_timer.tick(
+            fn=telemetry.get_training_artifacts,
+            outputs=[results_plot, confusion_matrix_plot],
+        )
+
+        # Manual refresh metrics plot
         refresh_results_btn.click(
             fn=telemetry.get_training_artifacts,
             outputs=[results_plot, confusion_matrix_plot],
