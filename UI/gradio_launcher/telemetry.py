@@ -3,8 +3,7 @@ import json
 import socket
 import subprocess
 from celery.result import AsyncResult
-from celery_client import _celery_app, _PRIVATE_QUEUE, _CONTROL_HOST, validate_min_config
-from templates import save_template
+from celery_client import _celery_app, _PRIVATE_QUEUE, _CONTROL_HOST, validate_min_config, save_template
 
 # Telemetry File
 TELEMETRY_FILE = "/results/telemetry.json"
