@@ -48,16 +48,20 @@ def build_layout() -> gr.Blocks:
             with gr.Tab("🚀 Training", id="training_tab"):
 
                 gr.Markdown(
-                    "**1.** Elige una plantilla de ejemplo o pega tu YAML → "
+                    "**1.** Elige un ejemplo, sube tu YAML o carga un template guardado → "
                     "**2.** Pulsa **🚀 Train** → "
                     "**3.** Se te lleva a *Monitoring* automáticamente con el Task ID ya copiado."
                 )
 
                 with gr.Row():
                     mode_radio = gr.Radio(
-                        choices=[("✏️ Editar YAML", "edit"), ("📤 Subir .yaml", "upload")],
-                        value="edit",
-                        label="¿Cómo quieres introducir la configuración?",
+                        choices=[
+                            ("✨ Usar ejemplo", "example"),
+                            ("📤 Subir YAML", "upload"),
+                            ("📚 Mis templates", "saved"),
+                        ],
+                        value="example",
+                        label="¿Cómo quieres preparar tu configuración?",
                         elem_classes=["mode-selector"],
                         container=False,
                     )
@@ -87,27 +91,6 @@ def build_layout() -> gr.Blocks:
                                 f" &nbsp;·&nbsp; 🎯 **Cola destino:** `{celery_client._PRIVATE_QUEUE}`"
                             )
 
-                        with gr.Group(elem_classes=["mode-card"]):
-                            gr.Markdown("### 📚 Tus templates guardados")
-                            with gr.Row():
-                                template_name_box = gr.Textbox(
-                                    label="Nombre del template",
-                                    placeholder="ej. mi_entreno_batch_v3",
-                                    scale=3,
-                                )
-                                saved_templates_dropdown = gr.Dropdown(
-                                    choices=templates.list_user_templates(),
-                                    label="Cargar template guardado",
-                                    scale=3,
-                                    allow_custom_value=False,
-                                )
-                                load_saved_btn = gr.Button(
-                                    "📂 Cargar", variant="secondary", size="lg"
-                                )
-                                refresh_saved_btn = gr.Button(
-                                    "🔄", variant="secondary", size="lg"
-                                )
-
                 with gr.Column(visible=False) as upload_col:
                     with gr.Group(elem_classes=["mode-card"]):
                         gr.Markdown("### 📤 Subir configuración YAML")
@@ -127,6 +110,39 @@ def build_layout() -> gr.Blocks:
                             elem_id="upload-preview",
                         )
 
+                with gr.Column(visible=False) as saved_col:
+                    with gr.Group(elem_classes=["mode-card"]):
+                        gr.Markdown("### 📚 Mis templates")
+                        with gr.Row():
+                            saved_templates_dropdown = gr.Dropdown(
+                                choices=templates.list_user_templates(),
+                                label="Template guardado",
+                                scale=3,
+                                allow_custom_value=False,
+                            )
+                            load_saved_btn = gr.Button(
+                                "📂 Cargar", variant="secondary", size="lg"
+                            )
+                            refresh_saved_btn = gr.Button(
+                                "🔄", variant="secondary", size="lg"
+                            )
+                        with gr.Row():
+                            template_name_box = gr.Textbox(
+                                label="Guardar el YAML actual como…",
+                                placeholder="ej. mi_entreno_batch_v3",
+                                scale=3,
+                            )
+                            save_btn = gr.Button(
+                                "💾 Guardar template",
+                                variant="secondary",
+                                size="lg",
+                                elem_id="save-btn",
+                            )
+                        gr.Markdown(
+                            "*💡 **Cargar** abre el template en el editor para revisarlo o lanzarlo; "
+                            "**Guardar** persiste el YAML que estés editando bajo ese nombre.*"
+                        )
+
                 with gr.Group(elem_classes=["mode-card"]):
                     output_msg = gr.Markdown("")
 
@@ -137,12 +153,6 @@ def build_layout() -> gr.Blocks:
                             size="lg",
                             interactive=False,
                             elem_id="train-btn",
-                        )
-                        save_btn = gr.Button(
-                            "💾 Guardar template",
-                            variant="secondary",
-                            size="lg",
-                            elem_id="save-btn",
                         )
 
             # ============================================================
@@ -158,20 +168,19 @@ def build_layout() -> gr.Blocks:
 
                 with gr.Row():
                     task_id_box = gr.Textbox(
-                        label="Task ID (se rellena automáticamente al pulsar Train)",
+                        label="Task ID (oculto — se rellena automáticamente al pulsar Train)",
                         interactive=False,
                         placeholder="Se rellenará solo al lanzar un entrenamiento…",
-                        scale=8,
+                        visible=False,
                     )
-                    edit_task_id_btn = gr.Button(
-                        "✏️ Editar", variant="secondary", size="lg", scale=1
-                    )
-                    task_id_edit_state = gr.State(False)
 
                 hardware_output = gr.HTML(telemetry.get_executor_stats())
 
                 with gr.Row():
                     status_output = gr.HTML(telemetry._idle_status())
+
+                # LLM Analysis Report — full width for prominence
+                with gr.Row():
                     llm_output = gr.HTML(telemetry._idle_llm())
 
                 with gr.Row():
@@ -179,7 +188,6 @@ def build_layout() -> gr.Blocks:
                         "📥 Descargar todos los resultados (ZIP)",
                         variant="secondary",
                         size="lg",
-                        interactive=False,
                     )
 
                 with gr.Accordion("📈 Resultados del entrenamiento", open=True):
@@ -217,7 +225,7 @@ def build_layout() -> gr.Blocks:
         mode_radio.change(
             fn=handlers.toggle_mode,
             inputs=[mode_radio],
-            outputs=[editor_col, upload_col],
+            outputs=[editor_col, upload_col, saved_col],
         )
 
         # Handle uploaded config file
@@ -228,9 +236,13 @@ def build_layout() -> gr.Blocks:
         )
         # Force editor column display and update status message
         yaml_file.change(
-            fn=lambda f: (gr.update(visible=True), gr.update(visible=False)),
+            fn=lambda f: (
+                gr.update(visible=True),
+                gr.update(visible=False),
+                gr.update(visible=False),
+            ),
             inputs=[yaml_file],
-            outputs=[editor_col, upload_col],
+            outputs=[editor_col, upload_col, saved_col],
         )
 
         # Editor inputs change validations
@@ -280,13 +292,6 @@ def build_layout() -> gr.Blocks:
             outputs=[status_output, llm_output],
         )
 
-        # Toggle Task ID editability (pencil button → read-only by default)
-        edit_task_id_btn.click(
-            fn=handlers.toggle_task_id_edit,
-            inputs=[task_id_edit_state],
-            outputs=[task_id_box, edit_task_id_btn, task_id_edit_state],
-        )
-
         status_timer.tick(
             fn=telemetry.get_executor_stats,
             outputs=[hardware_output],
@@ -301,12 +306,6 @@ def build_layout() -> gr.Blocks:
         status_timer.tick(
             fn=telemetry.get_training_artifacts,
             outputs=[results_plot, confusion_matrix_plot],
-        )
-
-        # Auto-enable the ZIP download when results are available
-        status_timer.tick(
-            fn=telemetry.get_download_state,
-            outputs=[download_btn],
         )
 
         # Shared Redis templates loading
@@ -336,6 +335,11 @@ def build_layout() -> gr.Blocks:
             fn=handlers.load_selected_template,
             inputs=[saved_templates_dropdown],
             outputs=[yaml_editor],
+        )
+        # Loading a template also jumps back to the editor view
+        load_saved_btn.click(
+            fn=lambda: handlers.toggle_mode("example"),
+            outputs=[editor_col, upload_col, saved_col],
         )
 
         refresh_saved_btn.click(
