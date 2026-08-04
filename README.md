@@ -87,7 +87,11 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.6 (Current Release) - 2026-08-04
+### Version 1.7.7 (Current Release) - 2026-08-04
+*   **Fix Dataset Paths in Gradio Templates:** Corrected the classification, detection, and segmentation quick templates to point to the bundled `/examples/` datasets (the old `/datasets/` paths did not exist on the cluster share, causing the executor to abort early without writing `results.json`).
+*   **Version Update to v1.7.7:** Bumped version to `v1.7.7`.
+
+### Version 1.7.6 - 2026-08-04
 *   **One-Click Training Dispatch:** Gradio launcher now validates the YAML and dispatches the Celery training task on the Train button click, auto-switching to the Monitoring tab.
 *   **Results ZIP Download:** Added a "Download Results ZIP" button to fetch the training results archive from the worker.
 *   **Auto-Refresh Metrics:** Training metric plots now auto-refresh on the status timer tick, in addition to the manual refresh button.
