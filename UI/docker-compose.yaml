@@ -11,7 +11,7 @@ services:
       - "7860:7860"
     environment:
       - CONTROL_HOST=${CONTROL_HOST:-127.0.0.1}
-      - PRIVATE_QUEUE=${PRIVATE_QUEUE:-default}
+      - PRIVATE_QUEUE=${PRIVATE_QUEUE:-}
       - OPTUNA_DB_URL=${OPTUNA_DB_URL:-postgresql://postgres:postgres@127.0.0.1:23436/wyoloservice}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
