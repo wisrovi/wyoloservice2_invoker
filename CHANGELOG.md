@@ -1,21 +1,16 @@
 # Changelog - GPU Invoker (Hive)
 
-## [1.7.7] - 2026-08-04
-### Added
-- Integrated central Redis-based template storage: Classification, Detection, and Segmentation templates are loaded/synchronized globally across all 70+ servers from the shared Redis hash `wyolo:shared_templates`.
-- Redesigned the Quick Templates interface with high-contrast, modern status-indicator style load buttons.
-- Applied a premium Glassmorphic dark styling sheet (_CSS_MODERN) to make the cockpit cockpit-style, modern, and highly usable.
-
-## [1.7.6] - 2026-08-04
-### Added
-- Unified the UI by merging features of `simple_dashboard` directly into `gradio_launcher`.
-- Added **🖥️ Local Worker Status** section in Gradio to display Celery status, active tasks, and queues for the local node.
-- Added **📊 Optuna Study History** section in Gradio to connect directly to the PostgreSQL database, display list of studies, query trial log list, and highlight the best historical trial.
-- Created `Dockerfile`, `docker-compose.yaml`, and `Makefile` inside the `UI/` folder for standalone deployment.
-
 ## [1.7.5] - 2026-08-03
 ### Fixed
 - Corrected python command list structure inside the docker container call in `EDA` to avoid syntax errors with single quotes.
+
+### Gradio UI Launcher Changes:
+#### [v1.1.0] - 2026-08-04
+- **Redis Templates Refactor:** Moved shared templates to `invoker:shared_templates` hash in central Redis, and local saved config template to `invoker:<ip>:template_invoker`.
+- **Destination Queue Prominence:** Added a prominent, highly styled target queue banner at the top of the UI to display the resolved private worker queue (derived from host's IP/hostname).
+- **Execution Mode Clarifications:** Added markdown text explaining the exact functional difference between Simple Training (direct) and Full Pipeline execution modes.
+- **Glassmorphic Cockpit Style:** Styled the UI with a beautiful, high-contrast dark theme.
+- **Standalone UI deployment:** Added `Dockerfile`, `docker-compose.yaml`, and `Makefile` under the `UI/` folder.
 
 ## [1.7.4] - 2026-08-03
 ### Added
