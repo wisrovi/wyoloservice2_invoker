@@ -21,15 +21,15 @@ def build_layout() -> gr.Blocks:
                         (Gradio UI {celery_client.GRADIO_VERSION})
                     </span>
                 </h1>
-                <p>Entrena YOLO en este nodo GPU • Configuración persistida en Redis •
-                   Monitorización automática en tiempo real</p>
+                <p>Train YOLO on this GPU node • Config persisted in Redis •
+                   Real-time automatic monitoring</p>
             </div>
             <div style="background: rgba(30, 41, 59, 0.7); border: 2px solid #3b82f6;
                         border-radius: 12px; padding: 1.2rem 1rem; margin-bottom: 1rem;
                         text-align: center; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);">
                 <span style="font-size: 1.1rem; color: #94a3b8; font-weight: 600;
                              text-transform: uppercase; letter-spacing: 0.05em;">
-                    🎯 Cola destino (este nodo):
+                    🎯 Target queue (this node):
                 </span>
                 <span style="font-size: 1.8rem; color: #60a5fa; font-weight: 900;
                              margin-left: 0.75rem; text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
@@ -170,16 +170,16 @@ def build_layout() -> gr.Blocks:
             with gr.Tab("📊 Monitoring", id="monitoring_tab"):
 
                 gr.Markdown(
-                    "Todo se actualiza **solo** cada 2 segundos: estado de la tarea, "
-                    "consumo de CPU/RAM/GPU y las gráficas de entrenamiento. "
-                    "No hace falta pulsar nada."
+                    "Everything updates **automatically** every 2 seconds: task status, "
+                    "CPU/RAM/GPU usage, and training plots. "
+                    "No manual refresh needed."
                 )
 
                 with gr.Row():
                     task_id_box = gr.Textbox(
-                        label="Task ID (oculto — se rellena automáticamente al pulsar Train)",
+                        label="Task ID (hidden — auto-filled when Train is clicked)",
                         interactive=False,
-                        placeholder="Se rellenará solo al lanzar un entrenamiento…",
+                        placeholder="Will be filled automatically when launching a training…",
                         visible=False,
                     )
 
@@ -194,39 +194,39 @@ def build_layout() -> gr.Blocks:
 
                 with gr.Row():
                     download_btn = gr.DownloadButton(
-                        "📥 Descargar todos los resultados (ZIP)",
+                        "📥 Download all results (ZIP)",
                         variant="secondary",
                         size="lg",
                     )
 
-                with gr.Accordion("📈 Resultados del entrenamiento", open=True):
+                with gr.Accordion("📈 Training Results", open=True):
                     with gr.Row():
                         results_plot = gr.Image(label="Training Metrics")
                         confusion_matrix_plot = gr.Image(label="Confusion Matrix")
 
-                with gr.Accordion("🖥️ Estado del worker (diagnóstico)", open=False):
+                with gr.Accordion("🖥️ Worker Status (diagnostic)", open=False):
                     gr.Markdown(
-                        "*💡 Esto es solo para operadores: verifica que el daemon "
-                        "Celery de este nodo está vivo (Online), cuántos entrenamientos "
-                        "ejecuta en paralelo (Concurrency = 1 en producción) y qué "
-                        "tareas están activas o en cola. En uso normal puedes ignorarlo.*"
+                        "*💡 For operators only: verifies the Celery daemon "
+                        "on this node is alive (Online), how many trainings "
+                        "run in parallel (Concurrency = 1 in production), and which "
+                        "tasks are active or queued. Can be ignored in normal use.*"
                     )
                     local_worker_stats = gr.Markdown()
 
-                with gr.Accordion("📊 Historial de estudios Optuna", open=False):
+                with gr.Accordion("📊 Optuna Study History", open=False):
                     with gr.Row():
                         study_selector = gr.Dropdown(
                             choices=db.list_optuna_studies(),
-                            label="Selecciona un estudio de la BD",
+                            label="Select a study from DB",
                             interactive=True,
                             allow_custom_value=True,
                         )
-                        refresh_studies_btn = gr.Button("🔄 Recargar lista", scale=0)
+                        refresh_studies_btn = gr.Button("🔄 Reload list", scale=0)
 
                     study_history_output = gr.Markdown(
-                        "Selecciona un estudio arriba para cargar su historial."
+                        "Select a study above to load its history."
                     )
-                    refresh_history_btn = gr.Button("🔄 Refrescar historial")
+                    refresh_history_btn = gr.Button("🔄 Refresh history")
 
         # ── Event wiring ──────────────────────────────────────────────
 

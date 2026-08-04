@@ -336,6 +336,18 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
             print(f"Pipeline fallido: {str(exc)}")
             raise exc
 
+        # Update Celery task state with LLM report for UI visibility
+        if isinstance(resultado, dict) and "llm_report" in resultado:
+            self.update_state(
+                state="SUCCESS",
+                meta={
+                    "status": "completed",
+                    "invoker": invoker_name,
+                    "llm_report": resultado.get("llm_report", ""),
+                    "accuracy": resultado.get("accuracy", 0.0),
+                },
+            )
+
         console.print(
             Panel(
                 f"[bold green]✔ Task {self.request.id} completed successfully for user: {user_id}[/bold green]",
