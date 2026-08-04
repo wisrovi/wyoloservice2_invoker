@@ -4,6 +4,8 @@ import os
 import socket
 import zipfile
 
+import gradio as gr
+
 from celery.result import AsyncResult
 
 from celery_client import _CONTROL_HOST, _PRIVATE_QUEUE, _celery_app  # noqa: F401
@@ -215,9 +217,9 @@ def _llm_status(state: str, info: dict) -> str:
     return _idle_llm()
 
 
-def check_task_status(task_id: str) -> tuple[str, str]:
+def check_task_status(task_id: str | None) -> tuple[str, str]:
     """Check Celery task state and return (status_html, llm_html)."""
-    if not task_id.strip():
+    if not task_id or not str(task_id).strip():
         return _idle_status(), _idle_llm()
 
     try:
@@ -251,9 +253,9 @@ def results_available() -> bool:
     return False
 
 
-def get_download_state() -> dict:
+def get_download_state() -> gr.update:
     """Gradio update: enable/disable the Download ZIP button based on results."""
-    return {"interactive": results_available()}
+    return gr.update(interactive=results_available())
 
 
 def get_results_zip() -> str | None:
