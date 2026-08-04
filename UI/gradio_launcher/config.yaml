@@ -1,0 +1,11 @@
+# WDarwin UI Launcher Configuration
+# ---------------------------------
+
+# Pipeline Execution Settings
+# If true, dispatches the full MLOps pipeline (tasks.train_on_gpu).
+# If false, executes direct GPU training (tasks.train_on_gpu_simple).
+run_full_pipeline: true
+
+# UI Configuration
+theme: "soft"
+default_task_type: "classification"
