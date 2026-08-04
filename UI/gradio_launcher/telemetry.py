@@ -253,14 +253,11 @@ def results_available() -> bool:
     return False
 
 
-def get_download_state() -> gr.update:
-    """Gradio update: enable/disable the Download ZIP button based on results."""
-    return gr.update(interactive=results_available())
-
-
 def get_results_zip() -> str | None:
     """Zip the ENTIRE results directory (weights, metrics, plots, configs)."""
     if not os.path.isdir(RESULTS_DIR):
+        return None
+    if not results_available():
         return None
     try:
         if os.path.exists(ZIP_PATH):
