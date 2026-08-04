@@ -87,11 +87,13 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.8.2 (Current Release) - 2026-08-04
-*   **Fix EDA YAML dataset path handling:** EDA now correctly reads `data.yaml` files to resolve the actual dataset directory, fixing `NotADirectoryError` when YAML paths were passed directly.
-*   **Unique Optuna study names per search space:** Study names now include an 8-character hash of the search space configuration, preventing `CategoricalDistribution does not support dynamic value space` errors when reusing studies with different search spaces.
-*   **Invoker identification fix:** Worker now correctly reports its IP (private queue) as `192.168.1.68` instead of "unknown" in logs and task metadata.
-*   **Version Update to v1.8.2:** Bumped version to `v1.8.2`.
+### Version 1.8.3 (Current Release) - 2026-08-04
+*   **LLM Analysis Report in UI:** Task state now updated with LLM report after post-training pipeline completes; Gradio Monitoring tab shows the report with copy-to-clipboard button.
+*   **Full English UI:** All Gradio user-facing texts translated to English (header, monitoring, accordions, buttons, placeholders).
+*   **Invoker ID fix confirmed:** Worker correctly reports private queue IP (192.168.1.68) in logs and task metadata.
+*   **Version Update to v1.8.3:** Bumped version to `v1.8.3`.
+
+### Version 1.8.2 - 2026-08-04
 
 ### Version 1.8.1 - 2026-08-04
 *   **LLM Analysis Report copy button:** Added copy-to-clipboard button with visual feedback (✅ Copied! / ❌ Failed) on the LLM Analysis Report in Monitoring.
