@@ -16,6 +16,9 @@ services:
       resources:
         reservations:
           memory: 100M
+        limits:
+          cpus: '1.0'
+          memory: 1000M
     environment:
       - PRIVATE_QUEUE=${WORKER_HOST:-default}
     env_file:
@@ -38,7 +41,7 @@ services:
     #   retries: 3
     # command: tail -f /dev/null
     command: >
-      celery -A worker_gpu worker -E -Q ${WORKER_HOST:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1 --max-memory-per-child=250000
+      celery -A worker_gpu worker -E -Q ${WORKER_HOST:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1
 
   dashboard:
     build: ./UI/simple_dashboard
