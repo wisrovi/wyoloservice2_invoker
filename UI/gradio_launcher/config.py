@@ -10,6 +10,7 @@ def load_ui_config() -> dict:
             "run_full_pipeline": True,
             "theme": "soft",
             "default_task_type": "classification",
+            "show_normalized_confusion_matrix": True,
         }
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -22,6 +23,7 @@ def load_ui_config() -> dict:
         "run_full_pipeline": True,
         "theme": "soft",
         "default_task_type": "classification",
+        "show_normalized_confusion_matrix": True,
     }
 
 # Load options on module load
@@ -30,3 +32,6 @@ _options = load_ui_config()
 RUN_FULL_PIPELINE = bool(_options.get("run_full_pipeline", True))
 THEME_NAME = str(_options.get("theme", "soft"))
 DEFAULT_TASK_TYPE = str(_options.get("default_task_type", "classification"))
+SHOW_NORMALIZED_CONFUSION_MATRIX = bool(
+    _options.get("show_normalized_confusion_matrix", True)
+)
