@@ -1,5 +1,12 @@
 # Changelog - GPU Invoker (Hive)
 
+## [1.7.6] - 2026-08-04
+### Added
+- Unified the UI by merging features of `simple_dashboard` directly into `gradio_launcher`.
+- Added **🖥️ Local Worker Status** section in Gradio to display Celery status, active tasks, and queues for the local node.
+- Added **📊 Optuna Study History** section in Gradio to connect directly to the PostgreSQL database, display list of studies, query trial log list, and highlight the best historical trial.
+- Created `Dockerfile`, `docker-compose.yaml`, and `Makefile` inside the `UI/` folder for standalone deployment.
+
 ## [1.7.5] - 2026-08-03
 ### Fixed
 - Corrected python command list structure inside the docker container call in `EDA` to avoid syntax errors with single quotes.
