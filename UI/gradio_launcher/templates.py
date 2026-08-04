@@ -7,7 +7,7 @@ from celery_client import _get_hm, _HASH_KEY
 _TEMPLATE_CLS: str = """model: "yolov8n-cls.pt"
 type: "yolo"
 train:
-  data: "/datasets/clasification/colorball.v8i.multiclass/"
+  data: "/examples/colorball.v8i.multiclass/"
   epochs: 2
   imgsz: 640
 sweeper:
@@ -37,7 +37,7 @@ _TEMPLATE_DET: str = """model: "yolov8n.pt"
 type: "yolo"
 train:
   batch: -1
-  data: "/datasets/detection/Deteksi komponen elektronik.v1i.yolov8/data.yaml"
+  data: "/examples/Deteksi_komponen_elektronik.v1i/data.yaml"
   epochs: 2
   imgsz: 640
 sweeper:
@@ -67,7 +67,7 @@ _TEMPLATE_SEG: str = """model: "yolov8n-seg.pt"
 type: "yolo"
 # dvc_data_path: /datasets/clasificacion/colorball.v8i.multiclass.dvc
 train:
-  data: "/datasets/segmentation/ArchitecturePlan/data.yaml"
+  data: "/examples/ArchitecturePlan/data.yaml"
   epochs: 2
   imgsz: 640
 sweeper:
