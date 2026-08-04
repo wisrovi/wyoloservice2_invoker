@@ -43,35 +43,6 @@ services:
     command: >
       celery -A worker_gpu worker -E -Q ${WORKER_HOST:-default},gpus_high,gpus_medium,gpus_low  --loglevel=info --concurrency=1 --prefetch-multiplier=1  -Ofair --max-tasks-per-child=1
 
-  dashboard:
-    build: ./UI/simple_dashboard
-    container_name: dashboard_${WORKER_NAME:-default}
-    image: wisrovi/train_service:worker_invoker_dashboard_v1.0.0
-    restart: always
-    ports:
-      - "8082:8000"
-    env_file:
-      - config/control_host.env
-      - config/user.env
-    environment:
-      - OPTUNA_DB_URL=postgresql://postgres:postgres@192.168.10.252:23436/wyoloservice
-    # volumes:
-    #   - ./app/config.yaml:/app/invoker/config.yaml
-    command: uvicorn dashboard_app:app --host 0.0.0.0 --port 8000
-    networks:
-      - train_service
-
-  # wpipe-scanner:
-  #   image: wisrovi/train_service:worker_executor_v1.0.0
-  #   restart: always
-  #   volumes:
-  #     - /wyolo/worker/events:/wyolo/worker/events
-  #   command: bash -c 'python -m wpipe.dashboard --db /wyolo/worker/events/wtrain.db --port 8036'
-  #   ports:
-  #     - "8082:8036"
-  #   networks:
-  #     - train_service
-
   gradio_launcher:
     build: ./UI/gradio_launcher
     image: wisrovi/train_service:worker_invoker_gradio_v1.0.0
