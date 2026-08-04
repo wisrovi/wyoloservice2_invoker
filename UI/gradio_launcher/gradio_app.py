@@ -308,6 +308,21 @@ def check_redis_connection() -> str:
         return "🔴 Redis ERROR — offline"
 
 
+def get_template_from_redis(template_type: str, default_content: str) -> str:
+    """Fetch template from central Redis, or initialize it with default if it doesn't exist."""
+    hm = _get_hm()
+    if hm is None:
+        return default_content
+    try:
+        raw = hm.read_hash(hash_name="wyolo:shared_templates", key=template_type)
+        if raw is None or not str(raw).strip():
+            hm.create_hash(hash_name="wyolo:shared_templates", key=template_type, value=default_content)
+            return default_content
+        return str(raw)
+    except Exception:
+        return default_content
+
+
 def load_template() -> str:
     """Load the last saved template from the Redis hash.
 
@@ -319,17 +334,17 @@ def load_template() -> str:
     """
     hm = _get_hm()
     if hm is None:
-        return _TEMPLATE_CLS
+        return get_template_from_redis("classification", _TEMPLATE_CLS)
     try:
         raw = hm.read_hash(hash_name=_HASH_KEY, key="template")
         if raw is None:
-            return _TEMPLATE_CLS
+            return get_template_from_redis("classification", _TEMPLATE_CLS)
 
         # new format — already a dict
         if isinstance(raw, dict):
             if raw:
                 return yaml.dump(raw, default_flow_style=False, allow_unicode=True)
-            return _TEMPLATE_CLS
+            return get_template_from_redis("classification", _TEMPLATE_CLS)
 
         # legacy format — stored as a string
         if isinstance(raw, str) and raw.strip():
@@ -342,9 +357,9 @@ def load_template() -> str:
             # maybe it's a raw YAML string (even older format)
             return raw
 
-        return _TEMPLATE_CLS
+        return get_template_from_redis("classification", _TEMPLATE_CLS)
     except Exception:
-        return _TEMPLATE_CLS
+        return get_template_from_redis("classification", _TEMPLATE_CLS)
 
 
 def save_template(content: str) -> str | None:
@@ -1504,17 +1519,17 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
     )
 
     btn_cls.click(
-        fn=lambda: _TEMPLATE_CLS,
+        fn=lambda: get_template_from_redis("classification", _TEMPLATE_CLS),
         outputs=[yaml_editor],
     )
 
     btn_det.click(
-        fn=lambda: _TEMPLATE_DET,
+        fn=lambda: get_template_from_redis("detection", _TEMPLATE_DET),
         outputs=[yaml_editor],
     )
 
     btn_seg.click(
-        fn=lambda: _TEMPLATE_SEG,
+        fn=lambda: get_template_from_redis("segmentation", _TEMPLATE_SEG),
         outputs=[yaml_editor],
     )
 
