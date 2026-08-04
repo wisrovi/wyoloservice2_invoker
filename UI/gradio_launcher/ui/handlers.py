@@ -1,5 +1,6 @@
 import yaml
 import gradio as gr
+import celery_client
 from celery_client import save_template, validate_min_config, _HASH_KEY
 from templates import load_template
 
@@ -43,3 +44,28 @@ def handle_upload(file: gr.File | None) -> tuple[str, str, dict]:
         return "", f"❌ {content}", gr.update(interactive=False)
     valid, msg = validate_min_config(content)
     return content, msg, gr.update(interactive=valid)
+
+def handle_train_click(yaml_content: str) -> tuple[str, str, dict]:
+    """
+    Validates config and dispatches Celery training task.
+    Returns:
+        - output_msg (Markdown string)
+        - task_id (string to populate task_id_box)
+        - tabs (Gradio gr.update to switch selected tab to monitoring)
+    """
+    result_msg = celery_client.validate_and_launch(yaml_content)
+    
+    # Extract task ID from output message
+    task_id = ""
+    if "🆔 **Task ID:**" in result_msg:
+        try:
+            parts = result_msg.split("🆔 **Task ID:** `")
+            if len(parts) > 1:
+                task_id = parts[1].split("`")[0]
+        except Exception:
+            pass
+            
+    if task_id:
+        # Switch to monitoring tab
+        return result_msg, task_id, gr.update(selected="monitoring_tab")
+    return result_msg, "", gr.update()
