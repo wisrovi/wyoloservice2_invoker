@@ -26,3 +26,6 @@ status:
 
 clean:
 	docker-compose down --rmi local --volumes
+
+publish: stop build start stop
+	docker push wisrovi/train_service:worker_invoker_gradio_v1.0.0
