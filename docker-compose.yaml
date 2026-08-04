@@ -16,6 +16,10 @@ services:
       resources:
         reservations:
           memory: 100M
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
         limits:
           cpus: '1.0'
           memory: 1000M
