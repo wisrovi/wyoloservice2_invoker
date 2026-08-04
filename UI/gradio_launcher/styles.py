@@ -193,6 +193,177 @@ tr:hover {
     transition: opacity 0.2s ease !important;
 }
 #dry-run-btn:hover { opacity: 0.6 !important; }
+
+/* ── Resource consumption dashboard ─────────────────────────────── */
+.res-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin: 0.5rem 0 0.25rem 0;
+}
+
+.res-card {
+    position: relative !important;
+    background: linear-gradient(165deg, #16233d 0%, #0d1526 60%, #0a1120 100%) !important;
+    border: 1px solid #2b3c5e !important;
+    border-radius: 16px !important;
+    padding: 1.1rem 1rem !important;
+    text-align: center !important;
+    box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(148, 163, 184, 0.12) !important;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+    overflow: hidden !important;
+}
+
+.res-card::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, #60a5fa, #818cf8, #a78bfa) !important;
+    opacity: 0.85 !important;
+    border-radius: 16px 16px 0 0 !important;
+}
+
+.res-card:hover {
+    transform: translateY(-4px) !important;
+    border-color: #6366f1 !important;
+    box-shadow:
+        0 10px 26px rgba(99, 102, 241, 0.25),
+        inset 0 1px 0 rgba(148, 163, 184, 0.12) !important;
+}
+
+.res-icon {
+    font-size: 1.7rem !important;
+    margin-bottom: 0.3rem !important;
+    filter: drop-shadow(0 2px 6px rgba(96, 165, 250, 0.35)) !important;
+}
+
+.res-label {
+    font-size: 0.72rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.12em !important;
+    color: #7d8fb3 !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.15rem !important;
+}
+
+.res-value {
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    color: #f1f5f9 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    margin: 0.2rem 0 0.55rem 0 !important;
+    text-shadow: 0 0 14px rgba(96, 165, 250, 0.25) !important;
+}
+
+.res-wait {
+    color: #64748b !important;
+    font-size: 0.9rem !important;
+    text-align: center !important;
+    margin-top: 0.75rem !important;
+}
+
+.bar {
+    width: 100% !important;
+    height: 7px !important;
+    background: #1e293b !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+.bar-fill {
+    height: 100% !important;
+    border-radius: 999px !important;
+    transition: width 0.6s ease !important;
+    box-shadow: 0 0 8px currentColor !important;
+}
+
+/* ── Task status card ───────────────────────────────────────────── */
+.status-card {
+    background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%) !important;
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+    padding: 1rem 1.1rem !important;
+    display: flex !important;
+    gap: 1rem !important;
+    align-items: flex-start !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+    height: 100% !important;
+}
+
+.status-pill {
+    min-width: 2.6rem !important;
+    height: 2.6rem !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.4rem !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.status-body {
+    flex: 1 !important;
+    color: #cbd5e1 !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+}
+
+.status-title {
+    font-size: 1.05rem !important;
+    margin-bottom: 0.35rem !important;
+}
+
+.status-body code {
+    background: #0b0f19 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 6px !important;
+    padding: 0.1rem 0.4rem !important;
+    font-size: 0.85rem !important;
+    color: #93c5fd !important;
+}
+
+/* ── LLM analysis states ────────────────────────────────────────── */
+.llm-state {
+    background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%) !important;
+    border: 1px dashed #475569 !important;
+    border-radius: 12px !important;
+    padding: 1rem 1.1rem !important;
+    color: #94a3b8 !important;
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+    height: 100% !important;
+}
+
+.llm-state b { color: #e2e8f0 !important; }
+
+.llm-done {
+    border-style: solid !important;
+    border-color: #10b981 !important;
+}
+
+.llm-error {
+    border-style: solid !important;
+    border-color: #ef4444 !important;
+}
+
+.llm-report {
+    margin-top: 0.5rem !important;
+    color: #cbd5e1 !important;
+    max-height: 280px !important;
+    overflow-y: auto !important;
+    white-space: pre-wrap !important;
+    font-size: 0.9rem !important;
+}
+
+/* ── Execution mode / queue selectors ───────────────────────────── */
+.mode-card textarea, .mode-card input { font-family: 'JetBrains Mono', monospace !important; }
 """
 
 # JS script for keyboard shortcuts
