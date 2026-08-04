@@ -87,7 +87,13 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.5 (Current Release) - 2026-08-03
+### Version 1.7.6 (Current Release) - 2026-08-04
+*   **UI Unification (Gradio + Dashboard):** Merged the FastAPI dashboard's Optuna historical query capabilities and Celery inspector into the Gradio launcher app.
+*   **Local Worker Status & Optuna History:** Added real-time local worker status monitoring (active/reserved tasks) and PostgreSQL-backed Optuna study history with best-trial hyperparameter display.
+*   **Standalone UI deployment:** Added `Dockerfile`, `docker-compose.yaml`, and `Makefile` under the `UI/` folder.
+*   **Version Update to v1.7.6:** Bumped version to `v1.7.6`.
+
+### Version 1.7.5 - 2026-08-03
 *   **EDA Python command fix:** Resolved syntax error in docker command by changing container command structure to a clean argv list.
 *   **Version Update to v1.7.5:** Bumped version to `v1.7.5`.
 
