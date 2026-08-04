@@ -1,6 +1,7 @@
 import os
 import json
 import socket
+import shutil
 from celery.result import AsyncResult
 from celery_client import _celery_app, _PRIVATE_QUEUE, _CONTROL_HOST, validate_min_config
 
@@ -74,7 +75,7 @@ def get_training_artifacts() -> tuple[str | None, str | None]:
 def check_task_status(task_id: str) -> tuple[str, str]:
     """Check the status of a Celery task."""
     if not task_id.strip():
-        return "❌ Task ID required", ""
+        return "❌ Task ID required", "⏳ Awaiting training completion to generate LLM analysis report..."
 
     try:
         result = AsyncResult(task_id, app=_celery_app)
@@ -82,12 +83,19 @@ def check_task_status(task_id: str) -> tuple[str, str]:
         message = f"📋 Task ID: `{task_id}`\n\n📡 State: **{result.state}**\n\n"
         llm_text = ""
 
-        if isinstance(info, dict):
-            # Extract LLM report separately
-            llm_text = (
-                info.get("llm_report") or info.get("llm_analysis") or info.get("analysis") or ""
-            )
+        if result.state in ["PENDING", "STARTED", "RETRY"]:
+            llm_text = "⏳ Training in progress. LLM analysis report will be generated upon completion..."
+        elif result.state == "SUCCESS":
+            if isinstance(info, dict):
+                llm_text = info.get("llm_report") or info.get("llm_analysis") or info.get("analysis") or "✅ Training succeeded, but no LLM analysis report was found."
+            else:
+                llm_text = "✅ Training succeeded."
+        elif result.state == "FAILURE":
+            llm_text = f"❌ Training failed. Info: {info}"
+        else:
+            llm_text = f"State: {result.state}"
 
+        if isinstance(info, dict):
             # Remove LLM/Telemetry keys from the info block
             info_clean = dict(info)
             info_clean.pop("llm_report", None)
@@ -105,3 +113,18 @@ def check_task_status(task_id: str) -> tuple[str, str]:
         return message, llm_text
     except Exception as exc:
         return f"❌ Error: {exc}", ""
+
+def get_results_zip() -> str | None:
+    """Creates a zip archive of the /results/evaluation_metrics directory and returns its path."""
+    zip_base = "/results/evaluation_metrics"
+    if not os.path.exists(zip_base):
+        return None
+    zip_out = "/results/training_results"
+    try:
+        shutil.make_archive(zip_out, 'zip', zip_base)
+        zip_file_path = zip_out + ".zip"
+        if os.path.exists(zip_file_path):
+            return zip_file_path
+    except Exception as e:
+        print(f"Error creating zip archive: {e}")
+    return None
