@@ -10,16 +10,10 @@ services:
     ports:
       - "7860:7860"
     env_file:
-      - ../config/control_host.env
-      - ../config/user.env
-    environment:
-      - CONTROL_HOST=${CONTROL_HOST:-127.0.0.1}
-      - PRIVATE_QUEUE=${PRIVATE_QUEUE:-}
-      - OPTUNA_DB_URL=${OPTUNA_DB_URL:-postgresql://postgres:postgres@127.0.0.1:23436/wyoloservice}
+      - ./config/control_host.env
+      - ./config/user.env
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - /home/wyolo/train_service_results:/results
-      - /home/wyolo/request:/wyolo/worker/request
     logging:
       driver: "json-file"
       options:
