@@ -87,11 +87,14 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.8.3 (Current Release) - 2026-08-04
-*   **LLM Analysis Report in UI:** Task state now updated with LLM report after post-training pipeline completes; Gradio Monitoring tab shows the report with copy-to-clipboard button.
+### Version 1.8.4 (Current Release) - 2026-08-04
+*   **Fix LLM/OpenCode hanging with timeout + fallback:** Added 180-second timeout to OpenCode subprocess; when the free model hangs, a fallback report is auto-generated from CSV metrics so tasks complete successfully.
+*   **LLM Analysis Report now visible in Gradio UI:** Task state updated with LLM report (from OpenCode or fallback) after post-training pipeline; Gradio Monitoring tab displays report with copy-to-clipboard button.
 *   **Full English UI:** All Gradio user-facing texts translated to English (header, monitoring, accordions, buttons, placeholders).
 *   **Invoker ID fix confirmed:** Worker correctly reports private queue IP (192.168.1.68) in logs and task metadata.
-*   **Version Update to v1.8.3:** Bumped version to `v1.8.3`.
+*   **Version Update to v1.8.4:** Bumped version to `v1.8.4`.
+
+### Version 1.8.3 - 2026-08-04
 
 ### Version 1.8.2 - 2026-08-04
 
