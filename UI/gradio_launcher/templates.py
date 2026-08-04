@@ -1,6 +1,11 @@
-import yaml
 import json
-from celery_client import _get_hm, _HASH_KEY
+
+import yaml
+
+from celery_client import _HASH_KEY, _PRIVATE_QUEUE, _get_hm
+
+# Hash holding user-saved named templates (key = template name)
+_USER_TEMPLATES_HASH = f"invoker:{_PRIVATE_QUEUE}:user_templates"
 
 # ── Quick templates (internal constants) ────────────────────────────
 
@@ -106,14 +111,21 @@ def get_template_from_redis(template_type: str, default_content: str) -> str:
     try:
         raw = hm.read_hash(hash_name="invoker:shared_templates", key=template_type)
         if raw is None or not str(raw).strip():
-            hm.create_hash(hash_name="invoker:shared_templates", key=template_type, value=default_content)
+            hm.create_hash(
+                hash_name="invoker:shared_templates",
+                key=template_type,
+                value=default_content,
+            )
             return default_content
         return str(raw)
     except Exception:
         return default_content
 
 def load_template() -> str:
-    """Load the last saved template from the Redis hash. Returns default classification on fallback."""
+    """Load the last saved template from the Redis hash.
+
+    Returns default classification on fallback.
+    """
     hm = _get_hm()
     if hm is None:
         return get_template_from_redis("classification", _TEMPLATE_CLS)
@@ -141,3 +153,68 @@ def load_template() -> str:
         return get_template_from_redis("classification", _TEMPLATE_CLS)
     except Exception:
         return get_template_from_redis("classification", _TEMPLATE_CLS)
+
+
+def save_user_template(name: str, content: str) -> str | None:
+    """Save the YAML under a user-chosen name in the private Redis hash.
+
+    Returns an error message, or None on success.
+    """
+    name = (name or "").strip()
+    if not name:
+        return "⚠️ Necesitas escribir un nombre para el template."
+    hm = _get_hm()
+    if hm is None:
+        return "🔴 Redis offline — no se pudo guardar"
+    try:
+        config_dict = yaml.safe_load(content)
+        if not isinstance(config_dict, dict):
+            return "🔴 YAML inválido: no es un dict de configuración"
+        hm.create_hash(hash_name=_USER_TEMPLATES_HASH, key=name, value=config_dict)
+        return None
+    except yaml.YAMLError as exc:
+        return f"🔴 Error parseando YAML: {exc}"
+    except Exception as exc:
+        return f"🔴 Error Redis: {exc}"
+
+
+def list_user_templates() -> list[str]:
+    """Return the names of all templates the user has saved."""
+    hm = _get_hm()
+    if hm is None:
+        return []
+    try:
+        all_data = hm.read_all_hash(hash_name=_USER_TEMPLATES_HASH)
+    except Exception:
+        return []
+    if not all_data or not isinstance(all_data, dict):
+        return []
+    return sorted(str(k) for k in all_data.keys())
+
+
+def load_user_template(name: str) -> str:
+    """Load a user-saved template by name, returning its YAML string."""
+    if not name:
+        return load_template()
+    hm = _get_hm()
+    if hm is None:
+        return load_template()
+    try:
+        raw = hm.read_hash(hash_name=_USER_TEMPLATES_HASH, key=name)
+    except Exception:
+        return load_template()
+    if raw is None:
+        return load_template()
+    if isinstance(raw, dict):
+        if raw:
+            return yaml.dump(raw, default_flow_style=False, allow_unicode=True)
+        return load_template()
+    if isinstance(raw, str) and raw.strip():
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                return yaml.dump(parsed, default_flow_style=False, allow_unicode=True)
+        except json.JSONDecodeError:
+            pass
+        return raw
+    return load_template()
