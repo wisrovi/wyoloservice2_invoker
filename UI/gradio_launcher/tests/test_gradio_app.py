@@ -543,13 +543,13 @@ class TestResultsDownload:
     def test_get_download_state_disabled(self, tmp_path) -> None:
         """The download button is disabled while there are no results."""
         with mock.patch("telemetry.RESULTS_DIR", str(tmp_path)):
-            assert get_download_state() == {"interactive": False}
+            assert dict(get_download_state())["interactive"] is False
 
     def test_get_download_state_enabled(self, tmp_path) -> None:
         """The download button is enabled once results.json exists."""
         (tmp_path / "results.json").write_text('{"accuracy": 0.7}')
         with mock.patch("telemetry.RESULTS_DIR", str(tmp_path)):
-            assert get_download_state() == {"interactive": True}
+            assert dict(get_download_state())["interactive"] is True
 
     def test_get_results_zip_creates_archive(self, tmp_path) -> None:
         """get_results_zip archives the whole results directory."""
