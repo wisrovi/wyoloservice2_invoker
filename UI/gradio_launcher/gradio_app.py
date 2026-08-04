@@ -1,6 +1,3 @@
-# mypy: ignore-errors
-# pylint: disable=all
-# ruff: noqa
 """Gradio Launcher for the Local Invoker.
 
 This module provides a web interface to submit training tasks directly to
@@ -19,7 +16,7 @@ from __future__ import annotations
 
 import json
 import os
-import re
+
 import subprocess
 from typing import Any
 
@@ -36,11 +33,10 @@ from celery.result import AsyncResult
 def get_host_ip() -> str:
     """Get host machine IP from inside Docker."""
     try:
-        return socket.gethostbyname(
-            "host.docker.internal"
-        )
+        return socket.gethostbyname("host.docker.internal")
     except Exception:
         return "127.0.0.1"
+
 
 def build_status_table(epoch, cpu, ram, gpu):
     return (
@@ -49,6 +45,7 @@ def build_status_table(epoch, cpu, ram, gpu):
         f"🎮 **GPU:** {gpu}% &nbsp;&nbsp;|&nbsp;&nbsp; "
         f"🔄 **Epoch:** {epoch}"
     )
+
 
 # ── Constants for Executor ───────────────────────────────────────────
 _EXECUTOR_IMAGE: str = "wisrovi/train_service:worker_executor_v1.0.0"
@@ -67,16 +64,17 @@ _CONFUSION_MATRIX_IMAGE: str = os.path.join(
 )
 
 
-
 # ── Constants ──────────────────────────────────────────────────────
 _CONTROL_HOST: str = os.getenv("CONTROL_HOST", "127.0.0.1")
 _REDIS_PORT: int = 23_437
 _REDIS_URL: str = f"redis://{_CONTROL_HOST}:{_REDIS_PORT}/0"
 
-_PRIVATE_QUEUE: str = (
-    os.getenv("PRIVATE_QUEUE")
-    or "default"
-)
+_PRIVATE_QUEUE: str = os.getenv("PRIVATE_QUEUE") or "default"
+
+# _DASHBOARD_URL = os.getenv(
+#     "DASHBOARD_URL",
+#     "http://localhost:8082"
+# )
 
 _HASH_KEY: str = f"wyolo:invokers:{_PRIVATE_QUEUE}"
 
@@ -87,6 +85,183 @@ _celery_app: Celery = Celery(
 )
 _hm: RedisHashManager | None = None
 
+
+# ── Local Worker Status & Optuna History ──────────────────────────────────
+
+def get_local_worker_status() -> str:
+    """Query Celery active tasks and status of the local worker node."""
+    try:
+        worker_name = f"celery@wyolo_invoker_{_PRIVATE_QUEUE}"
+        inspect = _celery_app.control.inspect([worker_name])
+        
+        # Ping the worker
+        ping = inspect.ping()
+        if not ping or worker_name not in ping:
+            return (
+                "### 🖥️ Local Worker Status\n\n"
+                "🔴 **Status:** Offline / Disconnected\n\n"
+                f"🎯 **Queue Target:** `{_PRIVATE_QUEUE}`\n\n"
+                "⚠️ *Verify that the Celery worker container is running on this host.*"
+            )
+            
+        # Get active tasks
+        active = inspect.active()
+        active_tasks = active.get(worker_name, []) if active else []
+        
+        # Get reserved/queued tasks
+        reserved = inspect.reserved()
+        reserved_tasks = reserved.get(worker_name, []) if reserved else []
+        
+        # Get worker stats
+        stats_all = inspect.stats()
+        worker_stats = stats_all.get(worker_name, {}) if stats_all else {}
+        pool = worker_stats.get("pool", {})
+        concurrency = pool.get("max-concurrency", 1)
+        
+        status_md = "### 🖥️ Local Worker Status\n\n"
+        status_md += "🟢 **Status:** Online\n\n"
+        status_md += f"🎯 **Queue Target:** `{_PRIVATE_QUEUE}` &nbsp;&nbsp;|&nbsp;&nbsp; 🚀 **Concurrency:** {concurrency}\n\n"
+        
+        if active_tasks:
+            status_md += "#### ⚡ Active Running Tasks\n"
+            for t in active_tasks:
+                task_id = t.get("id")
+                task_name = t.get("name")
+                runtime = t.get("runtime", "N/A")
+                status_md += f"* **ID:** `{task_id}` | **Name:** `{task_name}` | **Runtime:** {runtime}s\n"
+        else:
+            status_md += "💤 **Active Tasks:** None (Idle)\n\n"
+            
+        if reserved_tasks:
+            status_md += f"#### ⏳ Queued Tasks in Buffer: **{len(reserved_tasks)}**\n"
+            for t in reserved_tasks:
+                status_md += f"* **ID:** `{t.get('id')}` | **Name:** `{t.get('name')}`\n"
+                
+        return status_md
+    except Exception as exc:
+        return f"⚠️ **Local Worker Status Error:** {exc}"
+
+
+def get_optuna_engine():
+    default_db_url = f"postgresql://postgres:postgres@{_CONTROL_HOST}:23436/wyoloservice"
+    optuna_db_url = os.getenv("OPTUNA_DB_URL", default_db_url)
+    from sqlalchemy import create_engine
+    return create_engine(optuna_db_url)
+
+
+def list_optuna_studies() -> list[str]:
+    """Fetch all study names from PostgreSQL database."""
+    try:
+        from sqlalchemy import text
+        engine = get_optuna_engine()
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT study_name FROM studies ORDER BY study_id DESC"))
+            return [row[0] for row in result.fetchall()]
+    except Exception as e:
+        print(f"Error listing studies: {e}")
+        return []
+
+
+def get_optuna_study_history(study_name: str) -> str:
+    """Fetch history and best trial details for a specific Optuna study."""
+    if not study_name or not study_name.strip():
+        return "⚠️ *Please select or input a valid study name.*"
+        
+    study_name = study_name.strip()
+    try:
+        from sqlalchemy import text
+        engine = get_optuna_engine()
+        
+        # 1. Fetch study details
+        with engine.connect() as conn:
+            study_row = conn.execute(
+                text("""
+                SELECT s.study_id, sd.direction 
+                FROM studies s
+                LEFT JOIN study_directions sd ON s.study_id = sd.study_id
+                WHERE s.study_name = :study_name
+            """),
+                {"study_name": study_name}
+            ).fetchone()
+            
+            if not study_row:
+                return f"❌ **Study not found:** '{study_name}'"
+                
+            study_id, direction = study_row
+            
+            # 2. Fetch the best trial
+            best_row = conn.execute(
+                text("""
+                SELECT t.trial_id, tv.value, t.datetime_start, t.datetime_complete
+                FROM trials t
+                JOIN trial_values tv ON t.trial_id = tv.trial_id
+                WHERE t.study_id = :study_id AND t.state = 'COMPLETE'
+                ORDER BY
+                    CASE WHEN :direction = 'MAXIMIZE' THEN tv.value END DESC,
+                    CASE WHEN :direction = 'MINIMIZE' THEN tv.value END ASC
+                LIMIT 1
+            """),
+                {"study_id": study_id, "direction": direction}
+            ).fetchone()
+            
+            # 3. Fetch all trials
+            trials_rows = conn.execute(
+                text("""
+                SELECT t.trial_id, t.state, tv.value, t.datetime_start, t.datetime_complete
+                FROM trials t
+                LEFT JOIN trial_values tv ON t.trial_id = tv.trial_id
+                WHERE t.study_id = :study_id
+                ORDER BY t.trial_id DESC
+            """),
+                {"study_id": study_id}
+            ).fetchall()
+
+        # Build best trial parameters if found
+        best_info_md = ""
+        if best_row:
+            bt_id, bt_value, bt_start, bt_end = best_row
+            # Fetch best trial parameters
+            with engine.connect() as conn:
+                params_rows = conn.execute(
+                    text("SELECT param_name, param_value FROM trial_params WHERE trial_id = :trial_id"),
+                    {"trial_id": bt_id}
+                ).fetchall()
+            params_dict = {p[0]: p[1] for p in params_rows}
+            params_formatted = ", ".join([f"`{k}`: **{v}**" for k, v in params_dict.items()])
+            
+            best_info_md = (
+                f"### 🏆 Best Trial Found (Trial #{bt_id})\n"
+                f"* **Metric Score:** `{bt_value:.5f}` &nbsp;&nbsp;|&nbsp;&nbsp; **Direction:** `{direction}`\n"
+                f"* **Hyperparameters:** {params_formatted}\n"
+                f"* **Start:** {bt_start} &nbsp;&nbsp;|&nbsp;&nbsp; **End:** {bt_end}\n\n"
+            )
+        else:
+            best_info_md = "### 🏆 Best Trial Found\n*No completed trials yet in this study.*\n\n"
+
+        # Build trials history table
+        table_md = "#### 📋 Trials Log\n\n"
+        table_md += "| Trial ID | State | Score | Start Time | Parameters |\n"
+        table_md += "| :--- | :--- | :--- | :--- | :--- |\n"
+        
+        for r in trials_rows:
+            t_id, t_state, t_value, t_start, t_end = r
+            # Fetch params for this trial
+            with engine.connect() as conn:
+                params_rows = conn.execute(
+                    text("SELECT param_name, param_value FROM trial_params WHERE trial_id = :trial_id"),
+                    {"trial_id": t_id}
+                ).fetchall()
+            t_params_dict = {p[0]: p[1] for p in params_rows}
+            t_params_formatted = ", ".join([f"`{k}`: {v}" for k, v in t_params_dict.items()])
+            
+            val_str = f"{t_value:.5f}" if t_value is not None else "-"
+            state_emoji = "🟢" if t_state == "COMPLETE" else ("🟡" if t_state == "RUNNING" else "🔴")
+            
+            table_md += f"| #{t_id} | {state_emoji} {t_state} | **{val_str}** | {t_start} | {t_params_formatted} |\n"
+
+        return f"{best_info_md}{table_md}"
+    except Exception as exc:
+        return f"❌ **Optuna Connection Error:** {exc}"
 
 
 # ── Redis ──────────────────────────────────────────────────────────
@@ -102,21 +277,16 @@ def _get_hm() -> RedisHashManager | None:
             _hm = None
     return _hm
 
+
 def get_telemetry():
     try:
         if not os.path.exists(TELEMETRY_FILE):
             return "Esperando entrenamiento..."
 
-        with open(
-            TELEMETRY_FILE,
-            encoding="utf-8"
-        ) as file:
+        with open(TELEMETRY_FILE, encoding="utf-8") as file:
             data = json.load(file)
 
-        return (
-            f"CPU: {data.get('cpu', 0):.2f}%\n"
-            f"RAM: {data.get('ram_mb', 0):.2f} MB"
-        )
+        return f"CPU: {data.get('cpu', 0):.2f}%\n" f"RAM: {data.get('ram_mb', 0):.2f} MB"
 
     except Exception as exc:
         return f"Error leyendo telemetría: {exc}"
@@ -290,9 +460,7 @@ def validate_and_launch(
 
     try:
         task_name = (
-            "tasks.train_on_gpu"
-            if execution_mode == "full"
-            else "tasks.train_on_gpu_simple"
+            "tasks.train_on_gpu" if execution_mode == "full" else "tasks.train_on_gpu_simple"
         )
 
         result = _celery_app.send_task(
@@ -315,6 +483,7 @@ def validate_and_launch(
         f"🏷️ **Type:** `{type_name}`"
     )
 
+
 def check_task_status(task_id: str) -> tuple[str, str]:
     """
     Check the status of a Celery task.
@@ -335,10 +504,7 @@ def check_task_status(task_id: str) -> tuple[str, str]:
 
         info = result.info
 
-        message = (
-            f"📋 Task ID: `{task_id}`\n\n"
-            f"📡 State: **{result.state}**\n\n"
-        )
+        message = f"📋 Task ID: `{task_id}`\n\n" f"📡 State: **{result.state}**\n\n"
 
         llm_text = ""
 
@@ -346,10 +512,7 @@ def check_task_status(task_id: str) -> tuple[str, str]:
 
             # Extract LLM report separately
             llm_text = (
-                info.get("llm_report")
-                or info.get("llm_analysis")
-                or info.get("analysis")
-                or ""
+                info.get("llm_report") or info.get("llm_analysis") or info.get("analysis") or ""
             )
 
             # Remove LLM content from the info block
@@ -357,6 +520,17 @@ def check_task_status(task_id: str) -> tuple[str, str]:
             info_clean.pop("llm_report", None)
             info_clean.pop("llm_analysis", None)
             info_clean.pop("analysis", None)
+
+            for key in [
+                "cpu",
+                "ram",
+                "gpu",
+                "epoch",
+                "cpu_percent",
+                "ram_percent",
+                "gpu_percent",
+            ]:
+                info_clean.pop(key, None)
 
             if info_clean:
                 message += f"ℹ️ Info: `{info_clean}`"
@@ -375,29 +549,23 @@ def get_executor_stats() -> str:
     Read executor telemetry written by RunTraining.
     """
 
-    telemetry_file = (
-        "/results/telemetry.json"
-    )
+    telemetry_file = "/results/telemetry.json"
 
     if not os.path.exists(telemetry_file):
         return "⚪ Waiting for executor telemetry..."
 
     try:
-        with open(
-            telemetry_file,
-            encoding="utf-8"
-        ) as file:
+        with open(telemetry_file, encoding="utf-8") as file:
             telemetry = json.load(file)
 
         status = telemetry.get("status", "unknown")
 
         if status != "running":
-            return (
-                "### 📊 Hardware Usage\n\n"
-                "⚪ No active training\n\n"
-                "CPU: N/A\n\n"
-                "RAM: N/A\n\n"
-                "GPU: N/A"
+            return build_status_table(
+                epoch="-",
+                cpu="-",
+                ram="-",
+                gpu="-",
             )
 
         cpu = telemetry.get("cpu", 0)
@@ -415,6 +583,7 @@ def get_executor_stats() -> str:
     except Exception as exc:
         return f"❌ Telemetry error: {exc}"
 
+
 def get_training_artifacts():
 
     print("GET TRAINING ARTIFACTS")
@@ -429,6 +598,7 @@ def get_training_artifacts():
         _RESULTS_IMAGE if os.path.exists(_RESULTS_IMAGE) else None,
         _CONFUSION_MATRIX_IMAGE if os.path.exists(_CONFUSION_MATRIX_IMAGE) else None,
     )
+
 
 def launch_dry_run() -> str:
     """Send a hardcoded dry-run smoke test directly to the invoker.
@@ -507,11 +677,14 @@ def launch_via_executor(yaml_content: str) -> str:
 
     # 4) Build docker run command (matching micro_train.sh)
     cmd = [
-        "docker", "run",
+        "docker",
+        "run",
         "--rm",
-        "--name", f"wyolo_executor_{_PRIVATE_QUEUE}",
+        "--name",
+        f"wyolo_executor_{_PRIVATE_QUEUE}",
         "--privileged",
-        "--network", "host",
+        "--network",
+        "host",
         "--shm-size=16g",
         "--cpus=8",
         "--memory=24g",
@@ -519,22 +692,34 @@ def launch_via_executor(yaml_content: str) -> str:
         "--cap-add=DAC_READ_SEARCH",
         "--cap-add=NET_ADMIN",
         "--cap-add=SYS_RESOURCE",
-        "--gpus", "device=0",
-        "-e", "NVIDIA_VISIBLE_DEVICES=0",
-        "-e", "NVIDIA_DRIVER_CAPABILITIES=all",
-        "-e", "TZ=Europe/Madrid",
-        "-e", "PYTHONUNBUFFERED=1",
-        "-e", f"CONTROL_HOST={_CONTROL_HOST}",
-        "-e", "CIFS_USER=wisrovi",
-        "-e", "CIFS_PASS=wyoloservice",
-        "-v", "/home/wyolo/events:/wyolo/worker/events:rw",
-        "-v", "/home/wyolo/train_service_results:/wyolo/worker/train_service_results:rw",
-        "-v", "/home/wyolo/request:/wyolo/worker/request:rw",
+        "--gpus",
+        "device=0",
+        "-e",
+        "NVIDIA_VISIBLE_DEVICES=0",
+        "-e",
+        "NVIDIA_DRIVER_CAPABILITIES=all",
+        "-e",
+        "TZ=Europe/Madrid",
+        "-e",
+        "PYTHONUNBUFFERED=1",
+        "-e",
+        f"CONTROL_HOST={_CONTROL_HOST}",
+        "-e",
+        "CIFS_USER=wisrovi",
+        "-e",
+        "CIFS_PASS=wyoloservice",
+        "-v",
+        "/home/wyolo/events:/wyolo/worker/events:rw",
+        "-v",
+        "/home/wyolo/train_service_results:/wyolo/worker/train_service_results:rw",
+        "-v",
+        "/home/wyolo/request:/wyolo/worker/request:rw",
         _EXECUTOR_IMAGE,
-        "bash", "-c",
-        "nvidia-smi && echo \"[EXECUTOR] Starting mount...\" "
+        "bash",
+        "-c",
+        'nvidia-smi && echo "[EXECUTOR] Starting mount..." '
         "&& /usr/local/bin/mount-cifs.sh "
-        "&& echo \"[EXECUTOR] Mount OK. Starting training...\" "
+        '&& echo "[EXECUTOR] Mount OK. Starting training..." '
         "&& python main.py --file /wyolo/worker/request/config_train.yaml",
     ]
 
@@ -605,16 +790,11 @@ def validate_min_config(yaml_content: str) -> tuple[bool, str]:
             val = cfg[parent][key]
             if not isinstance(val, expected):
                 if isinstance(expected, tuple):
-                    expected_name = " or ".join(
-                        t.__name__ for t in expected
-                    )
+                    expected_name = " or ".join(t.__name__ for t in expected)
                 else:
                     expected_name = expected.__name__
 
-                return (
-                    False,
-                    f"❌ *{parent}.{key}* debe ser {expected_name}"
-                )
+                return (False, f"❌ *{parent}.{key}* debe ser {expected_name}")
                 if expected is str and not val.strip():
                     return False, f"❌ *{parent}.{key}* no puede estar vacío"
 
@@ -631,7 +811,7 @@ def validate_min_config(yaml_content: str) -> tuple[bool, str]:
     if "data" in train_cfg:
         if not train_cfg["data"].strip():
             return False, "❌ train.data cannot be empty"
-    
+
     return True, "✅ Configuración mínima válida"
 
 
@@ -875,8 +1055,10 @@ _CSS_HIDDEN_DRY_RUN: str = """\
 
 with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
     status_timer = gr.Timer(2)
+    # dashboard_timer = gr.Timer(10)
 
-    gr.HTML("""
+    gr.HTML(
+        """
     <div id="app-header">
         <h1>🚀 Invoker Launcher</h1>
         <p>
@@ -885,7 +1067,8 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
             Queue-aware dispatch
         </p>
     </div>
-    """)
+    """
+    )
 
     status_bar = gr.Markdown(check_redis_connection)
 
@@ -899,10 +1082,7 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
 
             with gr.Row():
                 mode_radio = gr.Radio(
-                    choices=[
-                        ("✏️ Edit YAML", "edit"),
-                        ("📤 Upload .yaml", "upload")
-                    ],
+                    choices=[("✏️ Edit YAML", "edit"), ("📤 Upload .yaml", "upload")],
                     value="edit",
                     label="Configuration Mode",
                     elem_classes=["mode-selector"],
@@ -969,9 +1149,7 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
                     label="Execution Mode",
                 )
 
-                gr.Markdown(
-                    f"🎯 **Destination Queue:** `{_PRIVATE_QUEUE}`"
-                )
+                gr.Markdown(f"🎯 **Destination Queue:** `{_PRIVATE_QUEUE}`")
 
                 output_msg = gr.Markdown("")
 
@@ -1011,9 +1189,7 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
 
         with gr.Tab("📊 Monitoring"):
 
-            hardware_output = gr.Markdown(
-                build_status_table("-", "-", "-", "-")
-            )
+            hardware_output = gr.Markdown(build_status_table("-", "-", "-", "-"))
 
             task_id_box = gr.Textbox(
                 label="Task ID",
@@ -1046,21 +1222,38 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
                 open=True,
             ):
                 with gr.Row():
-                    results_plot = gr.Image(
-                        label="Training Metrics"
-                    )
+                    results_plot = gr.Image(label="Training Metrics")
 
-                    confusion_matrix_plot = gr.Image(
-                        label="Confusion Matrix"
+                    confusion_matrix_plot = gr.Image(label="Confusion Matrix")
+
+            with gr.Accordion(
+                "🖥️ Local Worker Status",
+                open=True
+            ):
+                local_worker_stats = gr.Markdown()
+                refresh_worker_btn = gr.Button("🔄 Refresh Worker Status")
+
+            with gr.Accordion(
+                "📊 Optuna Study History",
+                open=True
+            ):
+                with gr.Row():
+                    study_selector = gr.Dropdown(
+                        choices=list_optuna_studies(),
+                        label="Select Study from DB",
+                        interactive=True,
+                        allow_custom_value=True,
                     )
+                    refresh_studies_btn = gr.Button("🔄 Reload Studies List", scale=0)
+                
+                study_history_output = gr.Markdown("Select a study above to load history.")
+                refresh_history_btn = gr.Button("🔄 Refresh Study History")
 
             with gr.Group(
                 elem_id="executor-section",
                 visible=True,
             ):
-                gr.Markdown(
-                    "### ⚡ Advanced: Direct Executor Run"
-                )
+                gr.Markdown("### ⚡ Advanced: Direct Executor Run")
 
                 gr.Markdown(
                     "*Bypasses Celery queue. Writes config to "
@@ -1082,8 +1275,8 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
     # Mode toggle: show/hide editor vs upload
     def _toggle_mode(mode: str):
         return (
-            gr.update(visible=(mode == "edit")),
-            gr.update(visible=(mode == "upload")),
+            gr.update(visible=mode == "edit"),
+            gr.update(visible=mode == "upload"),
         )
 
     mode_radio.change(
@@ -1108,7 +1301,11 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
                 gr.update(visible=True),
             )
         except Exception as exc:
-            return gr.update(value=f"Error: {exc}"), gr.update(visible=True), gr.update(visible=False)
+            return (
+                gr.update(value=f"Error: {exc}"),
+                gr.update(visible=True),
+                gr.update(visible=False),
+            )
 
     yaml_file.change(
         fn=_handle_upload,
@@ -1154,19 +1351,29 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
     check_btn.click(
         fn=check_task_status,
         inputs=[task_id_box],
-        outputs=[status_output, llm_output,],
+        outputs=[
+            status_output,
+            llm_output,
+        ],
     )
-    # def test_timer():
-    #     return "⏱️ Timer funcionando"
+
     status_timer.tick(
         fn=check_task_status,
         inputs=[task_id_box],
-        outputs=[status_output, llm_output,],
+        outputs=[
+            status_output,
+            llm_output,
+        ],
     )
 
     status_timer.tick(
         fn=get_executor_stats,
         outputs=[hardware_output],
+    )
+
+    status_timer.tick(
+        fn=get_local_worker_status,
+        outputs=[local_worker_stats],
     )
 
     refresh_results_btn.click(
@@ -1175,6 +1382,28 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
             results_plot,
             confusion_matrix_plot,
         ],
+    )
+
+    refresh_worker_btn.click(
+        fn=get_local_worker_status,
+        outputs=[local_worker_stats],
+    )
+
+    refresh_studies_btn.click(
+        fn=lambda: gr.update(choices=list_optuna_studies()),
+        outputs=[study_selector],
+    )
+
+    refresh_history_btn.click(
+        fn=get_optuna_study_history,
+        inputs=[study_selector],
+        outputs=[study_history_output],
+    )
+
+    # Automatically load worker status on page load
+    demo.load(
+        fn=get_local_worker_status,
+        outputs=[local_worker_stats],
     )
 
     # Executor direct run
@@ -1194,7 +1423,5 @@ if __name__ == "__main__":
         # theme=_THEME,
         head=_JS_SHORTCUTS,
         # css=_CSS_HIDDEN_DRY_RUN,
-        allowed_paths=[
-            "/results"
-        ]      
+        allowed_paths=["/results"],
     )
