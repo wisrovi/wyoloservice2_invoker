@@ -201,9 +201,15 @@ def _llm_status(state: str, info: dict) -> str:
             else None
         )
         if report:
+            safe_report = html.escape(str(report))
             return (
-                '<div class="llm-state llm-done">✅ <b>LLM Analysis Report</b><br>'
-                f'<div class="llm-report">{html.escape(str(report))}</div></div>'
+                '<div class="llm-state llm-done">'
+                '<div class="llm-header">'
+                '<span>✅ <b>LLM Analysis Report</b></span>'
+                f'<button class="copy-btn" onclick="copyToClipboard(this, \'{safe_report.replace(chr(39), chr(92)+chr(39))}\')">📋 Copy</button>'
+                '</div>'
+                f'<div class="llm-report">{safe_report}</div>'
+                '</div>'
             )
         return (
             '<div class="llm-state llm-done">✅ <b>Training completed.</b><br>'

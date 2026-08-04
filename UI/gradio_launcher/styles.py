@@ -398,23 +398,71 @@ tr:hover {
     color: #e2e8f0 !important;
 }
 
-/* ── Execution mode / queue selectors ───────────────────────────── */
-.mode-card textarea, .mode-card input { font-family: 'JetBrains Mono', monospace !important; }
+.llm-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 0.75rem !important;
+    padding-bottom: 0.5rem !important;
+    border-bottom: 1px solid #334155 !important;
+}
+.llm-header b { color: #f1f5f9 !important; }
+.copy-btn {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+}
+.copy-btn:hover {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+}
+.copy-btn:active {
+    transform: translateY(0) !important;
+}
+.copy-btn.copied {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+}
+
 """
 
 # JS script for keyboard shortcuts
-_JS_SHORTCUTS: str = """
-<script>
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        var btn = document.getElementById('train-btn');
-        if (btn) btn.click();
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        var btn = document.getElementById('save-btn');
-        if (btn) btn.click();
-    }
-});
-</script>
-"""
+_JS_SHORTCUTS: str = (
+    "<script>"
+    "document.addEventListener('keydown', function(e) {"
+    "    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {"
+    "        var btn = document.getElementById('train-btn');"
+    "        if (btn) btn.click();"
+    "    }"
+    "    if ((e.ctrlKey || e.metaKey) && e.key === 's') {"
+    "        e.preventDefault();"
+    "        var btn = document.getElementById('save-btn');"
+    "        if (btn) btn.click();"
+    "    }"
+    "});"
+    ""
+    "function copyToClipboard(btn, text) {"
+    "    navigator.clipboard.writeText(text).then(function() {"
+    "        btn.textContent = '✅ Copied!';"
+    "        btn.classList.add('copied');"
+    "        setTimeout(function() {"
+    "            btn.textContent = '📋 Copy';"
+    "            btn.classList.remove('copied');"
+    "        }, 2000);"
+    "    }, function(err) {"
+    "        btn.textContent = '❌ Failed';"
+    "        setTimeout(function() {"
+    "            btn.textContent = '📋 Copy';"
+    "        }, 2000);"
+    "    });"
+    "}"
+    "</script>"
+)
