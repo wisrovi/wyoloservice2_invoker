@@ -9,3 +9,8 @@ run_full_pipeline: true
 # UI Configuration
 theme: "soft"
 default_task_type: "classification"
+
+# Monitoring: which confusion matrix to display in the Monitoring tab.
+# If true, shows confusion_matrix_normalized.png (recommended for class
+# imbalance). If false, shows the raw count matrix confusion_matrix.png.
+show_normalized_confusion_matrix: true
