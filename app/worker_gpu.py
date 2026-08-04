@@ -27,7 +27,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.8.1"
+VERSION = "v1.8.2"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -116,15 +116,15 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
     )
     search_space = training_config.get("sweeper", {}).get("search_space", {})
 
-import hashlib
+    import hashlib
 
-# Study Settings (Crucial for distributed scenario)
-base_study_name = training_config.get(
-    "study_name", f"study_{datetime.now().strftime('%Y%m%d')}"
-)
-# Include hash of search space to avoid conflicts when search space changes
-space_hash = hashlib.md5(json.dumps(search_space, sort_keys=True).encode()).hexdigest()[:8]
-study_name = f"{base_study_name}_{space_hash}"
+    # Study Settings (Crucial for distributed scenario)
+    base_study_name = training_config.get(
+        "study_name", f"study_{datetime.now().strftime('%Y%m%d')}"
+    )
+    # Include hash of search space to avoid conflicts when search space changes
+    space_hash = hashlib.md5(json.dumps(search_space, sort_keys=True).encode()).hexdigest()[:8]
+    study_name = f"{base_study_name}_{space_hash}"
 
     # Priority: Environment variable > Config file
     base_url = "postgresql://postgres:postgres@<IP>:23436/wyoloservice"
