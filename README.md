@@ -87,20 +87,16 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.7 (Current Release) - 2026-08-04
-*   **Redis-based Centralized Templates:** Classification, Detection, and Segmentation templates are loaded dynamically from the shared Redis hash `wyolo:shared_templates` so changes sync immediately across all 70+ servers.
-*   **Stunning UI & UX overhaul:** Added premium Glassmorphic dark styling sheet (_CSS_MODERN) and custom styled load buttons for quick templates inside the editor card.
-*   **Version Update to v1.7.7:** Bumped version to `v1.7.7`.
-
-### Version 1.7.6 - 2026-08-04
-*   **UI Unification (Gradio + Dashboard):** Merged the FastAPI dashboard's Optuna historical query capabilities and Celery inspector into the Gradio launcher app.
-*   **Local Worker Status & Optuna History:** Added real-time local worker status monitoring (active/reserved tasks) and PostgreSQL-backed Optuna study history with best-trial hyperparameter display.
-*   **Standalone UI deployment:** Added `Dockerfile`, `docker-compose.yaml`, and `Makefile` under the `UI/` folder.
-*   **Version Update to v1.7.6:** Bumped version to `v1.7.6`.
-
-### Version 1.7.5 - 2026-08-03
+### Version 1.7.5 (Current Release) - 2026-08-03
 *   **EDA Python command fix:** Resolved syntax error in docker command by changing container command structure to a clean argv list.
 *   **Version Update to v1.7.5:** Bumped version to `v1.7.5`.
+
+#### Gradio UI Launcher Updates (v1.1.0) - 2026-08-04
+*   **Shared Redis Templates Store:** Moved Classification, Detection, and Segmentation templates to the centralized `invoker:shared_templates` hash in Redis.
+*   **Local Saved Template Path:** Local configs saved via "Save Template" are persisted under `invoker:<ip>:template_invoker` to avoid conflicts.
+*   **Prominent Destination Queue Banner:** Added a styled, prominent status bar showing the resolved private queue IP at the very top.
+*   **Execution Mode Descriptions:** Clearly documented the differences between Simple Training and Full Pipeline modes.
+*   **Glassmorphic cockpit design:** Styled the Gradio application with a gorgeous dark theme.
 
 ### Version 1.7.4 - 2026-08-03
 *   **EDA Temporary Executor Container:** Runs dataset analysis in a short-lived sibling executor container to safely mount network folders and analyze datasets before training.
