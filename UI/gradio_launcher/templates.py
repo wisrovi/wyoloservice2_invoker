@@ -14,6 +14,7 @@ sweeper:
   version: 1
   algorithm: optuna
   direction: maximize
+  fitness: "metrics/accuracy_top1"
   study_name: "color_ball_v2"
   tune: true
   sampler: "TPESampler"
@@ -44,6 +45,7 @@ sweeper:
   version: 1
   algorithm: optuna
   direction: maximize
+  fitness: "metrics/mAP50(M)"
   study_name: "elektronik_v2"
   tune: true
   sampler: "TPESampler"
