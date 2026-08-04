@@ -173,21 +173,6 @@ def build_layout() -> gr.Blocks:
                     study_history_output = gr.Markdown("Select a study above to load history.")
                     refresh_history_btn = gr.Button("🔄 Refresh Study History")
 
-                with gr.Group(elem_id="executor-section", visible=True):
-                    gr.Markdown("### ⚡ Advanced: Direct Executor Run")
-                    gr.Markdown(
-                        "*Bypasses Celery queue. Writes config to `/home/wyolo/request` "
-                        "and launches executor container directly with GPU access.*"
-                    )
-
-                    executor_btn = gr.Button(
-                        "🚀 Run via Executor",
-                        variant="primary",
-                        size="lg",
-                        elem_id="executor-btn",
-                    )
-
-                    executor_output = gr.Markdown("")
 
         # ── Event wiring ──────────────────────────────────────────────
 
@@ -310,13 +295,6 @@ def build_layout() -> gr.Blocks:
         demo.load(
             fn=celery_client.get_local_worker_status,
             outputs=[local_worker_stats],
-        )
-
-        # Direct executor run
-        executor_btn.click(
-            fn=telemetry.launch_via_executor,
-            inputs=[yaml_editor],
-            outputs=[executor_output],
         )
 
     return demo
