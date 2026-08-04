@@ -1,8 +1,13 @@
-import yaml
+import re
+
 import gradio as gr
+import yaml
+
 import celery_client
-from celery_client import save_template, validate_min_config, _HASH_KEY
-from templates import load_template
+from celery_client import _HASH_KEY, save_template, validate_min_config
+from templates import list_user_templates, load_template, load_user_template, save_user_template
+
+_TASK_ID_RE = re.compile(r"Task ID:.*?`([^`]+)`")
 
 def _save_with_feedback(content: str) -> str:
     """Wrap save_template with a user-facing status message."""
@@ -10,6 +15,42 @@ def _save_with_feedback(content: str) -> str:
     if err:
         return err
     return f"🟢 Template saved → `{_HASH_KEY}`"
+
+def save_named_template_with_feedback(name: str, content: str) -> tuple[str, dict]:
+    """Save the YAML under a user-chosen name and refresh the saved-templates list.
+
+    Returns (message, dropdown-update).
+    """
+    err = save_user_template(name, content)
+    if err:
+        return err, gr.update(choices=list_user_templates())
+    return (
+        f"🟢 Template **{name}** guardado → `{list_user_templates()}`",
+        gr.update(choices=list_user_templates(), value=name),
+    )
+
+def load_selected_template(name: str) -> str:
+    """Load a user-saved template by name into the YAML editor."""
+    return load_user_template(name)
+
+def toggle_task_id_edit(is_editing: bool) -> tuple[dict, dict, bool]:
+    """Toggle the Task ID box between read-only and editable.
+
+    The Task ID is auto-filled when Train is clicked, so it is read-only by
+    default. Clicking the pencil enables manual editing (e.g. to inspect a
+    different run), and clicking again locks it back.
+    """
+    if is_editing:
+        return (
+            gr.update(interactive=False),
+            gr.update(value="✏️ Editar", variant="secondary"),
+            False,
+        )
+    return (
+        gr.update(interactive=True),
+        gr.update(value="🔒 Bloquear", variant="primary"),
+        True,
+    )
 
 def parse_yaml_file(file: gr.File | None) -> str:
     """Read an uploaded YAML file, validate, persist to Redis, return content."""
@@ -48,24 +89,22 @@ def handle_upload(file: gr.File | None) -> tuple[str, str, dict]:
 def handle_train_click(yaml_content: str) -> tuple[str, str, dict]:
     """
     Validates config and dispatches Celery training task.
+    The execution mode (full pipeline vs direct) and destination queue are
+    controlled by config.yaml, never by UI widgets.
     Returns:
         - output_msg (Markdown string)
         - task_id (string to populate task_id_box)
         - tabs (Gradio gr.update to switch selected tab to monitoring)
     """
     result_msg = celery_client.validate_and_launch(yaml_content)
-    
-    # Extract task ID from output message
+
+    # Extract task ID from output message (robust to message wording)
     task_id = ""
-    if "🆔 **Task ID:**" in result_msg:
-        try:
-            parts = result_msg.split("🆔 **Task ID:** `")
-            if len(parts) > 1:
-                task_id = parts[1].split("`")[0]
-        except Exception:
-            pass
-            
+    match = _TASK_ID_RE.search(result_msg)
+    if match:
+        task_id = match.group(1)
+
     if task_id:
-        # Switch to monitoring tab
+        # Switch to monitoring tab — task id is auto-filled in the box
         return result_msg, task_id, gr.update(selected="monitoring_tab")
     return result_msg, "", gr.update()
