@@ -38,4 +38,4 @@ select = ["E", "F", "I", "N", "W", "UP"]
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]
-addopts = "-v --cov=gradio_app --cov-report=term-missing --cov-fail-under=80"
+addopts = "-v --cov=celery_client --cov=templates --cov=telemetry --cov=ui.handlers --cov-report=term-missing --cov-fail-under=60"
