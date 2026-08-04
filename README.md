@@ -87,7 +87,12 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.6 (Current Release) - 2026-08-04
+### Version 1.7.7 (Current Release) - 2026-08-04
+*   **Redis-based Centralized Templates:** Classification, Detection, and Segmentation templates are loaded dynamically from the shared Redis hash `wyolo:shared_templates` so changes sync immediately across all 70+ servers.
+*   **Stunning UI & UX overhaul:** Added premium Glassmorphic dark styling sheet (_CSS_MODERN) and custom styled load buttons for quick templates inside the editor card.
+*   **Version Update to v1.7.7:** Bumped version to `v1.7.7`.
+
+### Version 1.7.6 - 2026-08-04
 *   **UI Unification (Gradio + Dashboard):** Merged the FastAPI dashboard's Optuna historical query capabilities and Celery inspector into the Gradio launcher app.
 *   **Local Worker Status & Optuna History:** Added real-time local worker status monitoring (active/reserved tasks) and PostgreSQL-backed Optuna study history with best-trial hyperparameter display.
 *   **Standalone UI deployment:** Added `Dockerfile`, `docker-compose.yaml`, and `Makefile` under the `UI/` folder.
