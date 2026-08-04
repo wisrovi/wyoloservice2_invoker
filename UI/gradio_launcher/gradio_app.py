@@ -315,21 +315,21 @@ def load_template() -> str:
     JSON) or a raw YAML/JSON string (legacy).  Returns YAML for the editor.
 
     Returns:
-        str: The YAML content string, or empty string on failure.
+        str: The YAML content string, or default classification template on fallback.
     """
     hm = _get_hm()
     if hm is None:
-        return ""
+        return _TEMPLATE_CLS
     try:
         raw = hm.read_hash(hash_name=_HASH_KEY, key="template")
         if raw is None:
-            return ""
+            return _TEMPLATE_CLS
 
         # new format — already a dict
         if isinstance(raw, dict):
             if raw:
                 return yaml.dump(raw, default_flow_style=False, allow_unicode=True)
-            return ""
+            return _TEMPLATE_CLS
 
         # legacy format — stored as a string
         if isinstance(raw, str) and raw.strip():
@@ -342,9 +342,9 @@ def load_template() -> str:
             # maybe it's a raw YAML string (even older format)
             return raw
 
-        return ""
+        return _TEMPLATE_CLS
     except Exception:
-        return ""
+        return _TEMPLATE_CLS
 
 
 def save_template(content: str) -> str | None:
@@ -855,52 +855,96 @@ metadata:
 
 # ── Quick templates (internal) ──────────────────────────────────────
 
-_TEMPLATE_CLS: str = """\
-model: "yolov8n-cls.pt"
+_TEMPLATE_CLS: str = """model: "yolov8n-cls.pt"
 type: "yolo"
 train:
-  batch: -1
-  data: "/datasets/examples/classification/colorball.v8i.multiclass/"
+  data: "/datasets/clasification/colorball.v8i.multiclass/"
   epochs: 2
   imgsz: 640
 sweeper:
-  study_name: "exp_classification"
-  fitness: "metrics/accuracy_top1"
+  version: 1
+  algorithm: optuna
+  direction: maximize
+  study_name: "color_ball_v2"
+  tune: true
+  sampler: "TPESampler"
+  n_trials: 1
+  search_space:
+    model: [ "choice", "yolov8n-cls.pt" ]
+    train:
+      imgsz: [ "choice", 416 ]
+      lr0: [ "loguniform", 1e-5, 1e-2 ]
+extras:
+  gpu:
+    id: 0
+    limit: 0.95
 metadata:
-  author: "Gradio User"
-  content: "Classification experiment"
+  content: "Este es un experimento de clasificación de imágenes."
+  author: "William Rodriguez"
+  documentation: "Este modelo fue entrenado con datos del 2025."
 """
 
-_TEMPLATE_DET: str = """\
-model: "yolov8n.pt"
+_TEMPLATE_DET: str = """model: "yolov8n.pt"
 type: "yolo"
 train:
   batch: -1
-  data: "/datasets/examples/detection/colorball.v8i.multiclass/"
+  data: "/datasets/detection/Deteksi komponen elektronik.v1i.yolov8/data.yaml"
   epochs: 2
   imgsz: 640
 sweeper:
-  study_name: "exp_detection"
-  fitness: "metrics/mAP50-95(B)"
+  version: 1
+  algorithm: optuna
+  direction: maximize
+  study_name: "elektronik_v2"
+  tune: true
+  sampler: "TPESampler"
+  n_trials: 1
+  search_space:
+    model: [ "choice", "yolov8n.pt" ]
+    train:
+      imgsz: [ "choice", 416 ]
+      lr0: [ "loguniform", 1e-5, 1e-2 ]
+extras:
+  gpu:
+    id: 0
+    limit: 0.95
 metadata:
-  author: "Gradio User"
-  content: "Detection experiment"
+  content: "Este es un experimento de clasificación de imágenes."
+  author: "William Rodriguez"
+  documentation: "Este modelo fue entrenado con datos del 2025."
 """
 
-_TEMPLATE_SEG: str = """\
-model: "yolov8n-seg.pt"
+_TEMPLATE_SEG: str = """model: "yolov8n-seg.pt"
 type: "yolo"
+# dvc_data_path: /datasets/clasificacion/colorball.v8i.multiclass.dvc
 train:
-  batch: -1
-  data: "/datasets/examples/segmentation/ArchitecturePlan/data.yaml"
+  data: "/datasets/segmentation/ArchitecturePlan/data.yaml"
   epochs: 2
   imgsz: 640
 sweeper:
+  version: 1
+  algorithm: optuna
+  direction: maximize
   study_name: "ArchitecturePlan"
+  sampler: "TPESampler"
   fitness: "metrics/mAP50(M)"
+  n_trials: 1
+  search_space:
+    #model: ["choice", "yolov8n-seg.pt", "yolov8s-seg.pt", "yolov8m-seg.pt"]
+    train:
+      imgsz: ["choice", 640]
+      lr0: ["loguniform", 1e-5, 1e-2]
+      momentum: ["range", 0.85, 0.98, 0.01]
+      freeze: ["range", 1, 5, 1]
+      optimizer: ["choice", SGD, Adam, AdamW, NAdam, RMSProp]
+extras:
+  gpu:
+    id: 0
+    limit: 0.60
 metadata:
+  content: "Este es un entrenamiento de prueba de Wisrovi"
   author: "Manu G"
-  content: "Segmentation experiment"
+  documentation: "Este modelo fue entrenado con datos de marzo 2025."
 """
 
 
@@ -932,6 +976,176 @@ document.addEventListener('keydown', function(e) {
 </script>"""
 
 _CSS_MODERN: str = """\
+/* General container & page background styling */
+body {
+    background-color: #0b0f19 !important;
+}
+
+.gradio-container {
+    background-color: #0b0f19 !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+/* Stunning Glassmorphic header */
+#app-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%) !important;
+    color: white !important;
+    padding: 2.5rem 2rem !important;
+    margin-bottom: 2rem !important;
+    text-align: center !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+#app-header h1 {
+    font-size: 2.8rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.05em !important;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
+    margin-bottom: 0.5rem !important;
+}
+
+#app-header p {
+    font-size: 1.1rem !important;
+    opacity: 0.9 !important;
+    font-weight: 500 !important;
+}
+
+/* Beautiful custom tabs */
+.tabs {
+    border-bottom: 2px solid #1e293b !important;
+}
+
+.tab-nav button {
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    padding: 0.75rem 1.5rem !important;
+    transition: all 0.3s ease !important;
+    color: #94a3b8 !important;
+}
+
+.tab-nav button.selected {
+    color: #818cf8 !important;
+    border-bottom: 3px solid #6366f1 !important;
+}
+
+/* Cards & Accordions Glassmorphic design */
+.gr-box, .gr-panel, .gr-form, .gr-block, .gr-row, .gr-group {
+    background-color: #111827 !important;
+    border: 1px solid #1f2937 !important;
+    border-radius: 12px !important;
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Inputs & Textareas styling */
+input, textarea, select, .gr-input {
+    background-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+    border: 1px solid #374151 !important;
+    border-radius: 8px !important;
+    padding: 0.75rem !important;
+    font-size: 0.95rem !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+    outline: none !important;
+}
+
+/* Neon buttons */
+button.primary, #train-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1.05rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4) !important;
+}
+
+button.primary:hover, #train-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6) !important;
+}
+
+button.secondary, #save-btn, #check-btn, #refresh-btn {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1rem !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4) !important;
+}
+
+button.secondary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6) !important;
+}
+
+/* Accordions modern design */
+details.gr-accordion {
+    border: 1px solid #1f2937 !important;
+    background-color: #111827 !important;
+    border-radius: 12px !important;
+    margin-bottom: 1rem !important;
+}
+
+details.gr-accordion summary {
+    font-weight: 700 !important;
+    color: #e5e7eb !important;
+    padding: 1rem !important;
+    font-size: 1.1rem !important;
+    border-bottom: 1px solid #1f2937 !important;
+    cursor: pointer !important;
+}
+
+/* Optuna and Telemetry Markdown tables styling */
+table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 1.5rem 0 !important;
+    font-size: 0.95rem !important;
+    color: #d1d5db !important;
+}
+
+th {
+    background-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    padding: 0.75rem 1rem !important;
+    border-bottom: 2px solid #374151 !important;
+}
+
+td {
+    padding: 0.75rem 1rem !important;
+    border-bottom: 1px solid #1f2937 !important;
+}
+
+tr:nth-child(even) {
+    background-color: #111827 !important;
+}
+
+tr:hover {
+    background-color: #1f2937 !important;
+}
+
+#quick-templates-bar {
+    justify-content: flex-end;
+    gap: 5px;
+}
+
 /* Semi-hidden dry-run button */
 #dry-run-btn {
     opacity: 0.15 !important;
@@ -945,94 +1159,6 @@ _CSS_MODERN: str = """\
     transition: opacity 0.2s ease !important;
 }
 #dry-run-btn:hover { opacity: 0.6 !important; }
-
-/* Header styling */
-#app-header {
-    background: linear-gradient(
-        135deg,
-        #7c3aed 0%,
-        #9333ea 50%,
-        #a855f7 100%
-    );
-
-    color: white;
-
-    padding: 2rem 2rem;
-
-    margin-bottom: 2rem;
-
-    text-align: center;
-
-    border-radius: 0 0 24px 24px;
-
-    box-shadow: 0 8px 24px rgba(
-        124,
-        58,
-        237,
-        0.35
-    );
-}
-
-#app-header h1 {
-    margin: 0;
-    font-size: 2.2rem;
-    font-weight: 700;
-}
-
-#app-header p {
-    margin-top: 0.75rem;
-    opacity: 0.95;
-    font-size: 1rem;
-    font-weight: 400;
-}
-
-/* Card panels */
-.mode-card {
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin-bottom: 1rem;
-    box-shadow: none;
-}
-.mode-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-
-/* Radio buttons styling */
-.gradio-radio { gap: 1rem; }
-.gradio-radio label {
-    background: #fff;
-    border: 2px solid #e1e4e8;
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.gradio-radio input:checked + span {
-    background: #1e3a5f;
-    color: white;
-    border-color: #1e3a5f;
-}
-.gradio-radio label:hover { border-color: #2c5aa0; }
-
-/* Status indicators */
-.status-online { color: #28a745; font-weight: 500; }
-.status-offline { color: #dc3545; font-weight: 500; }
-
-/* Button states */
-#train-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Executor advanced section */
-#executor-section {
-    border: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    margin-top: 1rem;
-    box-shadow: none !important;
-}
-#executor-section summary {
-    font-weight: 600;
-    cursor: pointer;
-    color: #2c5aa0;
-}
 """
 
 _CSS_HIDDEN_DRY_RUN: str = """\
@@ -1091,7 +1217,12 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
 
             with gr.Column(visible=True) as editor_col:
                 with gr.Group(elem_classes=["mode-card"]):
-                    gr.Markdown("### 📄 YAML Configuration")
+                    with gr.Row():
+                        gr.Markdown("### 📄 YAML Configuration")
+                        with gr.Row(elem_id="quick-templates-bar"):
+                            btn_cls = gr.Button("🟢 Classification", size="sm", variant="secondary")
+                            btn_det = gr.Button("🔵 Detection", size="sm", variant="secondary")
+                            btn_seg = gr.Button("🔴 Segmentation", size="sm", variant="secondary")
 
                     yaml_editor = gr.Code(
                         value=load_template,
@@ -1169,19 +1300,7 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
                         elem_id="dry-run-btn",
                     )
 
-            with gr.Accordion("📋 YAML Reference", open=False):
-                gr.Markdown(_YAML_TEMPLATE_DOC)
 
-            with gr.Accordion("💡 Quick Templates", open=False):
-                gr.Examples(
-                    examples=[
-                        [_TEMPLATE_CLS],
-                        [_TEMPLATE_DET],
-                        [_TEMPLATE_SEG],
-                    ],
-                    inputs=[yaml_editor],
-                    label="Click to load a template into editor",
-                )
 
         # ============================================================
         # MONITORING TAB
@@ -1382,6 +1501,21 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
             results_plot,
             confusion_matrix_plot,
         ],
+    )
+
+    btn_cls.click(
+        fn=lambda: _TEMPLATE_CLS,
+        outputs=[yaml_editor],
+    )
+
+    btn_det.click(
+        fn=lambda: _TEMPLATE_DET,
+        outputs=[yaml_editor],
+    )
+
+    btn_seg.click(
+        fn=lambda: _TEMPLATE_SEG,
+        outputs=[yaml_editor],
     )
 
     refresh_worker_btn.click(
