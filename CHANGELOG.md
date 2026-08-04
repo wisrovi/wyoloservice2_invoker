@@ -1,5 +1,11 @@
 # Changelog - GPU Invoker (Hive)
 
+## [1.7.7] - 2026-08-04
+### Added
+- Integrated central Redis-based template storage: Classification, Detection, and Segmentation templates are loaded/synchronized globally across all 70+ servers from the shared Redis hash `wyolo:shared_templates`.
+- Redesigned the Quick Templates interface with high-contrast, modern status-indicator style load buttons.
+- Applied a premium Glassmorphic dark styling sheet (_CSS_MODERN) to make the cockpit cockpit-style, modern, and highly usable.
+
 ## [1.7.6] - 2026-08-04
 ### Added
 - Unified the UI by merging features of `simple_dashboard` directly into `gradio_launcher`.
