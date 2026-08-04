@@ -54,7 +54,7 @@ services:
       - config/control_host.env
       - config/user.env
     environment:
-      - PRIVATE_QUEUE=${PRIVATE_QUEUE:-default}
+      - PRIVATE_QUEUE=${PRIVATE_QUEUE:-}
     volumes:
       - /home/wyolo/train_service_results:/results
     command: python gradio_app.py
