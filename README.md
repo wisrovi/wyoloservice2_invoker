@@ -87,7 +87,13 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.5 (Current Release) - 2026-08-03
+### Version 1.7.6 (Current Release) - 2026-08-04
+*   **One-Click Training Dispatch:** Gradio launcher now validates the YAML and dispatches the Celery training task on the Train button click, auto-switching to the Monitoring tab.
+*   **Results ZIP Download:** Added a "Download Results ZIP" button to fetch the training results archive from the worker.
+*   **Auto-Refresh Metrics:** Training metric plots now auto-refresh on the status timer tick, in addition to the manual refresh button.
+*   **Version Update to v1.7.6:** Bumped version to `v1.7.6`.
+
+### Version 1.7.5 - 2026-08-03
 *   **EDA Python command fix:** Resolved syntax error in docker command by changing container command structure to a clean argv list.
 *   **Version Update to v1.7.5:** Bumped version to `v1.7.5`.
 
