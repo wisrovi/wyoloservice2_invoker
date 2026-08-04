@@ -44,6 +44,23 @@ class EDA:
                 "eda_results": {},
             }
 
+        # If dataset_path is a YAML file, read it to get the actual dataset directory
+        if isinstance(dataset_path, str) and dataset_path.endswith(('.yaml', '.yml')):
+            import yaml
+            try:
+                with open(dataset_path, 'r') as f:
+                    yaml_data = yaml.safe_load(f)
+                    # YOLO data.yaml typically has 'path' or 'train' field
+                    if isinstance(yaml_data, dict):
+                        if 'path' in yaml_data:
+                            dataset_path = yaml_data['path']
+                        elif 'train' in yaml_data and isinstance(yaml_data['train'], str):
+                            dataset_path = yaml_data['train']
+                        elif 'val' in yaml_data and isinstance(yaml_data['val'], str):
+                            dataset_path = yaml_data['val']
+            except Exception as exc:
+                print(f"[EDA] Warning: Could not read YAML file {dataset_path}: {exc}")
+
         # Run the temporary executor container to perform the mount and run python
         try:
             import docker
