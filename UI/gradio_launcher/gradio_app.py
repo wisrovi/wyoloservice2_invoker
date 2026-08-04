@@ -69,14 +69,14 @@ _CONTROL_HOST: str = os.getenv("CONTROL_HOST", "127.0.0.1")
 _REDIS_PORT: int = 23_437
 _REDIS_URL: str = f"redis://{_CONTROL_HOST}:{_REDIS_PORT}/0"
 
-_PRIVATE_QUEUE: str = os.getenv("PRIVATE_QUEUE") or "default"
+# Gradio Launcher UI Version
+GRADIO_VERSION: str = "v1.1.0"
 
-# _DASHBOARD_URL = os.getenv(
-#     "DASHBOARD_URL",
-#     "http://localhost:8082"
-# )
+_PRIVATE_QUEUE: str = os.getenv("PRIVATE_QUEUE") or os.getenv("WORKER_HOST") or "default"
+if _PRIVATE_QUEUE == "default" and os.getenv("WORKER_HOST"):
+    _PRIVATE_QUEUE = os.getenv("WORKER_HOST")
 
-_HASH_KEY: str = f"wyolo:invokers:{_PRIVATE_QUEUE}"
+_HASH_KEY: str = f"invoker:{_PRIVATE_QUEUE}:template_invoker"
 
 _celery_app: Celery = Celery(
     "invoker_launcher",
@@ -314,9 +314,9 @@ def get_template_from_redis(template_type: str, default_content: str) -> str:
     if hm is None:
         return default_content
     try:
-        raw = hm.read_hash(hash_name="wyolo:shared_templates", key=template_type)
+        raw = hm.read_hash(hash_name="invoker:shared_templates", key=template_type)
         if raw is None or not str(raw).strip():
-            hm.create_hash(hash_name="wyolo:shared_templates", key=template_type, value=default_content)
+            hm.create_hash(hash_name="invoker:shared_templates", key=template_type, value=default_content)
             return default_content
         return str(raw)
     except Exception:
@@ -1199,14 +1199,18 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
     # dashboard_timer = gr.Timer(10)
 
     gr.HTML(
-        """
+        f"""
     <div id="app-header">
-        <h1>🚀 Invoker Launcher</h1>
+        <h1>🚀 Invoker Launcher <span style="font-size: 1.2rem; opacity: 0.7; font-weight: 400;">(Gradio UI {GRADIO_VERSION})</span></h1>
         <p>
             Direct training submission to local GPU invoker • 
             Redis-persisted configs • 
             Queue-aware dispatch
         </p>
+    </div>
+    <div style="background: rgba(30, 41, 59, 0.7); border: 2px solid #3b82f6; border-radius: 12px; padding: 1.2rem 1rem; margin-bottom: 1.5rem; text-align: center; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);">
+        <span style="font-size: 1.1rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">🎯 Active Destination Queue (Cola Destino):</span>
+        <span style="font-size: 1.8rem; color: #60a5fa; font-weight: 900; margin-left: 0.75rem; text-shadow: 0 0 10px rgba(96, 165, 250, 0.5); font-family: monospace;">{_PRIVATE_QUEUE}</span>
     </div>
     """
     )
@@ -1295,7 +1299,13 @@ with gr.Blocks(title="Invoker Launcher", theme=_THEME, css=_CSS_MODERN) as demo:
                     label="Execution Mode",
                 )
 
-                gr.Markdown(f"🎯 **Destination Queue:** `{_PRIVATE_QUEUE}`")
+                gr.Markdown(
+                    """
+                    💡 **⚡ Simple Training** (tasks.train_on_gpu_simple): Executes the GPU training loop directly, bypassing Samba network mounts and pre-processing pipeline checks.
+                    
+                    💡 **🔬 Full Pipeline** (tasks.train_on_gpu): Executes the complete MLOps pipeline, including datasets mounting, folder verification, post-training LLM reports, and Optuna registration.
+                    """
+                )
 
                 output_msg = gr.Markdown("")
 
