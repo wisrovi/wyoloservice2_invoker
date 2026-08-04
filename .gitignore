@@ -192,3 +192,6 @@ graphify-out/manifest.json
 graphify-out/cost.json
 graphify-out/.graphify_*
 
+
+# Local environment symlinks (never committed)
+UI/config/
