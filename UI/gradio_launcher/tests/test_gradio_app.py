@@ -30,11 +30,10 @@ from ui.handlers import (
     handle_train_click,
     load_selected_template,
     save_named_template_with_feedback,
-    toggle_task_id_edit,
+    toggle_mode,
 )
 from telemetry import (
     check_task_status,
-    get_download_state,
     get_results_zip as telemetry_get_results_zip,
     results_available,
 )
@@ -470,24 +469,6 @@ class TestNamedUserTemplates:
             assert load_selected_template("a") == "model: m"
 
 
-class TestToggleTaskIdEdit:
-    """Tests for the read-only Task ID toggle."""
-
-    def test_locks_when_editing(self) -> None:
-        """Switching from editing locks the box and restores the pencil."""
-        task, btn, state = toggle_task_id_edit(True)
-        assert dict(task)["interactive"] is False
-        assert dict(btn)["value"] == "✏️ Editar"
-        assert state is False
-
-    def test_unlocks_when_locked(self) -> None:
-        """Switching from locked enables editing and shows the lock button."""
-        task, btn, state = toggle_task_id_edit(False)
-        assert dict(task)["interactive"] is True
-        assert dict(btn)["value"] == "🔒 Bloquear"
-        assert state is True
-
-
 # ── telemetry ────────────────────────────────────────────────────────
 
 
@@ -540,17 +521,6 @@ class TestResultsDownload:
         with mock.patch("telemetry.RESULTS_DIR", str(tmp_path)):
             assert results_available() is False
 
-    def test_get_download_state_disabled(self, tmp_path) -> None:
-        """The download button is disabled while there are no results."""
-        with mock.patch("telemetry.RESULTS_DIR", str(tmp_path)):
-            assert dict(get_download_state())["interactive"] is False
-
-    def test_get_download_state_enabled(self, tmp_path) -> None:
-        """The download button is enabled once results.json exists."""
-        (tmp_path / "results.json").write_text('{"accuracy": 0.7}')
-        with mock.patch("telemetry.RESULTS_DIR", str(tmp_path)):
-            assert dict(get_download_state())["interactive"] is True
-
     def test_get_results_zip_creates_archive(self, tmp_path) -> None:
         """get_results_zip archives the whole results directory."""
         (tmp_path / "results.json").write_text('{"accuracy": 0.7}')
@@ -598,3 +568,28 @@ class TestHandleTrainClick:
         _msg, task_id, tab_update = handle_train_click("bad")
         assert task_id == ""
         assert "selected" not in dict(tab_update)
+
+
+class TestToggleMode:
+    """Tests for the three-way configuration input selector."""
+
+    def test_example_mode(self) -> None:
+        """'example' shows the editor column only."""
+        editor, upload, saved = toggle_mode("example")
+        assert dict(editor)["visible"] is True
+        assert dict(upload)["visible"] is False
+        assert dict(saved)["visible"] is False
+
+    def test_upload_mode(self) -> None:
+        """'upload' shows the file-upload column only."""
+        editor, upload, saved = toggle_mode("upload")
+        assert dict(editor)["visible"] is False
+        assert dict(upload)["visible"] is True
+        assert dict(saved)["visible"] is False
+
+    def test_saved_mode(self) -> None:
+        """'saved' shows the saved-templates column only."""
+        editor, upload, saved = toggle_mode("saved")
+        assert dict(editor)["visible"] is False
+        assert dict(upload)["visible"] is False
+        assert dict(saved)["visible"] is True
