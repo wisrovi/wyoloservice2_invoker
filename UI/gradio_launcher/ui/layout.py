@@ -48,20 +48,20 @@ def build_layout() -> gr.Blocks:
             with gr.Tab("🚀 Training", id="training_tab"):
 
                 gr.Markdown(
-                    "**1.** Elige un ejemplo, sube tu YAML o carga un template guardado → "
-                    "**2.** Pulsa **🚀 Train** → "
-                    "**3.** Se te lleva a *Monitoring* automáticamente con el Task ID ya copiado."
+                    "**1.** Choose an example, upload your YAML, or load a saved template  \n"
+                    "**2.** Click **🚀 Train**  \n"
+                    "**3.** You are taken to *Monitoring* automatically with the Task ID already copied."
                 )
 
                 with gr.Row():
                     mode_radio = gr.Radio(
                         choices=[
-                            ("✨ Usar ejemplo", "example"),
-                            ("📤 Subir YAML", "upload"),
-                            ("📚 Mis templates", "saved"),
+                            ("✨ Use example", "example"),
+                            ("📤 Upload YAML", "upload"),
+                            ("📚 My templates", "saved"),
                         ],
                         value="example",
-                        label="¿Cómo quieres preparar tu configuración?",
+                        label="How would you like to prepare your configuration?",
                         elem_classes=["mode-selector"],
                         container=False,
                     )
@@ -86,17 +86,17 @@ def build_layout() -> gr.Blocks:
 
                         with gr.Row():
                             gr.Markdown(
-                                f"⚙️ **Modo:** "
+                                f"⚙️ **Mode:** "
                                 f"`{'Full Pipeline (EDA + Optuna + LLM)' if celery_client.RUN_FULL_PIPELINE else 'Direct Executor Run'}`"
-                                f" &nbsp;·&nbsp; 🎯 **Cola destino:** `{celery_client._PRIVATE_QUEUE}`"
+                                f" &nbsp;·&nbsp; 🎯 **Target queue:** `{celery_client._PRIVATE_QUEUE}`"
                             )
 
                 with gr.Column(visible=False) as upload_col:
                     with gr.Group(elem_classes=["mode-card"]):
-                        gr.Markdown("### 📤 Subir configuración YAML")
+                        gr.Markdown("### 📤 Upload YAML Configuration")
 
                         yaml_file = gr.File(
-                            label="Selecciona archivo .yaml / .yml",
+                            label="Select .yaml / .yml file",
                             file_types=[".yaml", ".yml"],
                             file_count="single",
                             elem_id="yaml-upload",
@@ -112,35 +112,44 @@ def build_layout() -> gr.Blocks:
 
                 with gr.Column(visible=False) as saved_col:
                     with gr.Group(elem_classes=["mode-card"]):
-                        gr.Markdown("### 📚 Mis templates")
-                        with gr.Row():
-                            saved_templates_dropdown = gr.Dropdown(
-                                choices=templates.list_user_templates(),
-                                label="Template guardado",
-                                scale=3,
-                                allow_custom_value=False,
-                            )
-                            load_saved_btn = gr.Button(
-                                "📂 Cargar", variant="secondary", size="lg"
-                            )
-                            refresh_saved_btn = gr.Button(
-                                "🔄", variant="secondary", size="lg"
-                            )
-                        with gr.Row():
-                            template_name_box = gr.Textbox(
-                                label="Guardar el YAML actual como…",
-                                placeholder="ej. mi_entreno_batch_v3",
-                                scale=3,
-                            )
-                            save_btn = gr.Button(
-                                "💾 Guardar template",
-                                variant="secondary",
-                                size="lg",
-                                elem_id="save-btn",
-                            )
+                        gr.Markdown("### 📚 My Templates")
+                        
+                        # Load section
+                        with gr.Group(elem_classes=["template-section"]):
+                            gr.Markdown("#### Load Template")
+                            with gr.Row():
+                                saved_templates_dropdown = gr.Dropdown(
+                                    choices=templates.list_user_templates(),
+                                    label="Select a saved template",
+                                    scale=3,
+                                    allow_custom_value=False,
+                                )
+                                load_saved_btn = gr.Button(
+                                    "📂 Load into Editor", variant="primary", size="lg"
+                                )
+                                refresh_saved_btn = gr.Button(
+                                    "🔄 Refresh", variant="secondary", size="lg"
+                                )
+                        
+                        # Save section
+                        with gr.Group(elem_classes=["template-section"]):
+                            gr.Markdown("#### Save Current YAML as New Template")
+                            with gr.Row():
+                                template_name_box = gr.Textbox(
+                                    label="Template name",
+                                    placeholder="e.g. my_batch_train_v3",
+                                    scale=3,
+                                )
+                                save_btn = gr.Button(
+                                    "💾 Save as Template",
+                                    variant="secondary",
+                                    size="lg",
+                                    elem_id="save-btn",
+                                )
+                        
                         gr.Markdown(
-                            "*💡 **Cargar** abre el template en el editor para revisarlo o lanzarlo; "
-                            "**Guardar** persiste el YAML que estés editando bajo ese nombre.*"
+                            "*💡 **Load** opens the template in the editor for review or launch. "
+                            "**Save** persists the YAML you are editing under a new name.*"
                         )
 
                 with gr.Group(elem_classes=["mode-card"]):

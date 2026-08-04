@@ -378,6 +378,26 @@ tr:hover {
     border: 1px solid #334155 !important;
 }
 
+/* ── My Templates section ─────────────────────────────────────────── */
+.template-section {
+    background: rgba(15, 23, 42, 0.4) !important;
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
+    margin-bottom: 1rem !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+.template-section:hover {
+    border-color: #475569 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+}
+.template-section h4 {
+    margin: 0 0 0.75rem 0 !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #e2e8f0 !important;
+}
+
 /* ── Execution mode / queue selectors ───────────────────────────── */
 .mode-card textarea, .mode-card input { font-family: 'JetBrains Mono', monospace !important; }
 """
