@@ -87,7 +87,11 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.7.7 (Current Release) - 2026-08-04
+### Version 1.7.8 (Current Release) - 2026-08-04
+*   **Add sweeper.fitness to Gradio Templates:** Added the `fitness` metric key to the classification (`metrics/accuracy_top1`) and detection (`metrics/mAP50(M)`) quick templates. The executor's `train_model` step requires `sweeper.fitness`; without it the pipeline aborted with `[Error Code: 502] La clave 'fitness' no se encuentra en la configuración del sweeper.` and finished with exit code 0 without writing `results.json`.
+*   **Version Update to v1.7.8:** Bumped version to `v1.7.8`.
+
+### Version 1.7.7 - 2026-08-04
 *   **Fix Dataset Paths in Gradio Templates:** Corrected the classification, detection, and segmentation quick templates to point to the bundled `/examples/` datasets (the old `/datasets/` paths did not exist on the cluster share, causing the executor to abort early without writing `results.json`).
 *   **Version Update to v1.7.7:** Bumped version to `v1.7.7`.
 
