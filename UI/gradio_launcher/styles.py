@@ -331,35 +331,51 @@ tr:hover {
 /* ── LLM analysis states ────────────────────────────────────────── */
 .llm-state {
     background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%) !important;
-    border: 1px dashed #475569 !important;
-    border-radius: 12px !important;
-    padding: 1rem 1.1rem !important;
+    border: 2px dashed #475569 !important;
+    border-radius: 16px !important;
+    padding: 1.25rem 1.5rem !important;
     color: #94a3b8 !important;
-    font-size: 0.95rem !important;
-    line-height: 1.55 !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+    font-size: 1rem !important;
+    line-height: 1.65 !important;
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(148, 163, 184, 0.08) !important;
     height: 100% !important;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
 }
 
-.llm-state b { color: #e2e8f0 !important; }
+.llm-state b { color: #f1f5f9 !important; }
 
 .llm-done {
     border-style: solid !important;
     border-color: #10b981 !important;
+    box-shadow:
+        0 6px 24px rgba(16, 185, 129, 0.18),
+        0 0 0 1px rgba(16, 185, 129, 0.25),
+        inset 0 1px 0 rgba(16, 185, 129, 0.12) !important;
 }
 
 .llm-error {
     border-style: solid !important;
     border-color: #ef4444 !important;
+    box-shadow:
+        0 6px 24px rgba(239, 68, 68, 0.18),
+        0 0 0 1px rgba(239, 68, 68, 0.25),
+        inset 0 1px 0 rgba(239, 68, 68, 0.12) !important;
 }
 
 .llm-report {
-    margin-top: 0.5rem !important;
-    color: #cbd5e1 !important;
-    max-height: 280px !important;
+    margin-top: 0.75rem !important;
+    color: #e2e8f0 !important;
+    max-height: 320px !important;
     overflow-y: auto !important;
     white-space: pre-wrap !important;
-    font-size: 0.9rem !important;
+    font-size: 0.95rem !important;
+    line-height: 1.7 !important;
+    background: rgba(15, 23, 42, 0.6) !important;
+    border-radius: 10px !important;
+    padding: 1rem !important;
+    border: 1px solid #334155 !important;
 }
 
 /* ── Execution mode / queue selectors ───────────────────────────── */
