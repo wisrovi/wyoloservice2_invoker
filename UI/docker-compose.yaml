@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  gradio_launcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wyolo_gradio_launcher
+    restart: always
+    ports:
+      - "7860:7860"
+    environment:
+      - CONTROL_HOST=${CONTROL_HOST:-127.0.0.1}
+      - PRIVATE_QUEUE=${PRIVATE_QUEUE:-default}
+      - OPTUNA_DB_URL=${OPTUNA_DB_URL:-postgresql://postgres:postgres@127.0.0.1:23436/wyoloservice}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/wyolo/train_service_results:/results
+      - /home/wyolo/request:/wyolo/worker/request
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
