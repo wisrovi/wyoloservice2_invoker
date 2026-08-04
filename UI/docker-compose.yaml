@@ -5,10 +5,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: wyolo_gradio_launcher
+    image: wisrovi/train_service:worker_invoker_gradio_v1.0.0
     restart: always
     ports:
       - "7860:7860"
+    env_file:
+      - ../config/control_host.env
+      - ../config/user.env
     environment:
       - CONTROL_HOST=${CONTROL_HOST:-127.0.0.1}
       - PRIVATE_QUEUE=${PRIVATE_QUEUE:-}
