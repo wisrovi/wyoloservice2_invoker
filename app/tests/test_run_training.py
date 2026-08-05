@@ -31,7 +31,11 @@ class TestRunTraining:
     @pytest.fixture
     def config(self, temp_results_dir):
         """Provides a basic configuration for RunTraining."""
-        return {"executor_image": "test_image:latest", "results_dir": temp_results_dir}
+        return {
+            "executor_image": "test_image:latest",
+            "results_dir": temp_results_dir,
+            "yaml_path": os.path.join(temp_results_dir, "config_train.yaml"),
+        }
 
     @pytest.fixture
     def training_config(self):
