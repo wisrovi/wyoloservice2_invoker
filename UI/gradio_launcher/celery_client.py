@@ -9,7 +9,7 @@ _CONTROL_HOST = os.getenv("CONTROL_HOST", "127.0.0.1")
 _REDIS_PORT = 23_437
 _REDIS_URL = f"redis://{_CONTROL_HOST}:{_REDIS_PORT}/0"
 
-GRADIO_VERSION = "v1.2.0"
+GRADIO_VERSION = "v1.2.1"
 
 _PRIVATE_QUEUE = os.getenv("PRIVATE_QUEUE") or os.getenv("WORKER_HOST") or "default"
 if _PRIVATE_QUEUE == "default" and os.getenv("WORKER_HOST"):
