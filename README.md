@@ -87,6 +87,12 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
+### Version 1.8.6 (Current Release) - 2026-08-05
+*   **LLM report generation moved to the executor:** The OpenCode analysis now runs inside the executor container, which writes `llm.md` into the shared results directory and uploads it to MLflow as an artifact.
+*   **Invoker LLM analyzer is now a passive reader:** `LlmAnalizer` no longer calls OpenCode; it reads `/home/wyolo/train_service_results/llm.md` and exposes the content through the Celery task state (`llm_report`), keeping MCP `get_study_details` compatible.
+*   **Gradio renders llm.md directly:** `_llm_status` reads `/results/llm.md` as the primary source when the task succeeds, falling back to the `llm_report` from the task result.
+*   **Version Update to v1.8.6:** Bumped version to `v1.8.6`.
+
 ### Version 1.8.5 (Current Release) - 2026-08-05
 *   **GPU monitoring inside the executor container:** `get_gpu_usage` now runs `nvidia-smi` via `docker exec wyolo_executor` with a 5-second timeout, so utilization is reported from the executor environment instead of the host.
 *   **Invoker ID fallback to PRIVATE_QUEUE:** `WORKER_NAME` env now falls back to `PRIVATE_QUEUE` when not set, keeping the correct invoker identity in logs and task metadata.
