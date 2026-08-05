@@ -16,13 +16,10 @@ def build_layout() -> gr.Blocks:
         gr.HTML(
             f"""
             <div id="app-header">
-                <h1>🚀 Invoker Launcher
-                    <span style="font-size: 1.2rem; opacity: 0.7; font-weight: 400;">
-                        (Gradio UI {celery_client.GRADIO_VERSION})
-                    </span>
-                </h1>
+                <h1>🚀 Invoker Launcher</h1>
                 <p>Train YOLO on this GPU node • Config persisted in Redis •
                    Real-time automatic monitoring</p>
+                <p id="app-version">v{celery_client.GRADIO_VERSION}</p>
             </div>
             <div style="background: rgba(30, 41, 59, 0.7); border: 2px solid #3b82f6;
                         border-radius: 12px; padding: 1.2rem 1rem; margin-bottom: 1rem;
