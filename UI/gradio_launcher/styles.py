@@ -46,6 +46,14 @@ body {
     font-weight: 500 !important;
 }
 
+#app-version {
+    font-size: 0.85rem !important;
+    opacity: 0.7 !important;
+    font-weight: 400 !important;
+    margin-top: 0.75rem !important;
+    letter-spacing: 0.04em !important;
+}
+
 /* Beautiful custom tabs */
 .tabs {
     border-bottom: 2px solid #1e293b !important;
