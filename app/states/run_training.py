@@ -146,6 +146,10 @@ class RunTraining:
             config (Dict[str, Any]): Configuration dictionary containing executor settings.
         """
         self.config = config
+        # Container-internal path for the training config YAML. Overridable via
+        # config["yaml_path"] so tests running on the host can inject a writable
+        # temp path instead of the container mount (/wyolo/worker/request).
+        self.yaml_path: str = self.config.get("yaml_path", YAML_PATH)
         print(
             f"Executor timeout configured: "
             f"{self.config.get('executor_timeout_seconds', 43200)}"
@@ -345,7 +349,7 @@ class RunTraining:
                 command=(
                     f'bash -c \'nvidia-smi && echo "[EXECUTOR] Starting mount..." && '
                     f'/usr/local/bin/mount-cifs.sh && echo "[EXECUTOR] Mount OK. Starting training..." && '
-                    f"python main.py --file {YAML_PATH}'"
+                    f"python main.py --file {self.yaml_path}'"
                 ),
             )
 
@@ -636,9 +640,9 @@ class RunTraining:
         try:
             # 1. Deliver Config: Write the JSON config to a file for the executor
             # training_config in yaml file
-            os.makedirs(os.path.dirname(YAML_PATH), exist_ok=True)
+            os.makedirs(os.path.dirname(self.yaml_path), exist_ok=True)
 
-            with open(YAML_PATH, "w", encoding="utf-8") as file:
+            with open(self.yaml_path, "w", encoding="utf-8") as file:
                 yaml.dump(clean_config, file)
 
             config_path: str = os.path.join(temp_dir, "config.json")
