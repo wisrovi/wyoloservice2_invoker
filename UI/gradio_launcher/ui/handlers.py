@@ -33,25 +33,6 @@ def load_selected_template(name: str) -> str:
     """Load a user-saved template by name into the YAML editor."""
     return load_user_template(name)
 
-def toggle_task_id_edit(is_editing: bool) -> tuple[dict, dict, bool]:
-    """Toggle the Task ID box between read-only and editable.
-
-    The Task ID is auto-filled when Train is clicked, so it is read-only by
-    default. Clicking the pencil enables manual editing (e.g. to inspect a
-    different run), and clicking again locks it back.
-    """
-    if is_editing:
-        return (
-            gr.update(interactive=False),
-            gr.update(value="✏️ Editar", variant="secondary"),
-            False,
-        )
-    return (
-        gr.update(interactive=True),
-        gr.update(value="🔒 Bloquear", variant="primary"),
-        True,
-    )
-
 def parse_yaml_file(file: gr.File | None) -> str:
     """Read an uploaded YAML file, validate, persist to Redis, return content."""
     if file is None:
@@ -70,11 +51,13 @@ def _validate_and_update_btn(yaml_content: str) -> tuple[str, dict]:
     valid, msg = validate_min_config(yaml_content)
     return msg, gr.update(interactive=valid)
 
-def toggle_mode(mode: str) -> tuple[dict, dict]:
-    """Switch visibility between editor and file upload columns."""
-    if mode == "upload":
-        return gr.update(visible=False), gr.update(visible=True)
-    return gr.update(visible=True), gr.update(visible=False)
+def toggle_mode(mode: str) -> tuple[dict, dict, dict]:
+    """Switch visibility between the example, upload and saved-template columns."""
+    return (
+        gr.update(visible=(mode == "example")),
+        gr.update(visible=(mode == "upload")),
+        gr.update(visible=(mode == "saved")),
+    )
 
 def handle_upload(file: gr.File | None) -> tuple[str, str, dict]:
     """Process uploaded config files and return (validated_content, validation_msg, btn_state)."""
