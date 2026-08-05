@@ -104,15 +104,20 @@ def get_system_limits(
 
 
 def get_gpu_usage() -> float:
-    """Get current GPU utilization percentage."""
+    """Get current GPU utilization percentage from the executor container."""
     try:
         result = subprocess.check_output(
             [
+                "docker",
+                "exec",
+                "wyolo_executor",
                 "nvidia-smi",
                 "--query-gpu=utilization.gpu",
                 "--format=csv,noheader,nounits",
             ],
             text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
         )
         return float(result.strip().split("\n")[0])
     except Exception:
@@ -160,7 +165,7 @@ class RunTraining:
         )
         telemetry_file = os.path.join(results_dir, "telemetry.json")
 
-        invoker_name = os.getenv("PRIVATE_QUEUE", "unknown")
+        invoker_name = os.getenv("WORKER_NAME", os.getenv("PRIVATE_QUEUE", "unknown"))
         timeout_seconds = self.config.get(
             "executor_timeout_seconds",
             43200,
@@ -582,7 +587,7 @@ class RunTraining:
             RuntimeError: If the executor container fails.
             Exception: For any other unexpected errors.
         """
-        invoker_name = os.getenv("WORKER_NAME", "unknown")
+        invoker_name = os.getenv("WORKER_NAME", os.getenv("PRIVATE_QUEUE", "unknown"))
 
         # Make the training config 100% clean and serializable to avoid PyYAML/JSON pickling errors (like _thread.RLock)
         def make_serializable(data: Any) -> Any:
