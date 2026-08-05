@@ -21,6 +21,18 @@ _NORMALIZED_CONFUSION_MATRIX_IMAGE = os.path.join(
     _EVALUATION_DIR, "confusion_matrix_normalized.png"
 )
 ZIP_PATH = os.path.join(RESULTS_DIR, "training_results.zip")
+_LLM_MD = os.path.join(RESULTS_DIR, "llm.md")
+
+
+def _read_llm_md() -> str | None:
+    """Read the executor-generated llm.md report from the shared results dir."""
+    try:
+        if not os.path.exists(_LLM_MD):
+            return None
+        content = open(_LLM_MD, encoding="utf-8").read().strip()
+        return content or None
+    except Exception:
+        return None
 
 
 def get_host_ip() -> str:
@@ -189,16 +201,17 @@ def _llm_status(state: str, info: dict) -> str:
     if state in ("PENDING", "STARTED", "PROGRESS", "RETRY"):
         return (
             '<div class="llm-state">🧠 <b>Training in progress…</b><br>'
-            "The LLM analysis report is queued and will be generated automatically "
-            "when the training finishes.</div>"
+            "The LLM analysis report is generated inside the executor and "
+            "will be available once the training finishes.</div>"
         )
     if state == "SUCCESS":
         report = (
-            info.get("llm_report")
+            _read_llm_md()
+            or info.get("llm_report")
             or info.get("llm_analysis")
             or info.get("analysis")
             if isinstance(info, dict)
-            else None
+            else _read_llm_md()
         )
         if report:
             safe_report = html.escape(str(report))
