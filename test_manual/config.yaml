@@ -2,12 +2,12 @@
 # This file configures how the send_task.py script connects to Celery
 
 redis:
-  host: "<IP>"   # Redis Host
+  host: "192.168.10.252"   # Redis Host
   port: 23437             # Redis Port (from docker-compose)
   db: 0                   # Redis Database
 
 celery:
-  queue: "gpus_high"      # Queue where the invoker is listening
+  queue: "192.168.1.68"      # Queue where the invoker is listening
   task_name: "tasks.train_on_gpu"  # Task name
 
 # Optional configuration to wait for result

@@ -117,6 +117,8 @@ worker_settings: dict[str, Any] = {
     "task_routes": {
         "tasks.manage_study": {"queue": "managers"},
         "tasks.train_on_gpu": {"queue": celery_cfg.get("queue", "gpus")},
+        "tasks.run_eda": {"queue": celery_cfg.get("queue", "gpus")},
+        "tasks.run_llm_analizer": {"queue": celery_cfg.get("queue", "gpus")},
     },
     # Concurrency control from YAML
     "worker_concurrency": int(celery_cfg.get("concurrency", 1)),

@@ -5,6 +5,7 @@ It receives training tasks, prepares the local environment, launches the
 Executor container, and reports results back to the Manager.
 """
 
+import hashlib
 import json
 import os
 import threading
@@ -27,7 +28,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.8.6"
+VERSION = "v1.9.0"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -116,14 +117,14 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
     )
     search_space = training_config.get("sweeper", {}).get("search_space", {})
 
-    import hashlib
-
     # Study Settings (Crucial for distributed scenario)
     base_study_name = training_config.get(
         "study_name", f"study_{datetime.now().strftime('%Y%m%d')}"
     )
     # Include hash of search space to avoid conflicts when search space changes
-    space_hash = hashlib.md5(json.dumps(search_space, sort_keys=True).encode()).hexdigest()[:8]
+    space_hash = hashlib.md5(
+        json.dumps(search_space, sort_keys=True).encode()
+    ).hexdigest()[:8]
     study_name = f"{base_study_name}_{space_hash}"
 
     # Priority: Environment variable > Config file
@@ -217,6 +218,31 @@ def welcome():
 
 
 welcome()
+
+
+def complete_train(training_config: dict[str, Any]) -> dict[str, Any]:
+    """Complete the training process."""
+    resultado = {}
+
+    try:
+        resultado = pipe_pretrain.run(training_config)
+    except Exception as exc:
+        print(f"Pipeline fallido: {str(exc)}")
+        raise exc
+
+    try:
+        resultado = optuna_search(training_config)
+    except Exception as exc:
+        print(f"Pipeline fallido: {str(exc)}")
+        raise exc
+
+    try:
+        resultado = pipe_posttrain.run(training_config)
+    except Exception as exc:
+        print(f"Pipeline fallido: {str(exc)}")
+        raise exc
+
+    return resultado
 
 
 @app.task(name="tasks.train_on_gpu", bind=True)
@@ -318,23 +344,7 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
             )
 
     try:
-        try:
-            resultado = pipe_pretrain.run(training_config)
-        except Exception as exc:
-            print(f"Pipeline fallido: {str(exc)}")
-            raise exc
-
-        try:
-            resultado = optuna_search(training_config)
-        except Exception as exc:
-            print(f"Pipeline fallido: {str(exc)}")
-            raise exc
-
-        try:
-            resultado = pipe_posttrain.run(training_config)
-        except Exception as exc:
-            print(f"Pipeline fallido: {str(exc)}")
-            raise exc
+        resultado = complete_train(training_config)
 
         # Update Celery task state with LLM report for UI visibility
         if isinstance(resultado, dict) and "llm_report" in resultado:
@@ -474,7 +484,6 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
                 "invoker": invoker_name,
             },
         )
-        run_training = RunTraining(CONFIG)
         training_config["task_id"] = self.request.id
         self.update_state(
             state="PROGRESS",
@@ -486,7 +495,8 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
                 "cpu": "N/A",
             },
         )
-        resultado = run_training(training_config)
+
+        resultado = complete_train(training_config)
 
         self.update_state(
             state="PROGRESS",
@@ -710,3 +720,25 @@ def force_docker_pull(state, image_name):
         error_msg = f"Unexpected error: {str(exc)}"
         print(f"[CONTROL COMMAND] Error: {error_msg}")
         return {"status": "failed", "image": image_name, "error": error_msg}
+
+
+@app.task(name="tasks.run_eda", bind=True)
+def run_eda(self, config: dict) -> dict:
+    invoker_name = PRIVATE_QUEUE
+    print(f"--- [INVOKER:{invoker_name}] Starting standalone EDA task ---")
+    try:
+        return pipe_pretrain.run(config)
+    except Exception as exc:
+        print(f"EDA failed: {exc}")
+        raise exc
+
+
+@app.task(name="tasks.run_llm_analizer", bind=True)
+def run_llm_analizer(self, config: dict) -> dict:
+    invoker_name = PRIVATE_QUEUE
+    print(f"--- [INVOKER:{invoker_name}] Starting standalone LLM Analizer task ---")
+    try:
+        return pipe_posttrain.run(config)
+    except Exception as exc:
+        print(f"LLM Analizer failed: {exc}")
+        raise exc

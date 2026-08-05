@@ -4,8 +4,8 @@
 # Training data (values for this specific trial)
 train:
   model: "yolov8n-cls.pt"      # YOLO base model
-  data: "/dataset/"            # Path to dataset
-  epochs: 10                   # Number of epochs (reduced for quick test)
+  data: "/home/wyolo/datasets/clasification/colorball.v8i.multiclass/"            # Path to dataset
+  epochs: 2                   # Number of epochs (reduced for quick test)
   imgsz: 640                   # Image size
   batch: 0.85                  # VRAM fraction
   lr0: 0.01                    # Initial learning rate
