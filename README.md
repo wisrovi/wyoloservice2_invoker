@@ -93,6 +93,10 @@ make stop-all
 *   **Gradio renders llm.md directly:** `_llm_status` reads `/results/llm.md` as the primary source when the task succeeds, falling back to the `llm_report` from the task result.
 *   **Version Update to v1.8.6:** Bumped version to `v1.8.6`.
 
+#### Gradio UI Launcher Update (v1.2.2) - 2026-08-05
+*   **Header cleanup:** Removed the word "Gradio" from the header title; the version now renders on its own line below the tagline ("Train YOLO on this GPU node • Config persisted in Redis • Real-time automatic monitoring") instead of inline in the title.
+*   **Version Update to v1.2.2:** Bumped gradio launcher version to `v1.2.2`.
+
 ### Version 1.8.5 (Current Release) - 2026-08-05
 *   **GPU monitoring inside the executor container:** `get_gpu_usage` now runs `nvidia-smi` via `docker exec wyolo_executor` with a 5-second timeout, so utilization is reported from the executor environment instead of the host.
 *   **Invoker ID fallback to PRIVATE_QUEUE:** `WORKER_NAME` env now falls back to `PRIVATE_QUEUE` when not set, keeping the correct invoker identity in logs and task metadata.
