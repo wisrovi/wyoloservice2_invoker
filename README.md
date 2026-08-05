@@ -87,7 +87,15 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.8.4 (Current Release) - 2026-08-04
+### Version 1.8.5 (Current Release) - 2026-08-05
+*   **GPU monitoring inside the executor container:** `get_gpu_usage` now runs `nvidia-smi` via `docker exec wyolo_executor` with a 5-second timeout, so utilization is reported from the executor environment instead of the host.
+*   **Invoker ID fallback to PRIVATE_QUEUE:** `WORKER_NAME` env now falls back to `PRIVATE_QUEUE` when not set, keeping the correct invoker identity in logs and task metadata.
+*   **CUDA-based invoker base image:** The invoker Dockerfile now builds on `nvidia/cuda:12.4.0-devel-ubuntu22.04` with Python 3.10 (removing `nvidia-utils-535`, which is provided by the base CUDA image).
+*   **Gradio launcher 3-column mode toggle:** `toggle_mode` now switches between the example, upload, and saved-template columns; removed the obsolete Task ID edit toggle.
+*   **Docker Compose cleanup:** Removed the `host.docker.internal` extra host mapping and tidied GPU capability formatting.
+*   **Version Update to v1.8.5:** Bumped version to `v1.8.5`.
+
+### Version 1.8.4 - 2026-08-04
 *   **Fix LLM/OpenCode hanging with timeout + fallback:** Added 180-second timeout to OpenCode subprocess; when the free model hangs, a fallback report is auto-generated from CSV metrics so tasks complete successfully.
 *   **LLM Analysis Report now visible in Gradio UI:** Task state updated with LLM report (from OpenCode or fallback) after post-training pipeline; Gradio Monitoring tab displays report with copy-to-clipboard button.
 *   **Full English UI:** All Gradio user-facing texts translated to English (header, monitoring, accordions, buttons, placeholders).
