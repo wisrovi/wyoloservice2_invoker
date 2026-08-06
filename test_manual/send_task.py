@@ -71,12 +71,15 @@ def main():
     print("\n[3] Preparing payload for Celery...")
 
     training_config = {
+        "model": train_cfg.get("model"),
+        "type": "yolo",
         "train": train_cfg,
         "sweeper": {
             "study_name": study_cfg.get("name", "test_study"),
             "direction": study_cfg.get("direction", "maximize"),
             "n_trials": study_cfg.get("n_trials", 1),
             "sampler": study_cfg.get("sampler", "TPESampler"),
+            "fitness": study_cfg.get("fitness", "metrics/accuracy_top1"),
         },
         "metadata": metadata_cfg,
         "user_id": metadata_cfg.get("author", "test_user"),
