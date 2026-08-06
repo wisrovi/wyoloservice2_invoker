@@ -222,27 +222,34 @@ welcome()
 
 def complete_train(training_config: dict[str, Any]) -> dict[str, Any]:
     """Complete the training process."""
-    resultado = {}
+    final_result = {}
 
     try:
-        resultado = pipe_pretrain.run(training_config)
+        resultado_pre = pipe_pretrain.run(training_config)
+        if isinstance(resultado_pre, dict):
+            final_result.update(resultado_pre)
     except Exception as exc:
         print(f"Pipeline fallido: {str(exc)}")
         raise exc
 
     try:
-        resultado = optuna_search(training_config)
+        resultado_train = optuna_search(training_config)
+        if isinstance(resultado_train, dict):
+            final_result.update(resultado_train)
     except Exception as exc:
         print(f"Pipeline fallido: {str(exc)}")
         raise exc
 
     try:
-        resultado = pipe_posttrain.run(training_config)
+        training_config.update(final_result)
+        resultado_post = pipe_posttrain.run(training_config)
+        if isinstance(resultado_post, dict):
+            final_result.update(resultado_post)
     except Exception as exc:
         print(f"Pipeline fallido: {str(exc)}")
         raise exc
 
-    return resultado
+    return final_result
 
 
 @app.task(name="tasks.train_on_gpu", bind=True)
