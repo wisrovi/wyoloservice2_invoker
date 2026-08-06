@@ -97,9 +97,9 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.8.7 (Current Release) - 2026-08-06
+### Version 1.9.1 (Current Release) - 2026-08-06
 *   **LLM Analyzer Compatibility:** Updated expected LLM report filename to LLM_Report.md to align with the new executor output format.
-*   **Version Update:** Bumped invoker version to v1.8.7.
+*   **Version Update:** Bumped invoker version to v1.9.1.
 
 ### Version 1.8.6 - 2026-08-05
 *   **LLM report generation moved to the executor:** The OpenCode analysis now runs inside the executor container, which writes `llm.md` into the shared results directory and uploads it to MLflow as an artifact.
