@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 RESULTS_DIR = "/home/wyolo/train_service_results"
-LLM_MD_NAME = "extras/llm/llm.md"
+LLM_MD_NAME = "extras/llm/LLM_Report.md"
 
 
 class LlmAnalizer:
