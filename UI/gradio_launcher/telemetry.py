@@ -21,7 +21,7 @@ _NORMALIZED_CONFUSION_MATRIX_IMAGE = os.path.join(
     _EVALUATION_DIR, "confusion_matrix_normalized.png"
 )
 ZIP_PATH = os.path.join(RESULTS_DIR, "training_results.zip")
-_LLM_MD = os.path.join(RESULTS_DIR, "llm.md")
+_LLM_MD = os.path.join(RESULTS_DIR, "extras", "llm", "llm.md")
 
 
 def _read_llm_md() -> str | None:
