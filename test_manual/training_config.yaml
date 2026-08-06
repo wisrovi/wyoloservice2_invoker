@@ -4,7 +4,7 @@
 # Training data (values for this specific trial)
 train:
   model: "yolov8n-cls.pt"      # YOLO base model
-  data: "/home/wyolo/datasets/clasification/colorball.v8i.multiclass/"            # Path to dataset
+  data: "/examples/colorball.v8i.multiclass/"            # Path to dataset
   epochs: 2                   # Number of epochs (reduced for quick test)
   imgsz: 640                   # Image size
   batch: 0.85                  # VRAM fraction
@@ -20,6 +20,7 @@ study:
   direction: "maximize"        # maximize or minimize
   n_trials: 1                  # Number of trials (1 for test)
   sampler: "TPESampler"       # Sampling algorithm
+  fitness: "metrics/accuracy_top1"
 
 # Metadata
 metadata:
