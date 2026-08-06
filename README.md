@@ -97,7 +97,11 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.8.6 (Current Release) - 2026-08-05
+### Version 1.8.7 (Current Release) - 2026-08-06
+*   **LLM Analyzer Compatibility:** Updated expected LLM report filename to LLM_Report.md to align with the new executor output format.
+*   **Version Update:** Bumped invoker version to v1.8.7.
+
+### Version 1.8.6 - 2026-08-05
 *   **LLM report generation moved to the executor:** The OpenCode analysis now runs inside the executor container, which writes `llm.md` into the shared results directory and uploads it to MLflow as an artifact.
 *   **Invoker LLM analyzer is now a passive reader:** `LlmAnalizer` no longer calls OpenCode; it reads `/home/wyolo/train_service_results/llm.md` and exposes the content through the Celery task state (`llm_report`), keeping MCP `get_study_details` compatible.
 *   **Gradio renders llm.md directly:** `_llm_status` reads `/results/llm.md` as the primary source when the task succeeds, falling back to the `llm_report` from the task result.
