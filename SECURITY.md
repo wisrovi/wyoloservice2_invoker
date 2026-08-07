@@ -2,53 +2,22 @@
 
 ## Supported Versions
 
-We release patches for security vulnerabilities. The following versions are currently supported:
+We currently provide security updates for the following versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| 0.1.x   | :x:                |
+| >= 1.0.x| :white_check_mark: |
+| < 1.0.0 | :x:                |
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please send an email to wisrovi.rodriguez@gmail.com with the following information:
+If you discover any security-related issues or vulnerabilities, please **DO NOT** report them in the public GitHub issue tracker.
 
-- Description of the vulnerability
-- Steps to reproduce the issue
-- Potential impact of the vulnerability
-- Any suggested fixes (optional)
+Instead, please send an email directly to the project lead at `william.rodriguez@example.com` (or your official contact email). 
 
-We appreciate your efforts to responsibly disclose the vulnerability, and will make every effort to acknowledge and address it promptly.
+Please include:
+- A detailed description of the vulnerability.
+- Steps to reproduce it.
+- A proof of concept (if available).
 
-## Security Best Practices
-
-When using WRedis, consider the following security best practices:
-
-### Redis Connection
-
-- Use password authentication for Redis connections in production
-- Use SSL/TLS encryption for Redis connections when possible
-- Don't expose Redis to the public internet
-- Use firewall rules to restrict access to Redis
-
-### Data Handling
-
-- Be careful about what data you store in Redis (avoid storing sensitive data in plaintext)
-- Consider using Redis encryption modules for sensitive data
-- Implement proper key expiration policies
-
-### Network Security
-
-- Use Redis in a private network
-- Implement proper network segmentation
-- Use VPC peering or VPN connections for Redis access
-
-### Access Control
-
-- Use Redis ACLs to limit access to specific commands and keys
-- Implement proper authentication
-- Rotate Redis passwords regularly
-
-## Changelog
-
-Security vulnerabilities will be documented in the CHANGELOG.md.
+We will verify the vulnerability, work on a patch, and release a security update. We pledge to treat all reports with the utmost priority.
