@@ -1,13 +1,18 @@
-# Graph Report - wyoloservice2_invoker  (2026-08-06)
+# Graph Report - wyoloservice2_invoker  (2026-08-05)
 
 ## Corpus Check
-- 75 files · ~40,026 words
+- 75 files · ~39,684 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 531 nodes · 682 edges · 84 communities (49 shown, 35 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.83)
+- 527 nodes · 674 edges · 83 communities (48 shown, 35 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.83)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `450c979d`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - TestSaveTemplate
@@ -18,7 +23,7 @@
 - worker_gpu.py
 - validate_min_config
 - GPU Invoker (Hive Worker) README
-- TestNamedUserTemplates
+- patch
 - TestLaunchDryRun
 - Worker Invoker (Celery Worker)
 - _get_hm
@@ -79,7 +84,7 @@
 - telemetry.py
 - handlers.py
 - TrainingReportAnalyzer
-- patch
+- TestLoadTemplate
 - toggle_mode
 - TestResultsDownload
 - TestCheckRedisConnection
@@ -87,7 +92,6 @@
 - TestHandleTrainClick
 - load_ui_config
 - Simple Dashboard Service
-- LlmAnalizer
 
 ## God Nodes (most connected - your core abstractions)
 1. `validate_min_config()` - 15 edges
@@ -122,7 +126,7 @@
 - **Manual Invoker-Executor Test Flow** — test_manual_readme_sender, test_manual_readme_workerinv, test_manual_readme_executor [EXTRACTED 1.00]
 - **Hive Invoker Core Responsibilities** — index_gpu_allocation, index_samba_client, index_state_machine [EXTRACTED 1.00]
 
-## Communities (84 total, 35 thin omitted)
+## Communities (83 total, 35 thin omitted)
 
 ### Community 0 - "TestSaveTemplate"
 Cohesion: 0.17
@@ -145,8 +149,8 @@ Cohesion: 0.11
 Nodes (10): Tests for the main train-submission function., A fully-valid YAML is accepted and sent., user_id defaults to metadata.author when absent., Existing user_id is preserved., Empty content returns an error., YAML without a model field is rejected., Malformed YAML returns a generic error., Requests always go to the private queue, never a public one. (+2 more)
 
 ### Community 5 - "worker_gpu.py"
-Cohesion: 0.08
-Nodes (29): EDA, Any, State class for performing Exploratory Data Analysis., Initialize EDA with configuration. Args: config: Worker configuration…, Execute EDA process via temporary Executor container. Args: training_config:…, complete_train(), force_docker_pull(), _merge_configs() (+21 more)
+Cohesion: 0.07
+Nodes (30): EDA, Any, State class for performing Exploratory Data Analysis., Initialize EDA with configuration. Args: config: Worker configuration…, Execute EDA process via temporary Executor container. Args: training_config:…, LlmAnalizer, Any, State class for reading the executor-generated LLM training report. (+22 more)
 
 ### Community 6 - "validate_min_config"
 Cohesion: 0.14
@@ -156,9 +160,9 @@ Nodes (12): Basic structural validation of the training config before Celery sub
 Cohesion: 0.18
 Nodes (12): Worker Configuration (config.yaml), Worker Invoker Component README, Changelog, Docker Compose Orchestration Stack, Gradio Launcher Service, Celery Worker Service, Worker Invoker Docker Image, GPU Invoker (Hive Worker) README (+4 more)
 
-### Community 8 - "TestNamedUserTemplates"
-Cohesion: 0.10
-Nodes (11): Tests for user-saved, named templates (save/list/load)., Saving without a name returns a warning., Invalid YAML returns an error and does not call Redis., Valid YAML is persisted under the given name., list_user_templates returns sorted names., Returns [] when Redis is offline., load_user_template returns the stored YAML., Empty name loads the default last-saved template. (+3 more)
+### Community 8 - "patch"
+Cohesion: 0.12
+Nodes (13): patch, Tests for user-saved, named templates (save/list/load)., Saving without a name returns a warning., Invalid YAML returns an error and does not call Redis., Valid YAML is persisted under the given name., list_user_templates returns sorted names., Returns [] when Redis is offline., load_user_template returns the stored YAML. (+5 more)
 
 ### Community 9 - "TestLaunchDryRun"
 Cohesion: 0.25
@@ -268,9 +272,9 @@ Nodes (11): File, handle_train_click(), handle_upload(), load_selected_template(
 Cohesion: 0.29
 Nodes (6): Path, Generate a basic report from CSV data when OpenCode fails., Generate AI-assisted training analysis using OpenCode with fallback., Generate a professional training report. Args: results_file: Path to YOLO…, Attempt to generate report using OpenCode with timeout., TrainingReportAnalyzer
 
-### Community 75 - "patch"
-Cohesion: 0.24
-Nodes (7): patch, Tests for the Redis template loading helper., Falls back to the bundled classification template when Redis is down., Returns YAML dumped from a stored dict (new format)., Returns YAML from a legacy JSON-string value., Returns raw YAML string (oldest format) as-is., TestLoadTemplate
+### Community 75 - "TestLoadTemplate"
+Cohesion: 0.20
+Nodes (6): Tests for the Redis template loading helper., Falls back to the bundled classification template when Redis is down., Returns YAML dumped from a stored dict (new format)., Returns YAML from a legacy JSON-string value., Returns raw YAML string (oldest format) as-is., TestLoadTemplate
 
 ### Community 76 - "toggle_mode"
 Cohesion: 0.24
@@ -289,12 +293,8 @@ Cohesion: 0.33
 Nodes (4): Tests for the user-facing save wrapper., Returns a green status message on success., Passes through the error message from save_template., TestSaveWithFeedback
 
 ### Community 80 - "TestHandleTrainClick"
-Cohesion: 0.33
-Nodes (4): Tests for the train-click handler (auto task-id + tab switch)., A dispatched task auto-fills the Task ID and switches to Monitoring., An invalid config does not switch tabs., TestHandleTrainClick
-
-### Community 83 - "LlmAnalizer"
-Cohesion: 0.29
-Nodes (5): LlmAnalizer, Any, State class for reading the executor-generated LLM training report., Initialize LLM Analyzer with configuration. Args: config: Worker configuration…, Read the ``llm.md`` report written by the executor. Args: training_config:…
+Cohesion: 0.50
+Nodes (3): Tests for the train-click handler (auto task-id + tab switch)., An invalid config does not switch tabs., TestHandleTrainClick
 
 ## Knowledge Gaps
 - **104 isolated node(s):** `$schema`, `.opencode/plugins/graphify.js`, `invoker_launcher`, `coverage.sh script`, `micro_train.sh script` (+99 more)
@@ -305,9 +305,9 @@ Nodes (5): LlmAnalizer, Any, State class for reading the executor-generated LLM 
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `validate_min_config()` connect `validate_min_config` to `handlers.py`, `test_gradio_app.py`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **Why does `validate_and_launch()` connect `test_gradio_app.py` to `_get_hm`, `TestValidateAndLaunch`, `validate_min_config`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+  _High betweenness centrality (0.014) - this node is a cross-community bridge._
 - **Why does `check_task_status()` connect `telemetry.py` to `test_gradio_app.py`?**
   _High betweenness centrality (0.009) - this node is a cross-community bridge._
 - **What connects `$schema`, `.opencode/plugins/graphify.js`, `invoker_launcher` to the rest of the system?**

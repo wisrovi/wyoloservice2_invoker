@@ -1,0 +1,512 @@
+{
+  ".gemini/settings.json": {
+    "mtime": 1785239189.4629152,
+    "ast_hash": "84d0b13031bbc23bc22ea768b9aeb371",
+    "semantic_hash": "84d0b13031bbc23bc22ea768b9aeb371"
+  },
+  ".opencode/opencode.json": {
+    "mtime": 1785502289.8446019,
+    "ast_hash": "e5f74d14a81702b55bdf53b33ec991d7",
+    "semantic_hash": ""
+  },
+  ".opencode/plugins/graphify.js": {
+    "mtime": 1785407849.4721293,
+    "ast_hash": "3ea725724bc8ebe483c9f13d6aa1124f",
+    "semantic_hash": "3ea725724bc8ebe483c9f13d6aa1124f"
+  },
+  "UI/gradio_launcher/gradio_app.py": {
+    "mtime": 1785830932.862198,
+    "ast_hash": "d9d769ab45540aa4579c90d579dbceee",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/pyproject.toml": {
+    "mtime": 1785834389.8486876,
+    "ast_hash": "bc6a43cddd81dcdb3af6ad44964fc762",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/tests/__init__.py": {
+    "mtime": 1782455089.2692513,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "UI/gradio_launcher/tests/test_gradio_app.py": {
+    "mtime": 1785838628.927247,
+    "ast_hash": "51f5d9356f760ae343b6f5dd31df7b9a",
+    "semantic_hash": ""
+  },
+  "app/__init__.py": {
+    "mtime": 1781629007.303516,
+    "ast_hash": "ac5b7d83825bae2c6675e8b0164cdb33",
+    "semantic_hash": "ac5b7d83825bae2c6675e8b0164cdb33"
+  },
+  "app/celery_config.py": {
+    "mtime": 1785740015.671798,
+    "ast_hash": "745832aa78d4147bdc858ff84da14eed",
+    "semantic_hash": ""
+  },
+  "app/coverage.sh": {
+    "mtime": 1781629023.6491053,
+    "ast_hash": "2348eca71058dac353eff1b77013587b",
+    "semantic_hash": "2348eca71058dac353eff1b77013587b"
+  },
+  "app/minimal_worker.py": {
+    "mtime": 1781629133.5000856,
+    "ast_hash": "fbee3ddc301439719b8a48d151bd8d07",
+    "semantic_hash": "fbee3ddc301439719b8a48d151bd8d07"
+  },
+  "app/run_tests.sh": {
+    "mtime": 1785740644.8548205,
+    "ast_hash": "2b229cf3100811729d6e3e35c8547eb5",
+    "semantic_hash": ""
+  },
+  "app/states/__init__.py": {
+    "mtime": 1781629007.303516,
+    "ast_hash": "ac5b7d83825bae2c6675e8b0164cdb33",
+    "semantic_hash": "ac5b7d83825bae2c6675e8b0164cdb33"
+  },
+  "app/states/eda.py": {
+    "mtime": 1785842420.7140431,
+    "ast_hash": "18fe0725c758419568f4aee911555801",
+    "semantic_hash": ""
+  },
+  "app/states/llm_analizer.py": {
+    "mtime": 1785911470.6794536,
+    "ast_hash": "ce422007d19b034d4547f44af6a648b6",
+    "semantic_hash": ""
+  },
+  "app/states/run_training.py": {
+    "mtime": 1785911780.506402,
+    "ast_hash": "a83fa9a04ab7b2c71f241be9db8c3307",
+    "semantic_hash": ""
+  },
+  "app/tests/test_run_training.py": {
+    "mtime": 1785911783.5364113,
+    "ast_hash": "a55f2409e6ec86cd7d20c3eaac1ff95e",
+    "semantic_hash": ""
+  },
+  "app/worker_gpu.py": {
+    "mtime": 1785911487.3655045,
+    "ast_hash": "79ac1e3e47e3e291e6c6b47b5d310939",
+    "semantic_hash": ""
+  },
+  "docs/conf.py": {
+    "mtime": 1781629133.5000856,
+    "ast_hash": "70bad095e9c9f9e81694fdfbff71a322",
+    "semantic_hash": "70bad095e9c9f9e81694fdfbff71a322"
+  },
+  "production/config.py": {
+    "mtime": 1785225469.958157,
+    "ast_hash": "87509ed6ce9ec7d864a606aaee484f8a",
+    "semantic_hash": "87509ed6ce9ec7d864a606aaee484f8a"
+  },
+  "production/install.sh": {
+    "mtime": 1781676388.7344868,
+    "ast_hash": "9c456f173bf74d39c48a7ffb9f2d4566",
+    "semantic_hash": "9c456f173bf74d39c48a7ffb9f2d4566"
+  },
+  "production/launcher_invoker.sh": {
+    "mtime": 1781676407.5994499,
+    "ast_hash": "1b1e76bcff5e1996c90b96105fa3f10e",
+    "semantic_hash": "1b1e76bcff5e1996c90b96105fa3f10e"
+  },
+  "production/uninstall.sh": {
+    "mtime": 1781676457.36711,
+    "ast_hash": "ddda4b6a31ae16635edbd5a18d7d060b",
+    "semantic_hash": "ddda4b6a31ae16635edbd5a18d7d060b"
+  },
+  "scripts/pause_public_queues.sh": {
+    "mtime": 1785229664.2683246,
+    "ast_hash": "132afe4ba3dfceb6407f8f8f5fbf47c7",
+    "semantic_hash": "132afe4ba3dfceb6407f8f8f5fbf47c7"
+  },
+  "scripts/resume_public_queues.sh": {
+    "mtime": 1785229666.3873303,
+    "ast_hash": "d23230faa7441d2e9ad692a20fbebe51",
+    "semantic_hash": "d23230faa7441d2e9ad692a20fbebe51"
+  },
+  "test/manage_remote_worker.py": {
+    "mtime": 1785314825.4642437,
+    "ast_hash": "ea11f038b8ae8b1cffbaf78ad4e82329",
+    "semantic_hash": "ea11f038b8ae8b1cffbaf78ad4e82329"
+  },
+  "test/send_to_invoker_directly.py": {
+    "mtime": 1785829279.621151,
+    "ast_hash": "4d08f947615211d6a0363787316fdd5a",
+    "semantic_hash": "4d08f947615211d6a0363787316fdd5a"
+  },
+  "test_manual/celery_config.py": {
+    "mtime": 1781629023.6491053,
+    "ast_hash": "613dd345ad43dc1a80926bd5aff2e254",
+    "semantic_hash": "613dd345ad43dc1a80926bd5aff2e254"
+  },
+  "test_manual/send_task.py": {
+    "mtime": 1781676316.7725704,
+    "ast_hash": "a5fada8c3fbf6d5bc21a4184027d0be7",
+    "semantic_hash": "a5fada8c3fbf6d5bc21a4184027d0be7"
+  },
+  "test_manual/send_task_docker.py": {
+    "mtime": 1781676316.7935703,
+    "ast_hash": "b4964013476c350f615b234e660c2541",
+    "semantic_hash": "b4964013476c350f615b234e660c2541"
+  },
+  "test_manual/send_task_simple.py": {
+    "mtime": 1781676316.7725704,
+    "ast_hash": "d32bb04b61b6a76ca909b1d743fe4a8b",
+    "semantic_hash": "d32bb04b61b6a76ca909b1d743fe4a8b"
+  },
+  ".agents/rules/graphify.md": {
+    "mtime": 1785239469.4393203,
+    "ast_hash": "f1e53ecc9194573d3c28fc116c743a2e",
+    "semantic_hash": "f1e53ecc9194573d3c28fc116c743a2e"
+  },
+  ".agents/workflows/graphify.md": {
+    "mtime": 1785239469.4395459,
+    "ast_hash": "0bc020d491fca99550c1ea3de0a5f862",
+    "semantic_hash": "0bc020d491fca99550c1ea3de0a5f862"
+  },
+  ".pre-commit-config.yaml": {
+    "mtime": 1781159621.754778,
+    "ast_hash": "5b8004d756b16368698a725921ef5f48",
+    "semantic_hash": "5b8004d756b16368698a725921ef5f48"
+  },
+  ".readthedocs.yaml": {
+    "mtime": 1781081002.0408762,
+    "ast_hash": "0a6f592668fcfb515c528b0a11cdb220",
+    "semantic_hash": "0a6f592668fcfb515c528b0a11cdb220"
+  },
+  "CHANGELOG.md": {
+    "mtime": 1785830589.685157,
+    "ast_hash": "b03703e129b60c876d1fcbcfd539dd65",
+    "semantic_hash": ""
+  },
+  "CODE_OF_CONDUCT.md": {
+    "mtime": 1779784482.3878891,
+    "ast_hash": "858db598a6e74cddc1f60fed5fe027cd",
+    "semantic_hash": "858db598a6e74cddc1f60fed5fe027cd"
+  },
+  "CONTRIBUTING.md": {
+    "mtime": 1781189743.5098047,
+    "ast_hash": "38c4a7a7af332ce4438e2230535fbc43",
+    "semantic_hash": "38c4a7a7af332ce4438e2230535fbc43"
+  },
+  "GEMINI.md": {
+    "mtime": 1785239189.4546404,
+    "ast_hash": "82efb97a359f5c7290bf2513d14686be",
+    "semantic_hash": "82efb97a359f5c7290bf2513d14686be"
+  },
+  "README.md": {
+    "mtime": 1785915819.0194733,
+    "ast_hash": "faf283ecf2a988d08d7145a639e2f4c2",
+    "semantic_hash": ""
+  },
+  "ROADMAP.md": {
+    "mtime": 1781606360.5776255,
+    "ast_hash": "8fad32e75ada586896713fa2ca92911f",
+    "semantic_hash": "8fad32e75ada586896713fa2ca92911f"
+  },
+  "SECURITY.md": {
+    "mtime": 1779784482.3878891,
+    "ast_hash": "b388f4513388253864343488e06d47f8",
+    "semantic_hash": "b388f4513388253864343488e06d47f8"
+  },
+  "UI/gradio_launcher/examples/classification/config_train.yaml": {
+    "mtime": 1781676316.7725704,
+    "ast_hash": "cc2932c112534fec71575b58e2e940c3",
+    "semantic_hash": "cc2932c112534fec71575b58e2e940c3"
+  },
+  "UI/gradio_launcher/examples/detection/config_train.yaml": {
+    "mtime": 1781676316.7725704,
+    "ast_hash": "5df5ba8c3e50248567b462b10b8c5f3d",
+    "semantic_hash": "5df5ba8c3e50248567b462b10b8c5f3d"
+  },
+  "UI/gradio_launcher/examples/segmentation/config_train.yaml": {
+    "mtime": 1781676316.7739604,
+    "ast_hash": "89bb72dc7f0c48d9d1b1fb58f2239dc0",
+    "semantic_hash": "89bb72dc7f0c48d9d1b1fb58f2239dc0"
+  },
+  "UI/gradio_launcher/requirements.txt": {
+    "mtime": 1785829222.3389761,
+    "ast_hash": "95097b4fc4262b6d50ef0f183d5c483d",
+    "semantic_hash": ""
+  },
+  "app/README.md": {
+    "mtime": 1781626809.4011648,
+    "ast_hash": "cafdf4851941c8039800b8bdd769b912",
+    "semantic_hash": "cafdf4851941c8039800b8bdd769b912"
+  },
+  "app/config.yaml": {
+    "mtime": 1785740287.5027254,
+    "ast_hash": "b822cc8a83bc209c0b82ccc7df551f39",
+    "semantic_hash": ""
+  },
+  "app/requirements.txt": {
+    "mtime": 1785156723.8711357,
+    "ast_hash": "f5c2ac6e9156b6d28fa30f04f00768e1",
+    "semantic_hash": "f5c2ac6e9156b6d28fa30f04f00768e1"
+  },
+  "docker-compose.yaml": {
+    "mtime": 1785842162.6312914,
+    "ast_hash": "52f126c292c1046e633455d477bde0f1",
+    "semantic_hash": ""
+  },
+  "docker_images.md": {
+    "mtime": 1785315757.2229495,
+    "ast_hash": "0f4b58745a8c0c959b68314189d767d5",
+    "semantic_hash": ""
+  },
+  "docs/api_reference.rst": {
+    "mtime": 1781606360.5781693,
+    "ast_hash": "c4914289d18b66863d711a0aeb9201f2",
+    "semantic_hash": "c4914289d18b66863d711a0aeb9201f2"
+  },
+  "docs/bibliography.rst": {
+    "mtime": 1781606360.5782053,
+    "ast_hash": "93ca04fa1dda125808dfc071fc75b0f6",
+    "semantic_hash": "93ca04fa1dda125808dfc071fc75b0f6"
+  },
+  "docs/faq.rst": {
+    "mtime": 1781606360.5782053,
+    "ast_hash": "f19be437ccc4caa46b87fde80f7df4e4",
+    "semantic_hash": "f19be437ccc4caa46b87fde80f7df4e4"
+  },
+  "docs/getting_started.rst": {
+    "mtime": 1781606360.5782053,
+    "ast_hash": "f880546dcf9a9f2a6b1920ddcf9ba2d0",
+    "semantic_hash": "f880546dcf9a9f2a6b1920ddcf9ba2d0"
+  },
+  "docs/index.rst": {
+    "mtime": 1781626809.2990882,
+    "ast_hash": "6d4d9e0f394c33c3bba9add1093e0f24",
+    "semantic_hash": "6d4d9e0f394c33c3bba9add1093e0f24"
+  },
+  "docs/tutorials.rst": {
+    "mtime": 1781606360.5784125,
+    "ast_hash": "54c693273a1e24cc89d9df2e780144c4",
+    "semantic_hash": "54c693273a1e24cc89d9df2e780144c4"
+  },
+  "extra_readmes/01_Architecture_and_Backend_Core.md": {
+    "mtime": 1781606360.5784736,
+    "ast_hash": "6064063f6af7484891f4feab7de41645",
+    "semantic_hash": "6064063f6af7484891f4feab7de41645"
+  },
+  "extra_readmes/02_Communication_Flow.md": {
+    "mtime": 1781626809.3967302,
+    "ast_hash": "77ce5ade8c1d9d71060ae49d9c047927",
+    "semantic_hash": "77ce5ade8c1d9d71060ae49d9c047927"
+  },
+  "extra_readmes/03_Microservice_Design.md": {
+    "mtime": 1781626809.2990882,
+    "ast_hash": "efa58f87cb642e7b92549c445b5791f3",
+    "semantic_hash": "efa58f87cb642e7b92549c445b5791f3"
+  },
+  "extra_readmes/04_Logic_Design.md": {
+    "mtime": 1781626809.3340883,
+    "ast_hash": "a613f7e65a94d18c01b28633cfa4a255",
+    "semantic_hash": "a613f7e65a94d18c01b28633cfa4a255"
+  },
+  "extra_readmes/05_Data_Diagrams_and_Models.md": {
+    "mtime": 1781626809.3330884,
+    "ast_hash": "423bac15c8629723926ce970ab9715cc",
+    "semantic_hash": "423bac15c8629723926ce970ab9715cc"
+  },
+  "extra_readmes/06_Usage_and_Test_Documentation.md": {
+    "mtime": 1781606360.578562,
+    "ast_hash": "d8b838125529ae90df68b33d17fd6583",
+    "semantic_hash": "d8b838125529ae90df68b33d17fd6583"
+  },
+  "extra_readmes/07_Security_Hardening_and_Resiliency.md": {
+    "mtime": 1781626809.3400884,
+    "ast_hash": "0a0ad84303f4402e95aa694d2ac9f92c",
+    "semantic_hash": "0a0ad84303f4402e95aa694d2ac9f92c"
+  },
+  "extra_readmes/08_Deployment_Ops_and_Maintenance.md": {
+    "mtime": 1781626809.3410883,
+    "ast_hash": "aeb901ef376c499a65c4123419962627",
+    "semantic_hash": "aeb901ef376c499a65c4123419962627"
+  },
+  "extra_readmes/09_Context_State_of_the_Art_and_Research.md": {
+    "mtime": 1781626809.2980883,
+    "ast_hash": "77ab53942d03fabca5528d1dc9775132",
+    "semantic_hash": "77ab53942d03fabca5528d1dc9775132"
+  },
+  "index.html": {
+    "mtime": 1781626809.4306602,
+    "ast_hash": "b366eeb67e336ac8e8a026d97d46853c",
+    "semantic_hash": "b366eeb67e336ac8e8a026d97d46853c"
+  },
+  "production/README.md": {
+    "mtime": 1781676316.7725704,
+    "ast_hash": "fc141c76e4ab208661db0400ca069d1b",
+    "semantic_hash": "fc141c76e4ab208661db0400ca069d1b"
+  },
+  "production/docker-compose.extras.yaml": {
+    "mtime": 1781683040.171115,
+    "ast_hash": "b3c9f6f46a7719368ce4c8b87e657f0e",
+    "semantic_hash": "b3c9f6f46a7719368ce4c8b87e657f0e"
+  },
+  "production/docker-compose.yaml": {
+    "mtime": 1785315615.2635374,
+    "ast_hash": "fff709145f7bcc9992cf0adb284ef3fe",
+    "semantic_hash": "fff709145f7bcc9992cf0adb284ef3fe"
+  },
+  "requirements.txt": {
+    "mtime": 1781629023.6458023,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "test/test_to_send_invoker.yaml": {
+    "mtime": 1785829279.6309085,
+    "ast_hash": "d5fd7fd79c700821b8f534a068166be6",
+    "semantic_hash": "d5fd7fd79c700821b8f534a068166be6"
+  },
+  "test_manual/README.md": {
+    "mtime": 1781676316.7725704,
+    "ast_hash": "53a77970f96bc9978f7aa4bdb224ca5d",
+    "semantic_hash": "53a77970f96bc9978f7aa4bdb224ca5d"
+  },
+  "test_manual/config.yaml": {
+    "mtime": 1781676316.7725704,
+    "ast_hash": "dd53093c326ef91f176d4a846471b2f7",
+    "semantic_hash": "dd53093c326ef91f176d4a846471b2f7"
+  },
+  "test_manual/docker-compose.yml": {
+    "mtime": 1778786822.0,
+    "ast_hash": "219f3cae1af7b3ddddea54b0fb737f6f",
+    "semantic_hash": "219f3cae1af7b3ddddea54b0fb737f6f"
+  },
+  "test_manual/requirements.txt": {
+    "mtime": 1778786822.0,
+    "ast_hash": "836d4cfbd24f658964c801306f88e3d6",
+    "semantic_hash": "836d4cfbd24f658964c801306f88e3d6"
+  },
+  "test_manual/training_config.yaml": {
+    "mtime": 1781676316.7725704,
+    "ast_hash": "fbb0c05cd36307d9bb287a3fca10d9ed",
+    "semantic_hash": "fbb0c05cd36307d9bb287a3fca10d9ed"
+  },
+  "test_to_send_invoker.yaml": {
+    "mtime": 1785229479.6378236,
+    "ast_hash": "81090a891fb4e585210b7749c5c8d59e",
+    "semantic_hash": "81090a891fb4e585210b7749c5c8d59e"
+  },
+  "app/micro_train.sh": {
+    "mtime": 1785477598.5432615,
+    "ast_hash": "ab0aa0db4df8d537d130901c15e3dab3",
+    "semantic_hash": ""
+  },
+  "config.py": {
+    "mtime": 1785502414.7509787,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/SKILL.md": {
+    "mtime": 1785407849.4717255,
+    "ast_hash": "a8188bdf35abb58e750eb1750272caf8",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/add-watch.md": {
+    "mtime": 1785237790.782548,
+    "ast_hash": "d59d027fe449f06aa03905a01184e779",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/exports.md": {
+    "mtime": 1785237790.7826357,
+    "ast_hash": "9da2a2152e60a22f07f05fed5158f287",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/extraction-spec.md": {
+    "mtime": 1785237790.7827413,
+    "ast_hash": "42fef56a01698118f7fd722acdadea34",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/github-and-merge.md": {
+    "mtime": 1785237790.7828262,
+    "ast_hash": "cde13df085e4c492aeb7ba298a996d0d",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/hooks.md": {
+    "mtime": 1785237790.7829041,
+    "ast_hash": "3f545db6ce646650bb9de588f5512a27",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/query.md": {
+    "mtime": 1785237790.7830226,
+    "ast_hash": "3c46f8ad006874260614ed8657d02307",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/transcribe.md": {
+    "mtime": 1785237790.7831762,
+    "ast_hash": "67b6a5fa6c0974e18f60db9f8932fbd8",
+    "semantic_hash": ""
+  },
+  ".opencode/skills/graphify/references/update.md": {
+    "mtime": 1785237790.783285,
+    "ast_hash": "9378bd03d56baaf78bd738ab3848f142",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1785407849.4719641,
+    "ast_hash": "6f77016cc4ceb36ce43b306b3f701da2",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/celery_client.py": {
+    "mtime": 1785915798.1584096,
+    "ast_hash": "b64772faea63429f3b0f3fcfafbc594b",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/config.py": {
+    "mtime": 1785836726.3886976,
+    "ast_hash": "a36d3bf21076619e40ea28bc9e4949f1",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/db.py": {
+    "mtime": 1785830887.9250617,
+    "ast_hash": "d0f2d55c9df0bd3f1d326400a3e606ac",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/styles.py": {
+    "mtime": 1785915789.3403828,
+    "ast_hash": "df620b9dbae87f24bbee83d9b544b26c",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/telemetry.py": {
+    "mtime": 1785911482.7084904,
+    "ast_hash": "c9f651522f788b6254d08ca4ba9a9f60",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/templates.py": {
+    "mtime": 1785836794.6689048,
+    "ast_hash": "8a5049f103e8b533677c21aa951221e3",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/ui/handlers.py": {
+    "mtime": 1785837606.4143677,
+    "ast_hash": "cb73ad0a3c9800a9bc310ad0f4e646cf",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/ui/layout.py": {
+    "mtime": 1785915785.0663698,
+    "ast_hash": "c8d0b3aee818e472622d6e06cddd08cd",
+    "semantic_hash": ""
+  },
+  "app/utils/dataset_analyzer.py": {
+    "mtime": 1785741213.8976297,
+    "ast_hash": "bb28a9234f1af6fa669c36eb95456132",
+    "semantic_hash": ""
+  },
+  "app/utils/training_report_analyzer.py": {
+    "mtime": 1785848162.4220746,
+    "ast_hash": "48683c4d19977d99d817465441ced36e",
+    "semantic_hash": ""
+  },
+  "UI/docker-compose.yaml": {
+    "mtime": 1785910658.2328207,
+    "ast_hash": "3ced96b3afaf2f03579891ac979f1f90",
+    "semantic_hash": ""
+  },
+  "UI/gradio_launcher/config.yaml": {
+    "mtime": 1785836721.3826823,
+    "ast_hash": "905b1f3f7830b60293753fe1e438d32d",
+    "semantic_hash": ""
+  }
+}

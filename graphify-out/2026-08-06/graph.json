@@ -981,7 +981,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "patch",
-      "community": 75,
+      "community": 8,
       "community_name": "patch",
       "norm_label": "patch"
     },
@@ -1257,7 +1257,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": "testloadtemplate"
     },
     {
@@ -1268,7 +1268,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_offline",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": ".test_offline()"
     },
     {
@@ -1279,7 +1279,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_new_format_dict",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": ".test_new_format_dict()"
     },
     {
@@ -1290,7 +1290,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_legacy_json_string",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": ".test_legacy_json_string()"
     },
     {
@@ -1301,7 +1301,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testloadtemplate_test_legacy_yaml_string",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": ".test_legacy_yaml_string()"
     },
     {
@@ -1312,7 +1312,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "testnamedusertemplates"
     },
     {
@@ -1323,7 +1323,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates_test_save_requires_name",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": ".test_save_requires_name()"
     },
     {
@@ -1334,7 +1334,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates_test_save_invalid_yaml",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": ".test_save_invalid_yaml()"
     },
     {
@@ -1345,7 +1345,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates_test_save_success",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": ".test_save_success()"
     },
     {
@@ -1356,7 +1356,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates_test_list_saved",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": ".test_list_saved()"
     },
     {
@@ -1367,7 +1367,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates_test_list_offline",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": ".test_list_offline()"
     },
     {
@@ -1378,7 +1378,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates_test_load_named",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": ".test_load_named()"
     },
     {
@@ -1389,7 +1389,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates_test_load_empty_name_falls_back",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": ".test_load_empty_name_falls_back()"
     },
     {
@@ -1400,7 +1400,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates_test_save_named_feedback_success",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": ".test_save_named_feedback_success()"
     },
     {
@@ -1411,7 +1411,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testnamedusertemplates_test_load_selected",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": ".test_load_selected()"
     },
     {
@@ -1531,8 +1531,8 @@
       "source_location": "L555",
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_testhandletrainclick_test_extracts_task_id_and_switches_tab",
-      "community": 80,
-      "community_name": "TestHandleTrainClick",
+      "community": 8,
+      "community_name": "patch",
       "norm_label": ".test_extracts_task_id_and_switches_tab()"
     },
     {
@@ -1972,7 +1972,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_350",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": "tests for the redis template loading helper."
     },
     {
@@ -1983,7 +1983,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_354",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": "falls back to the bundled classification template when redis is down."
     },
     {
@@ -1994,7 +1994,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_361",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": "returns yaml dumped from a stored dict (new format)."
     },
     {
@@ -2005,7 +2005,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_371",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": "returns yaml from a legacy json-string value."
     },
     {
@@ -2016,7 +2016,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_381",
       "community": 75,
-      "community_name": "patch",
+      "community_name": "TestLoadTemplate",
       "norm_label": "returns raw yaml string (oldest format) as-is."
     },
     {
@@ -2027,7 +2027,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_391",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "tests for user-saved, named templates (save/list/load)."
     },
     {
@@ -2038,7 +2038,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_395",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "saving without a name returns a warning."
     },
     {
@@ -2049,7 +2049,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_401",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "invalid yaml returns an error and does not call redis."
     },
     {
@@ -2060,7 +2060,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_410",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "valid yaml is persisted under the given name."
     },
     {
@@ -2071,7 +2071,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_422",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "list_user_templates returns sorted names."
     },
     {
@@ -2082,7 +2082,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_430",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "returns [] when redis is offline."
     },
     {
@@ -2093,7 +2093,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_436",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "load_user_template returns the stored yaml."
     },
     {
@@ -2104,7 +2104,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_448",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "empty name loads the default last-saved template."
     },
     {
@@ -2115,7 +2115,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_456",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "the ui feedback wrapper returns success + refreshed dropdown."
     },
     {
@@ -2126,7 +2126,7 @@
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_465",
       "community": 8,
-      "community_name": "TestNamedUserTemplates",
+      "community_name": "patch",
       "norm_label": "load_selected_template delegates to load_user_template."
     },
     {
@@ -2246,8 +2246,8 @@
       "source_location": "L558",
       "_origin": "ast",
       "id": "ui_gradio_launcher_tests_test_gradio_app_rationale_558",
-      "community": 80,
-      "community_name": "TestHandleTrainClick",
+      "community": 8,
+      "community_name": "patch",
       "norm_label": "a dispatched task auto-fills the task id and switches to monitoring."
     },
     {
@@ -2831,8 +2831,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_states_llm_analizer",
-      "community": 83,
-      "community_name": "LlmAnalizer",
+      "community": 5,
+      "community_name": "worker_gpu.py",
       "norm_label": "llm_analizer.py"
     },
     {
@@ -2842,8 +2842,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "app_states_llm_analizer_llmanalizer",
-      "community": 83,
-      "community_name": "LlmAnalizer",
+      "community": 5,
+      "community_name": "worker_gpu.py",
       "norm_label": "llmanalizer"
     },
     {
@@ -2853,8 +2853,8 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "app_states_llm_analizer_llmanalizer_init",
-      "community": 83,
-      "community_name": "LlmAnalizer",
+      "community": 5,
+      "community_name": "worker_gpu.py",
       "norm_label": ".__init__()"
     },
     {
@@ -2864,8 +2864,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "app_states_llm_analizer_py_any",
-      "community": 83,
-      "community_name": "LlmAnalizer",
+      "community": 5,
+      "community_name": "worker_gpu.py",
       "norm_label": "any"
     },
     {
@@ -2875,8 +2875,8 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "app_states_llm_analizer_llmanalizer_call",
-      "community": 83,
-      "community_name": "LlmAnalizer",
+      "community": 5,
+      "community_name": "worker_gpu.py",
       "norm_label": ".__call__()"
     },
     {
@@ -2886,8 +2886,8 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "app_states_llm_analizer_rationale_22",
-      "community": 83,
-      "community_name": "LlmAnalizer",
+      "community": 5,
+      "community_name": "worker_gpu.py",
       "norm_label": "state class for reading the executor-generated llm training report."
     },
     {
@@ -2897,8 +2897,8 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "app_states_llm_analizer_rationale_28",
-      "community": 83,
-      "community_name": "LlmAnalizer",
+      "community": 5,
+      "community_name": "worker_gpu.py",
       "norm_label": "initialize llm analyzer with configuration. args: config: worker configuration..."
     },
     {
@@ -2908,8 +2908,8 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "app_states_llm_analizer_rationale_36",
-      "community": 83,
-      "community_name": "LlmAnalizer",
+      "community": 5,
+      "community_name": "worker_gpu.py",
       "norm_label": "read the ``llm.md`` report written by the executor. args: training_config:..."
     },
     {
@@ -3697,7 +3697,7 @@
       "label": "_suggest_from_space()",
       "file_type": "code",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L64",
+      "source_location": "L63",
       "_origin": "ast",
       "id": "app_worker_gpu_suggest_from_space",
       "community": 5,
@@ -3730,7 +3730,7 @@
       "label": "_merge_configs()",
       "file_type": "code",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L90",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "app_worker_gpu_merge_configs",
       "community": 5,
@@ -3741,7 +3741,7 @@
       "label": "optuna_search()",
       "file_type": "code",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L99",
+      "source_location": "L98",
       "_origin": "ast",
       "id": "app_worker_gpu_optuna_search",
       "community": 5,
@@ -3752,23 +3752,12 @@
       "label": "welcome()",
       "file_type": "code",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L185",
+      "source_location": "L184",
       "_origin": "ast",
       "id": "app_worker_gpu_welcome",
       "community": 5,
       "community_name": "worker_gpu.py",
       "norm_label": "welcome()"
-    },
-    {
-      "label": "complete_train()",
-      "file_type": "code",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L223",
-      "_origin": "ast",
-      "id": "app_worker_gpu_complete_train",
-      "community": 5,
-      "community_name": "worker_gpu.py",
-      "norm_label": "complete_train()"
     },
     {
       "label": "task",
@@ -3785,7 +3774,7 @@
       "label": "train_on_gpu()",
       "file_type": "code",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L256",
+      "source_location": "L223",
       "_origin": "ast",
       "id": "app_worker_gpu_train_on_gpu",
       "community": 5,
@@ -3796,7 +3785,7 @@
       "label": "train_on_gpu_simple()",
       "file_type": "code",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L401",
+      "source_location": "L384",
       "_origin": "ast",
       "id": "app_worker_gpu_train_on_gpu_simple",
       "community": 5,
@@ -3807,7 +3796,7 @@
       "label": "pause_monitor_thread()",
       "file_type": "code",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L554",
+      "source_location": "L537",
       "_origin": "ast",
       "id": "app_worker_gpu_pause_monitor_thread",
       "community": 5,
@@ -3829,7 +3818,7 @@
       "label": "setup_pause_monitor()",
       "file_type": "code",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L625",
+      "source_location": "L608",
       "_origin": "ast",
       "id": "app_worker_gpu_setup_pause_monitor",
       "community": 5,
@@ -3851,34 +3840,12 @@
       "label": "force_docker_pull()",
       "file_type": "code",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L709",
+      "source_location": "L692",
       "_origin": "ast",
       "id": "app_worker_gpu_force_docker_pull",
       "community": 5,
       "community_name": "worker_gpu.py",
       "norm_label": "force_docker_pull()"
-    },
-    {
-      "label": "run_eda()",
-      "file_type": "code",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L733",
-      "_origin": "ast",
-      "id": "app_worker_gpu_run_eda",
-      "community": 5,
-      "community_name": "worker_gpu.py",
-      "norm_label": "run_eda()"
-    },
-    {
-      "label": "run_llm_analizer()",
-      "file_type": "code",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L744",
-      "_origin": "ast",
-      "id": "app_worker_gpu_run_llm_analizer",
-      "community": 5,
-      "community_name": "worker_gpu.py",
-      "norm_label": "run_llm_analizer()"
     },
     {
       "label": "Worker Invoker Module. This module acts as a bridge between Celery and the\u2026",
@@ -3895,31 +3862,20 @@
       "label": "Perform hyperparameter search using Optuna. Args: training_config: Base\u2026",
       "file_type": "rationale",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L100",
+      "source_location": "L99",
       "_origin": "ast",
-      "id": "app_worker_gpu_rationale_100",
+      "id": "app_worker_gpu_rationale_99",
       "community": 5,
       "community_name": "worker_gpu.py",
       "norm_label": "perform hyperparameter search using optuna. args: training_config: base..."
     },
     {
-      "label": "Complete the training process.",
+      "label": "Orchestrates the execution of the training EXECUTOR container. This task\u2026",
       "file_type": "rationale",
       "source_file": "app/worker_gpu.py",
       "source_location": "L224",
       "_origin": "ast",
       "id": "app_worker_gpu_rationale_224",
-      "community": 5,
-      "community_name": "worker_gpu.py",
-      "norm_label": "complete the training process."
-    },
-    {
-      "label": "Orchestrates the execution of the training EXECUTOR container. This task\u2026",
-      "file_type": "rationale",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L257",
-      "_origin": "ast",
-      "id": "app_worker_gpu_rationale_257",
       "community": 5,
       "community_name": "worker_gpu.py",
       "norm_label": "orchestrates the execution of the training executor container. this task..."
@@ -3928,9 +3884,9 @@
       "label": "Simplified task that runs the Executor directly without Optuna. Useful for\u2026",
       "file_type": "rationale",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L402",
+      "source_location": "L385",
       "_origin": "ast",
-      "id": "app_worker_gpu_rationale_402",
+      "id": "app_worker_gpu_rationale_385",
       "community": 5,
       "community_name": "worker_gpu.py",
       "norm_label": "simplified task that runs the executor directly without optuna. useful for..."
@@ -3939,9 +3895,9 @@
       "label": "Monitors the pause state in Redis and cancels/adds public queues dynamically.",
       "file_type": "rationale",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L557",
+      "source_location": "L540",
       "_origin": "ast",
-      "id": "app_worker_gpu_rationale_557",
+      "id": "app_worker_gpu_rationale_540",
       "community": 5,
       "community_name": "worker_gpu.py",
       "norm_label": "monitors the pause state in redis and cancels/adds public queues dynamically."
@@ -3950,9 +3906,9 @@
       "label": "Initializes the background pause monitor thread and registers worker telemetry\u2026",
       "file_type": "rationale",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L626",
+      "source_location": "L609",
       "_origin": "ast",
-      "id": "app_worker_gpu_rationale_626",
+      "id": "app_worker_gpu_rationale_609",
       "community": 5,
       "community_name": "worker_gpu.py",
       "norm_label": "initializes the background pause monitor thread and registers worker telemetry..."
@@ -3961,9 +3917,9 @@
       "label": "Executes a docker pull command on the worker host for the specified image.",
       "file_type": "rationale",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L710",
+      "source_location": "L693",
       "_origin": "ast",
-      "id": "app_worker_gpu_rationale_710",
+      "id": "app_worker_gpu_rationale_693",
       "community": 5,
       "community_name": "worker_gpu.py",
       "norm_label": "executes a docker pull command on the worker host for the specified image."
@@ -10623,7 +10579,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L25",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -10725,7 +10681,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L26",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -10883,7 +10839,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L27",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -11060,6 +11016,18 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_tests_test_run_training_testruntraining_test_call_success",
+      "target": "app_states_run_training_runtraining"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/worker_gpu.py",
+      "source_location": "L477",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "app_worker_gpu_train_on_gpu_simple",
       "target": "app_states_run_training_runtraining"
     },
     {
@@ -12026,18 +11994,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L223",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "app_worker_gpu",
-      "target": "app_worker_gpu_complete_train",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L709",
+      "source_location": "L692",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -12048,7 +12005,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L90",
+      "source_location": "L89",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -12059,7 +12016,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L99",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -12070,7 +12027,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L554",
+      "source_location": "L537",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -12081,29 +12038,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L733",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "app_worker_gpu",
-      "target": "app_worker_gpu_run_eda",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L744",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "app_worker_gpu",
-      "target": "app_worker_gpu_run_llm_analizer",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L625",
+      "source_location": "L608",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -12114,7 +12049,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L64",
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -12125,7 +12060,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L256",
+      "source_location": "L223",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -12136,7 +12071,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L401",
+      "source_location": "L384",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -12147,7 +12082,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L185",
+      "source_location": "L184",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu",
@@ -12170,7 +12105,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L64",
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu_suggest_from_space",
@@ -12182,7 +12117,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L64",
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu_suggest_from_space",
@@ -12194,19 +12129,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L223",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "app_worker_gpu_complete_train",
-      "target": "app_worker_gpu_py_any",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "generic_arg",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L90",
+      "source_location": "L89",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu_merge_configs",
@@ -12218,7 +12141,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L99",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu_optuna_search",
@@ -12230,7 +12153,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L256",
+      "source_location": "L223",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu_train_on_gpu",
@@ -12242,7 +12165,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L401",
+      "source_location": "L384",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu_train_on_gpu_simple",
@@ -12250,26 +12173,50 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "calls",
-      "context": "call",
+      "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L236",
+      "source_location": "L99",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "app_worker_gpu_complete_train",
+      "source": "app_worker_gpu_rationale_99",
       "target": "app_worker_gpu_optuna_search",
       "confidence_score": 1.0
     },
     {
-      "relation": "rationale_for",
+      "relation": "calls",
+      "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L100",
+      "source_location": "L328",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "app_worker_gpu_rationale_100",
+      "source": "app_worker_gpu_train_on_gpu",
       "target": "app_worker_gpu_optuna_search",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "app/worker_gpu.py",
+      "source_location": "L223",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast",
+      "source": "app_worker_gpu_train_on_gpu",
+      "target": "app_worker_gpu_py_task",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "app/worker_gpu.py",
+      "source_location": "L384",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "_origin": "ast",
+      "source": "app_worker_gpu_train_on_gpu_simple",
+      "target": "app_worker_gpu_py_task",
       "confidence_score": 1.0
     },
     {
@@ -12280,89 +12227,6 @@
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu_rationale_224",
-      "target": "app_worker_gpu_complete_train",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L354",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "app_worker_gpu_train_on_gpu",
-      "target": "app_worker_gpu_complete_train",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L506",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "app_worker_gpu_train_on_gpu_simple",
-      "target": "app_worker_gpu_complete_train",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L732",
-      "weight": 1.0,
-      "context": "decorator",
-      "_origin": "ast",
-      "source": "app_worker_gpu_run_eda",
-      "target": "app_worker_gpu_py_task",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L743",
-      "weight": 1.0,
-      "context": "decorator",
-      "_origin": "ast",
-      "source": "app_worker_gpu_run_llm_analizer",
-      "target": "app_worker_gpu_py_task",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L256",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast",
-      "source": "app_worker_gpu_train_on_gpu",
-      "target": "app_worker_gpu_py_task",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L401",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "_origin": "ast",
-      "source": "app_worker_gpu_train_on_gpu_simple",
-      "target": "app_worker_gpu_py_task",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "rationale_for",
-      "confidence": "EXTRACTED",
-      "source_file": "app/worker_gpu.py",
-      "source_location": "L257",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "app_worker_gpu_rationale_257",
       "target": "app_worker_gpu_train_on_gpu",
       "confidence_score": 1.0
     },
@@ -12370,10 +12234,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L402",
+      "source_location": "L385",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "app_worker_gpu_rationale_402",
+      "source": "app_worker_gpu_rationale_385",
       "target": "app_worker_gpu_train_on_gpu_simple",
       "confidence_score": 1.0
     },
@@ -12381,10 +12245,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L557",
+      "source_location": "L540",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "app_worker_gpu_rationale_557",
+      "source": "app_worker_gpu_rationale_540",
       "target": "app_worker_gpu_pause_monitor_thread",
       "confidence_score": 1.0
     },
@@ -12393,7 +12257,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L695",
+      "source_location": "L678",
       "weight": 1.0,
       "_origin": "ast",
       "source": "app_worker_gpu_setup_pause_monitor",
@@ -12404,7 +12268,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L624",
+      "source_location": "L607",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast",
@@ -12416,10 +12280,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L626",
+      "source_location": "L609",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "app_worker_gpu_rationale_626",
+      "source": "app_worker_gpu_rationale_609",
       "target": "app_worker_gpu_setup_pause_monitor",
       "confidence_score": 1.0
     },
@@ -12427,7 +12291,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L705",
+      "source_location": "L688",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast",
@@ -12439,10 +12303,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app/worker_gpu.py",
-      "source_location": "L710",
+      "source_location": "L693",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "app_worker_gpu_rationale_710",
+      "source": "app_worker_gpu_rationale_693",
       "target": "app_worker_gpu_force_docker_pull",
       "confidence_score": 1.0
     },
@@ -13954,5 +13818,6 @@
       "confidence_score": 1.0,
       "source_file": "index.html"
     }
-  ]
+  ],
+  "built_at_commit": "450c979d5106dc9c22a23006ca5c41861f058c67"
 }
