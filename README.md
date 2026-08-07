@@ -111,7 +111,7 @@ make stop-all
 *   **Header cleanup:** Removed the word "Gradio" from the header title; the version now renders on its own line below the tagline ("Train YOLO on this GPU node • Config persisted in Redis • Real-time automatic monitoring") instead of inline in the title.
 *   **Version Update to v1.2.2:** Bumped gradio launcher version to `v1.2.2`.
 
-### Version 1.8.5 (Current Release) - 2026-08-05
+### Version 1.8.5 - 2026-08-05
 *   **GPU monitoring inside the executor container:** `get_gpu_usage` now runs `nvidia-smi` via `docker exec wyolo_executor` with a 5-second timeout, so utilization is reported from the executor environment instead of the host.
 *   **Invoker ID fallback to PRIVATE_QUEUE:** `WORKER_NAME` env now falls back to `PRIVATE_QUEUE` when not set, keeping the correct invoker identity in logs and task metadata.
 *   **CUDA-based invoker base image:** The invoker Dockerfile now builds on `nvidia/cuda:12.4.0-devel-ubuntu22.04` with Python 3.10 (removing `nvidia-utils-535`, which is provided by the base CUDA image).
@@ -186,7 +186,7 @@ make stop-all
 ### Version 1.5.0 - 2026-07-31
 *   **Version Update to v1.5.0:** Bumped core invoker version to reflect recent telemetry, startup registry, and micro-train features.
 
-### Version 1.3.4 (Current Release) - 2026-07-31
+### Version 1.3.4 - 2026-07-31
 *   **Massive Docker Broadcast Pull Command:** Registered a new custom Celery remote control handler (`force_docker_pull`) inside the worker invoker to enable fast, massive cluster-wide image pulling.
 
 ### Version 1.3.3 - 2026-07-29
@@ -243,3 +243,16 @@ This project features a Graphify-powered knowledge graph located in the `graphif
 Principal Systems & Software Architect / Technology Evangelist
 [LinkedIn Profile](https://es.linkedin.com/in/wisrovi-rodriguez)
 
+
+## Licensing and Usage
+
+This project uses a **Dual License** model:
+- **Community/Research**: Licensed under the AGPLv3. See [LICENSE](LICENSE).
+- **Commercial**: Requires a commercial license. See [COMMERCIAL.md](COMMERCIAL.md) for details.
+
+### Academic Research
+If you use this project in academic research, you are required to cite this repository using the provided `CITATION.cff` and notify the author with a link to your publication.
+
+
+## Changelog
+- Bumped version due to License update to AGPLv3 and Dual Licensing model.
