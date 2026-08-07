@@ -246,8 +246,8 @@ Principal Systems & Software Architect / Technology Evangelist
 
 ## Licensing and Usage
 
-This project uses a **Dual License** model:
-- **Community/Research**: Licensed under the AGPLv3. See [LICENSE](LICENSE).
+This project uses a **PolyForm Noncommercial License** model:
+- **Community/Research**: Licensed under the PolyForm Noncommercial. See [LICENSE](LICENSE).
 - **Commercial**: Requires a commercial license. See [COMMERCIAL.md](COMMERCIAL.md) for details.
 
 ### Academic Research
@@ -255,4 +255,4 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
-- Bumped version due to License update to AGPLv3 and Dual Licensing model.
+- Bumped version due to License update to PolyForm Noncommercial and Dual Licensing model.
