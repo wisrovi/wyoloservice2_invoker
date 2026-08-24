@@ -97,7 +97,13 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.9.1 (Current Release) - 2026-08-06
+### Version 1.9.2 (Current Release) - 2026-08-24
+*   **Optuna storage moved to dedicated DB:** `optuna_search` now stores studies in `postgresql://...:23436/optuna_db` instead of the shared `wyoloservice` DB. The shared DB is also used by MLflow, whose Alembic migrations overwrite the generic `alembic_version` table (revision `da6fb0208061`) and made Optuna abort every study creation with "The runtime optuna version 4.8.0 is no longer compatible with the table schema". This aligns the invoker with the manager, which already used `optuna_db`.
+*   **Gradio launcher DB aligned:** `UI/gradio_launcher/db.py` default URL now points to `optuna_db` as well.
+*   **EDA dataset path translation:** The temporary EDA executor container has no `/datasets` root path (the CIFS share mounts at `/wyolo/control_server/datasets`). `EDA` now translates user-facing `/datasets/...` paths to `/wyolo/control_server/datasets/...` before running `DatasetAnalyzer`, fixing the `FileNotFoundError` seen on the Bus-Dron segmentation training.
+*   **Version Update:** Bumped invoker version to v1.9.2.
+
+### Version 1.9.1 - 2026-08-06
 *   **LLM Analyzer Compatibility:** Updated expected LLM report filename to LLM_Report.md to align with the new executor output format.
 *   **Version Update:** Bumped invoker version to v1.9.1.
 
