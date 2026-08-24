@@ -28,7 +28,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.9.1"
+VERSION = "v1.9.2"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -128,7 +128,10 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
     study_name = f"{base_study_name}_{space_hash}"
 
     # Priority: Environment variable > Config file
-    base_url = "postgresql://postgres:postgres@<IP>:23436/wyoloservice"
+    # NOTE: Must use the dedicated `optuna_db`. The shared `wyoloservice` DB is
+    # also used by MLflow, whose Alembic migrations overwrite the generic
+    # `alembic_version` table and break Optuna's schema compatibility check.
+    base_url = "postgresql://postgres:postgres@<IP>:23436/optuna_db"
     control_host = os.getenv("CONTROL_HOST", "localhost")
     storage_url = base_url.replace("<IP>", control_host)
 
