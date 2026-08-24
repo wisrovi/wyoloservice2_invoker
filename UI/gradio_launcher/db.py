@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, text
 def get_optuna_engine():
     """Initializes and returns SQLAlchemy engine using OPTUNA_DB_URL or default control host."""
     control_host = os.getenv("CONTROL_HOST", "127.0.0.1")
-    default_db_url = f"postgresql://postgres:postgres@{control_host}:23436/wyoloservice"
+    default_db_url = f"postgresql://postgres:postgres@{control_host}:23436/optuna_db"
     optuna_db_url = os.getenv("OPTUNA_DB_URL", default_db_url)
     return create_engine(optuna_db_url)
 
