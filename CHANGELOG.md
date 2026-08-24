@@ -1,5 +1,14 @@
 # Changelog - GPU Invoker (Hive)
 
+## [1.9.2] - 2026-08-24
+### Fixed
+- **Optuna storage DB:** `optuna_search` now connects to the dedicated `optuna_db` instead of the shared `wyoloservice` PostgreSQL database. MLflow's Alembic migrations on the shared DB overwrite the generic `alembic_version` table, causing every `create_study` to fail with "The runtime optuna version 4.8.0 is no longer compatible with the table schema". Aligns the invoker with the manager's existing convention.
+- **Gradio launcher DB:** default study-listing URL in `UI/gradio_launcher/db.py` moved to `optuna_db`.
+- **EDA path translation:** `/datasets/...` paths are now translated to `/wyolo/control_server/datasets/...` before running `DatasetAnalyzer` inside the temporary executor container (which has no root `/datasets`), fixing `FileNotFoundError` during EDA.
+
+### Version Update
+- Bumped invoker version to `v1.9.2`.
+
 ## [1.7.5] - 2026-08-03
 ### Fixed
 - Corrected python command list structure inside the docker container call in `EDA` to avoid syntax errors with single quotes.
