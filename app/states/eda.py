@@ -66,6 +66,13 @@ class EDA:
             import docker
             client = docker.from_env()
 
+            # The executor image mounts the CIFS share at
+            # /wyolo/control_server/datasets (there is no / at /datasets), so
+            # translate user-facing paths accordingly before running inside it.
+            container_dataset_path = dataset_path.replace(
+                "/datasets/", "/wyolo/control_server/datasets/"
+            )
+
             executor_image = self.config.get(
                 "executor_image",
                 "wisrovi/train_service:worker_executor_v1.0.0"
@@ -114,7 +121,7 @@ class EDA:
                         f"/usr/local/bin/mount-cifs.sh && "
                         f"python -c \"import sys; sys.path.append('/app'); "
                         f"from states.utils.dataset_analyzer import DatasetAnalyzer; "
-                        f"import json; print(json.dumps(DatasetAnalyzer().analyze('{dataset_path}')))\""
+                        f"import json; print(json.dumps(DatasetAnalyzer().analyze('{container_dataset_path}')))\""
                     )
                 ],
                 remove=True
