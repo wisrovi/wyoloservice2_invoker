@@ -1,5 +1,12 @@
 # Changelog - GPU Invoker (Hive)
 
+## [1.9.4] - 2026-08-25
+### Fixed
+- **LLM analyzer model:** replaced dead `opencode/deepseek-v4-flash-free` with `opencode/nemotron-3.5-lightning-free` in `training_report_analyzer.py`. Model is now configurable via `LLM_MODEL` env var.
+
+### Version Update
+- Bumped invoker version to `v1.9.4`.
+
 ## [1.9.3] - 2026-08-25
 ### Fixed
 - **Optuna study naming:** `optuna_search` now resolves the study name from `sweeper.study_name` (falling back to top-level `study_name`, then the dated default). Previously the user-provided name was ignored because it was read from the wrong nesting level, so every run created a new `study_YYYYMMDD_<hash>` study and Optuna lost its cross-run warm-start history.

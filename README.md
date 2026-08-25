@@ -104,7 +104,11 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.9.3 (Current Release) - 2026-08-25
+### Version 1.9.4 (Current Release) - 2026-08-25
+*   **LLM Model Fix:** Replaced dead `opencode/deepseek-v4-flash-free` with `opencode/nemotron-3.5-lightning-free` in training report analyzer. Model configurable via `LLM_MODEL` env var.
+*   **Version Update:** Bumped invoker version to v1.9.4.
+
+### Version 1.9.3 - 2026-08-25
 *   **Optuna study naming fixed:** `optuna_search` now reads the study name from `sweeper.study_name` (falling back to top-level `study_name`, then the dated default). The user-provided name was previously read from the wrong nesting level, so every run created a fresh `study_YYYYMMDD_<hash>` study and Optuna lost its cross-run trial history (warm-start).
 *   **Version Update:** Bumped invoker version to v1.9.3.
 
