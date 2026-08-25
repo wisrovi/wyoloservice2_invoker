@@ -1,5 +1,9 @@
 # Changelog - GPU Invoker (Hive)
 
+## [1.9.3] - 2026-08-25
+### Fixed
+- **Optuna study naming:** `optuna_search` now resolves the study name from `sweeper.study_name` (falling back to top-level `study_name`, then the dated default). Previously the user-provided name was ignored because it was read from the wrong nesting level, so every run created a new `study_YYYYMMDD_<hash>` study and Optuna lost its cross-run warm-start history.
+
 ## [1.9.2] - 2026-08-24
 ### Fixed
 - **Optuna storage DB:** `optuna_search` now connects to the dedicated `optuna_db` instead of the shared `wyoloservice` PostgreSQL database. MLflow's Alembic migrations on the shared DB overwrite the generic `alembic_version` table, causing every `create_study` to fail with "The runtime optuna version 4.8.0 is no longer compatible with the table schema". Aligns the invoker with the manager's existing convention.
