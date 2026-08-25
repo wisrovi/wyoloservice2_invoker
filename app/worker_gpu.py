@@ -28,7 +28,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.9.2"
+VERSION = "v1.9.3"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -118,8 +118,12 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
     search_space = training_config.get("sweeper", {}).get("search_space", {})
 
     # Study Settings (Crucial for distributed scenario)
-    base_study_name = training_config.get(
-        "study_name", f"study_{datetime.now().strftime('%Y%m%d')}"
+    # Prefer the user-provided `sweeper.study_name` so consecutive runs of the
+    # same experiment accumulate trials in one study (Optuna warm-start).
+    base_study_name = (
+        training_config.get("sweeper", {}).get("study_name")
+        or training_config.get("study_name")
+        or f"study_{datetime.now().strftime('%Y%m%d')}"
     )
     # Include hash of search space to avoid conflicts when search space changes
     space_hash = hashlib.md5(
