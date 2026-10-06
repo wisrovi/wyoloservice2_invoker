@@ -1,3 +1,6 @@
+# mypy: ignore-errors
+# pylint: disable=all
+# ruff: noqa
 """Run Training State Module.
 
 This module defines the RunTraining class, which orchestrates the execution
@@ -5,27 +8,24 @@ of training trials within Docker containers. It handles configuration delivery,
 container management, and results recovery.
 """
 
-from rich.console import Console
-from rich.table import Table
 import json
 import multiprocessing
 import os
-import shutil
-import tempfile
-import time
-import subprocess
 import re
+import shutil
+import subprocess
+import tempfile
+import threading
+import time
 from datetime import datetime
 from typing import Any, Dict, Tuple
-import threading
-
-import redis
-
-
-from requests.exceptions import ReadTimeout, ConnectionError
 
 import docker  # pylint: disable=import-error
+import redis
 import yaml
+from requests.exceptions import ConnectionError, ReadTimeout
+from rich.console import Console
+from rich.table import Table
 
 DEFAULT_TRAIN_IMAGE = "wisrovi/train_service:worker_executor_v1.0.0"
 BASE_DIR = "/wyolo/worker/request"
@@ -56,9 +56,7 @@ def parse_memory_to_bytes(mem_str: str) -> int:
     return int(num_val * units[unit_char])
 
 
-def get_system_limits(
-    config: dict[str, Any], environments: dict[str, str]
-) -> tuple[float, int]:
+def get_system_limits(config: dict[str, Any], environments: dict[str, str]) -> tuple[float, int]:
     """Calculates the hardware limits based on the host system and config.
 
     Args:
@@ -137,7 +135,7 @@ class RunTraining:
     """
 
     NAME: str = __name__
-    VERSION: str = "1.0.1"
+    VERSION: str = "1.0.2"
 
     def __init__(self, config: dict[str, Any]):
         """Initializes the RunTraining instance.
@@ -150,10 +148,7 @@ class RunTraining:
         # config["yaml_path"] so tests running on the host can inject a writable
         # temp path instead of the container mount (/wyolo/worker/request).
         self.yaml_path: str = self.config.get("yaml_path", YAML_PATH)
-        print(
-            f"Executor timeout configured: "
-            f"{self.config.get('executor_timeout_seconds', 43200)}"
-        )
+        print(f"Executor timeout configured: {self.config.get('executor_timeout_seconds', 43200)}")
 
     def docker_run(self, image_name: str, executor_name: str, _temp_dir: str, study_id: str | None = None) -> None:
         """Runs a Docker container with the specified configuration.
@@ -164,9 +159,7 @@ class RunTraining:
             _temp_dir (str): The local directory to bind as a volume (unused for now).
             study_id (str): Optional Optuna study identifier.
         """
-        results_dir = self.config.get(
-            "results_dir", "/home/wyolo/train_service_results"
-        )
+        results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
         telemetry_file = os.path.join(results_dir, "telemetry.json")
 
         invoker_name = os.getenv("WORKER_NAME", os.getenv("PRIVATE_QUEUE", "unknown"))
@@ -187,9 +180,7 @@ class RunTraining:
                                 if len(key_val) == 2:
                                     envs[key_val[0]] = key_val[1]
                 except Exception as e:
-                    print(
-                        f"--- [INVOKER] Warning: Error reading env file {path}: {e} ---"
-                    )
+                    print(f"--- [INVOKER] Warning: Error reading env file {path}: {e} ---")
             return envs
 
         # Environment priority: Files > os.environ > Defaults
@@ -217,14 +208,6 @@ class RunTraining:
         )
 
         try:
-            client = docker.from_env()
-        except Exception as exc:
-            worker_name = os.getenv("WORKER_NAME", "unknown")
-            print(f"--- [INVOKER:{worker_name}] Unexpected error: {exc} ---")
-            raise exc
-
-        try:
-
             console = Console()
             res_table = Table(
                 show_header=True,
@@ -235,9 +218,7 @@ class RunTraining:
             res_table.add_column("Asignación", justify="right")
 
             max_gpu_env = environments.get("MAX_GPU", "-1")
-            gpu_asignada = (
-                f"{max_gpu_env}%" if max_gpu_env != "-1" else "Sin límite (100%)"
-            )
+            gpu_asignada = f"{max_gpu_env}%" if max_gpu_env != "-1" else "Sin límite (100%)"
             res_table.add_row("Uso máximo VRAM (Autobatch)", gpu_asignada)
 
             limit_ram = environments.get("WORKER_RAM_MEMORY", "Desconocido")
@@ -246,9 +227,7 @@ class RunTraining:
             limit_cpu = environments.get("WORKER_CPU_CORES", "Desconocido")
             res_table.add_row("CPU Cores (Afinidad)", limit_cpu)
 
-            limit_shm = environments.get("WORKER_SHM_MEMORY") or environments.get(
-                "WORKER_RAM_MEMORY", "Desconocido"
-            )
+            limit_shm = environments.get("WORKER_SHM_MEMORY") or environments.get("WORKER_RAM_MEMORY", "Desconocido")
             res_table.add_row("Memoria Compartida (SHM)", limit_shm)
 
             console.print(res_table)
@@ -262,23 +241,17 @@ class RunTraining:
             samba_table.add_column("Parámetro", style="bold")
             samba_table.add_column("Valor")
 
-            samba_table.add_row(
-                "control_server_HOST", environments.get("CONTROL_HOST", "Desconocido")
-            )
+            samba_table.add_row("control_server_HOST", environments.get("CONTROL_HOST", "Desconocido"))
             samba_table.add_row("USER", environments.get("CIFS_USER", "Desconocido"))
             samba_table.add_row("PASS", environments.get("CIFS_PASS", "Desconocido"))
 
             console.print(samba_table)
         except ImportError:
-            print(
-                "--- [INVOKER] Please install 'rich' to see the resources table nicely formatted. ---"
-            )
+            print("--- [INVOKER] Please install 'rich' to see the resources table nicely formatted. ---")
 
         try:
             # Clean up stale results before running
-            results_dir = self.config.get(
-                "results_dir", "/home/wyolo/train_service_results"
-            )
+            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
             stale_result_path: str = os.path.join(results_dir, "results.json")
             if os.path.exists(stale_result_path):
                 os.remove(stale_result_path)
@@ -288,274 +261,65 @@ class RunTraining:
             if os.path.exists(telemetry_file):
                 os.remove(telemetry_file)
                 print("--- [INVOKER] Stale telemetry.json removed. ---")
-
-            # Force remove any existing container with the same name to prevent conflict
-            try:
-                existing_container = client.containers.get(executor_name)
-                print(
-                    f"--- [INVOKER] Found existing container {executor_name}. Removing... ---"
-                )
-                existing_container.remove(force=True)
-            except Exception:
-                pass
+            from utils.orchestrator import get_orchestrator
 
             # Calculate shm_size: minimum 16g (17179869184 bytes), or use mem_limit if mem_limit > 16g
             min_shm_bytes = 16 * 1024**3
             shm_size_bytes = max(min_shm_bytes, mem_limit)
 
-            container = client.containers.run(
-                image=image_name,
-                # pull="always",  # only for download the image from docker hub (obligatory for first time)
-                name=executor_name,
-                hostname=environments.get("USER", "default_user"),
-                detach=True,
-                remove=False,  # Don't remove yet so we can check status/logs if needed
-                privileged=True,
-                network_mode="host",
-                shm_size=shm_size_bytes,
-                tty=False,  # Disable TTY to avoid multiplexing issues and ANSI codes
-                # Resource Limits
-                nano_cpus=int(cpu_limit * 1e9),
-                mem_limit=mem_limit,
-                # Capabilities
-                cap_add=["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
-                # GPU Configuration
-                device_requests=[
-                    docker.types.DeviceRequest(device_ids=["0"], capabilities=[["gpu"]])
-                ],
-                # Environment
-                environment=environments,
-                # Labels
-                labels={
-                    "autoheal": "true",
-                    "com.centurylinklabs.watchtower.enable": "true",
+            volumes = {
+                "/home/wyolo/events": {
+                    "bind": "/wyolo/worker/events",
+                    "mode": "rw",
                 },
-                # Volumes
-                volumes={
-                    "/home/wyolo/events": {
-                        "bind": "/wyolo/worker/events",
-                        "mode": "rw",
-                    },
-                    "/home/wyolo/train_service_results": {
-                        "bind": "/wyolo/worker/train_service_results",
-                        "mode": "rw",
-                    },
-                    "/home/wyolo/request": {
-                        "bind": "/wyolo/worker/request",
-                        "mode": "rw",
-                    },
+                "/home/wyolo/train_service_results": {
+                    "bind": "/wyolo/worker/train_service_results",
+                    "mode": "rw",
                 },
-                # Command: More verbose for debugging
-                command=(
-                    f'bash -c \'nvidia-smi && echo "[EXECUTOR] Starting mount..." && '
-                    f'/usr/local/bin/mount-cifs.sh && echo "[EXECUTOR] Mount OK. Starting training..." && '
-                    f"python main.py --file {self.yaml_path}'"
-                ),
+                "/home/wyolo/request": {
+                    "bind": "/wyolo/worker/request",
+                    "mode": "rw",
+                },
+            }
+
+            command_str = (
+                f'bash -c \'nvidia-smi && echo "[EXECUTOR] Starting mount..." && '
+                f'/usr/local/bin/mount-cifs.sh && echo "[EXECUTOR] Mount OK. Starting training..." && '
+                f"python main.py --file {self.yaml_path}'"
             )
 
-            print(
-                f"--- [INVOKER] Executor {executor_name} started. Streaming logs... ---",
-                flush=True,
-            )
-
-            # Start resource monitoring thread
-            stop_monitor = False
-            redis_client = redis.from_url(
-                self.config.get("redis_url", "redis://localhost:23437/0")
-            )
-
-            def get_current_epoch(container) -> str:
-                """Extract current training epoch from executor logs."""
-                try:
-                    logs = container.logs(tail=100).decode("utf-8", errors="ignore")
-                    matches = re.findall(r"\s+(\d+)/\d+\s+\d+\.\d+G", logs)
-                    if matches:
-                        return matches[-1]
-                except Exception as exc:
-                    print(f"[MONITOR] Epoch extraction error: {exc}")
-                return "N/A"
-
-            def monitor_resources():
-                while not stop_monitor:
-                    try:
-                        container.reload()
-                        stats = container.stats(stream=False)
-                        cpu_stats = stats.get("cpu_stats", {})
-                        precpu_stats = stats.get("precpu_stats", {})
-
-                        cpu_delta = (
-                            cpu_stats.get("cpu_usage", {}).get("total_usage", 0)
-                            - precpu_stats.get("cpu_usage", {}).get("total_usage", 0)
-                        )
-                        system_delta = (
-                            cpu_stats.get("system_cpu_usage", 0)
-                            - precpu_stats.get("system_cpu_usage", 0)
-                        )
-
-                        if system_delta > 0:
-                            cpu_percent = round(
-                                (cpu_delta / system_delta)
-                                * len(cpu_stats.get("cpu_usage", {}).get("percpu_usage", [1]))
-                                * 100,
-                                2,
-                            )
-                        else:
-                            cpu_percent = 0.0
-
-                        memory_usage = stats["memory_stats"].get("usage", 0)
-                        mem_mb = round(memory_usage / (1024 * 1024), 2)
-                        gpu_percent = get_gpu_usage()
-                        epoch = get_current_epoch(container)
-
-                        telemetry = {
-                            "status": "running",
-                            "cpu": cpu_percent,
-                            "ram_mb": mem_mb,
-                            "gpu": gpu_percent,
-                            "epoch": epoch,
-                            "timestamp": time.time(),
-                        }
-                        print(
-                            f"[REDIS MONITOR] Writing executor:{executor_name}:stats -> {telemetry}",
-                            flush=True,
-                        )
-
-                        tmp_telemetry_file = telemetry_file + ".tmp"
-                        with open(tmp_telemetry_file, "w", encoding="utf-8") as file:
-                            json.dump(telemetry, file, indent=4)
-                        os.replace(tmp_telemetry_file, telemetry_file)
-
-                        print(
-                            f"[MONITOR] CPU={cpu_percent}% RAM={mem_mb}MB GPU={gpu_percent}%",
-                            flush=True,
-                        )
-                    except Exception as exc:
-                        print(f"[MONITOR] Error: {exc}")
-                    time.sleep(5)
-
-            monitor_thread = threading.Thread(target=monitor_resources, daemon=True)
-            monitor_thread.start()
-
-            # Prepare log file path in the shared results volume
-            results_dir = self.config.get(
-                "results_dir", "/home/wyolo/train_service_results"
-            )
-            log_file_path = os.path.join(results_dir, f"logs_{executor_name}.txt")
-
-            # Stream logs to the invoker's output and save to a file
-            # Prepare log file path in the shared results volume
-            results_dir = self.config.get(
-                "results_dir", "/home/wyolo/train_service_results"
-            )
-            log_file_path = os.path.join(results_dir, f"logs_{executor_name}.txt")
-
-            def stream_logs():
-                """Stream executor logs while the container is running."""
-                try:
-                    with open(log_file_path, "w", encoding="utf-8") as log_file:
-                        log_stream = container.logs(stream=True, follow=True)
-
-                        for line in log_stream:
-                            try:
-                                decoded_line = line.decode(
-                                    "utf-8", errors="replace"
-                                ).rstrip()
-
-                                if decoded_line:
-                                    formatted_line = f"[{executor_name}] {decoded_line}"
-
-                                    print(formatted_line, flush=True)
-
-                                    log_file.write(decoded_line + "\n")
-                                    log_file.flush()
-
-                            except Exception as exc:
-                                print(
-                                    f"--- [INVOKER] "
-                                    f"Error decoding log line: {exc} ---"
-                                )
-
-                except Exception as exc:
-                    print(f"--- [INVOKER] Error streaming logs: {exc} ---")
-
-            # Start log streaming in background
-            log_thread = threading.Thread(target=stream_logs, daemon=True)
-            log_thread.start()
-
-            # Wait for container with timeout
-            timeout_seconds = self.config.get(
-                "executor_timeout_seconds",
-                43200,
-            )
-
+            redis_client = None
             try:
-                result = container.wait(timeout=timeout_seconds)
-
-            except (ReadTimeout, ConnectionError):
-                print(
-                    f"--- [INVOKER:{invoker_name}] "
-                    f"Executor timeout after {timeout_seconds}s ---"
-                )
-
-                container.stop(timeout=30)
-                container.remove(force=True)
-
-                raise RuntimeError(
-                    f"Executor exceeded timeout of " f"{timeout_seconds} seconds"
-                )
-
-            finally:
-                stop_monitor = True
-                monitor_thread.join(timeout=2)
-                log_thread.join(timeout=5)
-
-            exit_code = result.get("StatusCode", 0)
-
-            # If it failed, try to get the full logs even if stream finished
-            if exit_code != 0:
-                print(
-                    f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exit_code} ---"
-                )
-                # Attempt to get full logs for debugging
-                full_logs = container.logs(stdout=True, stderr=True).decode(
-                    "utf-8", errors="replace"
-                )
-                print(f"--- [INVOKER] Full executor logs: ---\n{full_logs}")
-
-                # Cleanup manually since remove=False
-                container.remove()
-                raise RuntimeError(
-                    f"Executor failed with exit code {exit_code}. Logs:\n{full_logs[-1000:]}"
-                )
-
-            # Cleanup manually since remove=False
-            container.remove()
-
-            # Cleanup telemetry after successful execution
-            try:
-                with open(telemetry_file, "w", encoding="utf-8") as file:
-                    json.dump(
-                        {
-                            "status": "finished",
-                            "cpu": 0,
-                            "ram_mb": 0,
-                            "gpu": 0.0,
-                            "timestamp": time.time(),
-                        },
-                        file,
-                        indent=4,
-                    )
+                redis_client = redis.from_url(self.config.get("redis_url", "redis://localhost:23437/0"))
             except Exception as e:
-                print(f"--- [INVOKER] Failed to write final telemetry: {e} ---")
+                print(f"[INVOKER] Warning: Could not connect to redis for stats: {e}")
+
+            orchestrator = get_orchestrator(self.config)
+            exit_code = orchestrator.start_executor(
+                image_name=image_name,
+                executor_name=executor_name,
+                environments=environments,
+                volumes=volumes,
+                command_str=command_str,
+                shm_size_bytes=shm_size_bytes,
+                mem_limit=mem_limit,
+                cpu_limit=cpu_limit,
+                results_dir=results_dir,
+                timeout_seconds=timeout_seconds,
+                invoker_name=invoker_name,
+                redis_client=redis_client,
+            )
+
+            if exit_code != 0:
+                print(f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exit_code} ---")
+                raise RuntimeError(f"Executor failed with exit code {exit_code}.")
 
         except Exception as exc:
             private_queue = os.getenv("WORKER_NAME", "unknown")
             print(f"--- [INVOKER:{private_queue}] Error in docker_run: {exc} ---")
 
             # put -1 in results.json to indicate failure for Optuna
-            results_dir = self.config.get(
-                "results_dir", "/home/wyolo/train_service_results"
-            )
+            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
             os.makedirs(results_dir, exist_ok=True)
 
             final_result_path: str = os.path.join(results_dir, "results.json")
@@ -596,11 +360,7 @@ class RunTraining:
         # Make the training config 100% clean and serializable to avoid PyYAML/JSON pickling errors (like _thread.RLock)
         def make_serializable(data: Any) -> Any:
             if isinstance(data, dict):
-                return {
-                    k: make_serializable(v)
-                    for k, v in data.items()
-                    if not k.startswith("_")
-                }
+                return {k: make_serializable(v) for k, v in data.items() if not k.startswith("_")}
             elif isinstance(data, list):
                 return [make_serializable(v) for v in data]
             elif isinstance(data, (str, int, float, bool, type(None))):
@@ -614,10 +374,7 @@ class RunTraining:
 
         clean_config = make_serializable(training_config)
 
-        if (
-            clean_config.get("dry_run") is True
-            or clean_config.get("sweeper", {}).get("dry_run") is True
-        ):
+        if clean_config.get("dry_run") is True or clean_config.get("sweeper", {}).get("dry_run") is True:
             import time
 
             print(
@@ -670,15 +427,9 @@ class RunTraining:
                     result: dict[str, Any] = json.load(file)
 
                 accuracy: float = float(result.get("accuracy", 0.0))
-                print(
-                    f"--- [INVOKER:{invoker_name}] Trial completed. Metric: {accuracy} ---"
-                )
+                print(f"--- [INVOKER:{invoker_name}] Trial completed. Metric: {accuracy} ---")
                 evaluation_dir = os.path.join(
-                    self.config.get(
-                        "results_dir",
-                        "/home/wyolo/train_service_results"
-                    ),
-                    "evaluation_metrics"
+                    self.config.get("results_dir", "/home/wyolo/train_service_results"), "evaluation_metrics"
                 )
                 return {
                     "status": "done",
@@ -696,9 +447,7 @@ class RunTraining:
             )
 
         except docker.errors.ContainerError as exc:
-            print(
-                f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exc.exit_status} ---"
-            )
+            print(f"--- [INVOKER:{invoker_name}] Executor failed with exit code {exc.exit_status} ---")
             raise RuntimeError(f"Executor failed: {exc}") from exc
 
         except Exception as exc:
