@@ -358,6 +358,11 @@ class KubernetesOrchestrator(BaseOrchestrator):
             "spec": {
                 "nodeName": self.node_name,
                 "restartPolicy": "Never",
+                "tolerations": [
+                    {"key": "nvidia.com/gpu", "operator": "Exists", "effect": "NoSchedule"},
+                    {"key": "node.kubernetes.io/disk-pressure", "operator": "Exists"},
+                    {"key": "node.kubernetes.io/memory-pressure", "operator": "Exists"},
+                ],
                 "containers": [
                     {
                         "name": "eda",
@@ -465,6 +470,11 @@ class KubernetesOrchestrator(BaseOrchestrator):
             "spec": {
                 "nodeName": self.node_name,
                 "restartPolicy": "Never",
+                "tolerations": [
+                    {"key": "nvidia.com/gpu", "operator": "Exists", "effect": "NoSchedule"},
+                    {"key": "node.kubernetes.io/disk-pressure", "operator": "Exists"},
+                    {"key": "node.kubernetes.io/memory-pressure", "operator": "Exists"},
+                ],
                 "containers": [
                     {
                         "name": "executor",
