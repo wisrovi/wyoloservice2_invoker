@@ -1,10 +1,6 @@
 #!/bin/bash
-# Script to calculate code coverage using pytest-cov.
+# Script to calculate code coverage using pytest-cov inside Docker.
 
-echo "Calculating code coverage..."
+IMAGE_NAME="worker-test-env"
 
-# Ensure we are in the right directory and have PYTHONPATH set
-PYTHONPATH=$PYTHONPATH:$(pwd)
-export PYTHONPATH
-
-pytest --cov=states --cov=worker_gpu tests/ --cov-report=term-missing
+docker run --rm $IMAGE_NAME pytest --cov=states --cov=utils tests/ --cov-report=term-missing
