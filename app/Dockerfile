@@ -29,4 +29,6 @@ COPY . .
 RUN cp micro_train.sh /usr/local/bin/micro_train && \
     chmod +x /usr/local/bin/micro_train
 
+ENV PYTHONPATH=/app
+
 CMD ["celery", "-A", "worker_gpu", "worker", "-Q", "gpus", "--loglevel=info"]
