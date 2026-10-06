@@ -1,5 +1,17 @@
 # Changelog - GPU Invoker (Hive)
 
+## [1.9.5] - 2026-10-06
+### Added
+- **Hybrid Orchestration Architecture (`orchestrator.py`):**
+  - Dual orchestration engine supporting both standalone Docker environments and native Kubernetes clusters.
+  - Automatically detects cluster execution via `ORCHESTRATOR` or in-cluster ServiceAccount token.
+  - When in Kubernetes mode, spawns ephemeral Pods pinned to the local node (`nodeName: WORKER_HOSTNAME`) via native REST API, streaming logs in real time.
+  - Fully integrated with Dozzle web UI (`http://localhost:8888`), allowing browser-based one-click deletion/stopping of training tasks without terminal access.
+  - Refactored `EDA` and `RunTraining` states to use `get_orchestrator()`.
+
+### Version Update
+- Bumped invoker version to `v1.9.5`.
+
 ## [1.9.4] - 2026-08-25
 ### Fixed
 - **LLM analyzer model:** replaced dead `opencode/deepseek-v4-flash-free` with `opencode/nemotron-3.5-lightning-free` in `training_report_analyzer.py`. Model is now configurable via `LLM_MODEL` env var.
