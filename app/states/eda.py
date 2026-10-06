@@ -15,7 +15,7 @@ class EDA:
     """State class for performing Exploratory Data Analysis."""
 
     NAME: str = "EDA"
-    VERSION: str = "1.0.0"
+    VERSION: str = "1.1.0"
 
     def __init__(self, config: dict[str, Any]):
         """Initialize EDA with configuration.
@@ -45,46 +45,34 @@ class EDA:
             }
 
         # If dataset_path is a YAML file, read it to get the actual dataset directory
-        if isinstance(dataset_path, str) and dataset_path.endswith(('.yaml', '.yml')):
+        if isinstance(dataset_path, str) and dataset_path.endswith((".yaml", ".yml")):
             import yaml
+
             try:
-                with open(dataset_path, 'r') as f:
+                with open(dataset_path, "r") as f:
                     yaml_data = yaml.safe_load(f)
                     # YOLO data.yaml typically has 'path' or 'train' field
                     if isinstance(yaml_data, dict):
-                        if 'path' in yaml_data:
-                            dataset_path = yaml_data['path']
-                        elif 'train' in yaml_data and isinstance(yaml_data['train'], str):
-                            dataset_path = yaml_data['train']
-                        elif 'val' in yaml_data and isinstance(yaml_data['val'], str):
-                            dataset_path = yaml_data['val']
+                        if "path" in yaml_data:
+                            dataset_path = yaml_data["path"]
+                        elif "train" in yaml_data and isinstance(yaml_data["train"], str):
+                            dataset_path = yaml_data["train"]
+                        elif "val" in yaml_data and isinstance(yaml_data["val"], str):
+                            dataset_path = yaml_data["val"]
             except Exception as exc:
                 print(f"[EDA] Warning: Could not read YAML file {dataset_path}: {exc}")
 
-        # Run the temporary executor container to perform the mount and run python
+        # Run the temporary executor container/pod to perform the mount and run python
         try:
-            import docker
-            client = docker.from_env()
+            from utils.orchestrator import get_orchestrator
 
             # The executor image mounts the CIFS share at
             # /wyolo/control_server/datasets (there is no / at /datasets), so
             # translate user-facing paths accordingly before running inside it.
-            container_dataset_path = dataset_path.replace(
-                "/datasets/", "/wyolo/control_server/datasets/"
-            )
+            container_dataset_path = dataset_path.replace("/datasets/", "/wyolo/control_server/datasets/")
 
-            executor_image = self.config.get(
-                "executor_image",
-                "wisrovi/train_service:worker_executor_v1.0.0"
-            )
+            executor_image = self.config.get("executor_image", "wisrovi/train_service:worker_executor_v1.0.0")
             executor_name = f"wyolo_eda_runner_{os.getenv('PRIVATE_QUEUE', 'default')}"
-
-            # Remove existing container just in case
-            try:
-                existing = client.containers.get(executor_name)
-                existing.remove(force=True)
-            except Exception:
-                pass
 
             environments = {
                 "CONTROL_HOST": os.getenv("CONTROL_HOST", "127.0.0.1"),
@@ -92,43 +80,41 @@ class EDA:
                 "CIFS_PASS": os.getenv("CIFS_PASS", "wyoloservice"),
             }
 
-            print(f"[EDA] Spawning temp container {executor_name} with image {executor_image}...")
-            container_output = client.containers.run(
-                image=executor_image,
-                name=executor_name,
-                detach=False,
-                privileged=True,
-                network_mode="host",
-                environment=environments,
-                volumes={
-                    "/home/wyolo/events": {
-                        "bind": "/wyolo/worker/events",
-                        "mode": "rw",
-                    },
-                    "/home/wyolo/train_service_results": {
-                        "bind": "/wyolo/worker/train_service_results",
-                        "mode": "rw",
-                    },
-                    "/home/wyolo/request": {
-                        "bind": "/wyolo/worker/request",
-                        "mode": "rw",
-                    },
+            volumes = {
+                "/home/wyolo/events": {
+                    "bind": "/wyolo/worker/events",
+                    "mode": "rw",
                 },
-                command=[
-                    "bash",
-                    "-c",
-                    (
-                        f"/usr/local/bin/mount-cifs.sh && "
-                        f"python -c \"import sys; sys.path.append('/app'); "
-                        f"from states.utils.dataset_analyzer import DatasetAnalyzer; "
-                        f"import json; print(json.dumps(DatasetAnalyzer().analyze('{container_dataset_path}')))\""
-                    )
-                ],
-                remove=True
-            )
+                "/home/wyolo/train_service_results": {
+                    "bind": "/wyolo/worker/train_service_results",
+                    "mode": "rw",
+                },
+                "/home/wyolo/request": {
+                    "bind": "/wyolo/worker/request",
+                    "mode": "rw",
+                },
+            }
 
-            output_str = container_output.decode("utf-8", errors="ignore")
-            print(f"[EDA] Container output logs:\n{output_str}")
+            command = [
+                "bash",
+                "-c",
+                (
+                    f"/usr/local/bin/mount-cifs.sh && "
+                    f"python -c \"import sys; sys.path.append('/app'); "
+                    f"from states.utils.dataset_analyzer import DatasetAnalyzer; "
+                    f"import json; print(json.dumps(DatasetAnalyzer().analyze('{container_dataset_path}')))\""
+                ),
+            ]
+
+            orchestrator = get_orchestrator(self.config)
+            output_str = orchestrator.run_eda(
+                image_name=executor_image,
+                name=executor_name,
+                environments=environments,
+                volumes=volumes,
+                command=command,
+            )
+            print(f"[EDA] Orchestrator output logs:\n{output_str}")
 
             json_start = output_str.find('{"dataset_type":')
             if json_start == -1:
@@ -136,17 +122,17 @@ class EDA:
 
             if json_start == -1:
                 raise ValueError("Could not find JSON output in container logs.")
-            
+
             json_str = output_str[json_start:]
-            json_end = json_str.rfind('}')
+            json_end = json_str.rfind("}")
             if json_end != -1:
-                json_str = json_str[:json_end+1]
+                json_str = json_str[: json_end + 1]
 
             data = json.loads(json_str)
             # If the output is a wrapped run_eda response or direct analysis dict
             if "success" in data and not data.get("success"):
                 raise RuntimeError(data.get("error", "Unknown error in container execution"))
-            
+
             eda_results = data.get("results", data) if "results" in data else data
             return {
                 "status": "success",
