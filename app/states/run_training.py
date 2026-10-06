@@ -260,8 +260,14 @@ class RunTraining:
             # Clean up stale telemetry before running
             if os.path.exists(telemetry_file):
                 os.remove(telemetry_file)
-                print("--- [INVOKER] Stale telemetry.json removed. ---")
-            from utils.orchestrator import get_orchestrator
+            try:
+                from utils.orchestrator import get_orchestrator
+            except ImportError:
+                import sys
+
+                if "/app" not in sys.path:
+                    sys.path.insert(0, "/app")
+                from utils.orchestrator import get_orchestrator
 
             # Calculate shm_size: minimum 16g (17179869184 bytes), or use mem_limit if mem_limit > 16g
             min_shm_bytes = 16 * 1024**3
