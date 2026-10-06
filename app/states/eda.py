@@ -64,7 +64,14 @@ class EDA:
 
         # Run the temporary executor container/pod to perform the mount and run python
         try:
-            from utils.orchestrator import get_orchestrator
+            try:
+                from utils.orchestrator import get_orchestrator
+            except ImportError:
+                import sys
+
+                if "/app" not in sys.path:
+                    sys.path.insert(0, "/app")
+                from utils.orchestrator import get_orchestrator
 
             # The executor image mounts the CIFS share at
             # /wyolo/control_server/datasets (there is no / at /datasets), so
