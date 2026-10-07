@@ -31,7 +31,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.9.6"
+VERSION = "v1.9.7"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -610,6 +610,19 @@ def setup_pause_monitor(sender=None, **kwargs):
         worker_cpus = os.getenv("WORKER_CPU_CORES", "unknown")
         worker_gpu_count = os.getenv("WORKER_GPU_COUNT", "0")
         worker_gpu_model = os.getenv("WORKER_GPU_MODEL", "unknown")
+        worker_gpu_memory = os.getenv("WORKER_GPU_MEMORY")
+        if not worker_gpu_memory or worker_gpu_memory == "unknown":
+            try:
+                import subprocess
+                smi_out = subprocess.check_output(
+                    ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader"],
+                    text=True,
+                    timeout=3,
+                ).strip()
+                if smi_out:
+                    worker_gpu_memory = smi_out.splitlines()[0]
+            except Exception:
+                worker_gpu_memory = "unknown"
 
         # Calculate limits allocated for the executor
         import multiprocessing
@@ -639,6 +652,7 @@ def setup_pause_monitor(sender=None, **kwargs):
             "worker_cpu_cores": worker_cpus,
             "worker_gpu_count": worker_gpu_count,
             "worker_gpu_model": worker_gpu_model,
+            "worker_gpu_memory": worker_gpu_memory,
             "executor_allocated_cpus": f"{allocated_cpus:.2f}",
             "executor_allocated_ram": allocated_ram,
             "executor_cpu_limit_pct": cpu_pct,
@@ -663,7 +677,7 @@ def setup_pause_monitor(sender=None, **kwargs):
             "hostname": worker_hostname,
             "physical_gpu_model": worker_gpu_model,
             "physical_gpu_count": str(worker_gpu_count),
-            "physical_gpu_memory_total": os.getenv("WORKER_GPU_MEMORY", "unknown"),
+            "physical_gpu_memory_total": str(worker_gpu_memory),
             "physical_ram_total": str(allocated_ram),
             "physical_cpu_cores": str(worker_cpus),
             "status": "online",
