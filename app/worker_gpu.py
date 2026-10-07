@@ -31,7 +31,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.9.5"
+VERSION = "v1.9.6"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -649,6 +649,42 @@ def setup_pause_monitor(sender=None, **kwargs):
 
         redis_client.set(f"invoker:{worker_host}:version", json.dumps(metadata))
         print(f"[METADATA REGISTRATION] Saved host metadata to Redis key 'invoker:{worker_host}:version'")
+
+        # Register or update dynamic resource limits hash in Redis (invoker:<worker_host>:resources)
+        res_key = f"invoker:{worker_host}:resources"
+        existing_res = redis_client.hgetall(res_key) or {}
+        decoded_existing = {
+            k.decode("utf-8") if isinstance(k, bytes) else str(k): v.decode("utf-8") if isinstance(v, bytes) else str(v)
+            for k, v in existing_res.items()
+        }
+
+        # Physical specs (always refreshed from host)
+        hset_payload = {
+            "hostname": worker_hostname,
+            "physical_gpu_model": worker_gpu_model,
+            "physical_gpu_count": str(worker_gpu_count),
+            "physical_gpu_memory_total": os.getenv("WORKER_GPU_MEMORY", "unknown"),
+            "physical_ram_total": str(allocated_ram),
+            "physical_cpu_cores": str(worker_cpus),
+            "status": "online",
+            "last_seen": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        # Dynamic limits: preserve existing if user configured them, otherwise initialize defaults
+        if "max_gpu_percent" not in decoded_existing:
+            hset_payload["max_gpu_percent"] = str(os.getenv("MAX_GPU", "30"))
+        if "max_ram" not in decoded_existing:
+            hset_payload["max_ram"] = str(allocated_ram)
+        if "max_cpu_cores" not in decoded_existing:
+            hset_payload["max_cpu_cores"] = f"{allocated_cpus:.2f}"
+        if "pause_state" not in decoded_existing:
+            hset_payload["pause_state"] = "active"
+        if "pause_until" not in decoded_existing:
+            hset_payload["pause_until"] = ""
+        if "updated_at" not in decoded_existing:
+            hset_payload["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        redis_client.hset(res_key, mapping=hset_payload)
+        print(f"[RESOURCES REGISTRATION] Initialized/updated Redis hash '{res_key}'")
     except Exception as e:
         print(f"[METADATA REGISTRATION] Warning: Failed to save host metadata to Redis: {e}")
 
