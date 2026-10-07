@@ -135,7 +135,7 @@ class RunTraining:
     """
 
     NAME: str = __name__
-    VERSION: str = "1.0.2"
+    VERSION: str = "1.0.3"
 
     def __init__(self, config: dict[str, Any]):
         """Initializes the RunTraining instance.
@@ -188,6 +188,34 @@ class RunTraining:
         # In the invoker container, these are usually at /app/config/
         environments.update(load_env_file("/app/config/control_host.env"))
         environments.update(load_env_file("/app/config/user.env"))
+
+        # Check dynamic limits from Redis hash invoker:<worker_ip>:resources
+        worker_ip = os.getenv("WORKER_HOST") or environments.get("WORKER_HOST")
+        if worker_ip:
+            try:
+                redis_url = self.config.get("redis_url", os.getenv("REDIS_URL", "redis://localhost:23437/0"))
+                if "CONTROL_HOST" in environments and "REDIS_PORT" in environments:
+                    redis_url = f"redis://{environments['CONTROL_HOST']}:{environments['REDIS_PORT']}/{environments.get('REDIS_DB', '0')}"
+                r_cli = redis.from_url(redis_url, socket_timeout=3)
+                res_hash = r_cli.hgetall(f"invoker:{worker_ip}:resources")
+                if res_hash:
+                    decoded_res = {
+                        k.decode("utf-8") if isinstance(k, bytes) else str(k): v.decode("utf-8") if isinstance(v, bytes) else str(v)
+                        for k, v in res_hash.items()
+                    }
+                    if decoded_res.get("max_gpu_percent"):
+                        environments["MAX_GPU"] = decoded_res["max_gpu_percent"]
+                    if decoded_res.get("max_ram"):
+                        environments["WORKER_RAM_MEMORY"] = decoded_res["max_ram"]
+                    if decoded_res.get("max_cpu_cores"):
+                        environments["WORKER_CPU_CORES_AVAILABLE"] = decoded_res["max_cpu_cores"]
+                    print(
+                        f"--- [INVOKER:{invoker_name}] Applied dynamic resources from Redis: "
+                        f"MAX_GPU={environments.get('MAX_GPU')}%, RAM={environments.get('WORKER_RAM_MEMORY')}, "
+                        f"CPU={environments.get('WORKER_CPU_CORES_AVAILABLE')} ---"
+                    )
+            except Exception as r_err:
+                print(f"--- [INVOKER:{invoker_name}] Warning: Could not fetch dynamic limits from Redis: {r_err} ---")
 
         environments.update(
             {
