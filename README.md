@@ -301,4 +301,5 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+- **v1.9.6 (2026-10-07)**: Added dynamic resources Hash registration (`invoker:<worker_ip>:resources`) in Redis on startup and runtime dynamic limits injection (`MAX_GPU`, RAM, CPU cores) in `run_training.py` without restarting containers.
 - Bumped version due to License update to PolyForm Noncommercial and Dual Licensing model.
