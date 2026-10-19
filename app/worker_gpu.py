@@ -31,7 +31,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.9.7"
+VERSION = "v1.9.8"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 # Load local worker configuration
@@ -614,6 +614,7 @@ def setup_pause_monitor(sender=None, **kwargs):
         if not worker_gpu_memory or worker_gpu_memory == "unknown":
             try:
                 import subprocess
+
                 smi_out = subprocess.check_output(
                     ["nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader"],
                     text=True,
