@@ -368,11 +368,18 @@ class KubernetesOrchestrator(BaseOrchestrator):
             },
             "spec": {
                 "nodeName": self.node_name,
+                "priorityClassName": "system-node-critical",
                 "restartPolicy": "Never",
                 "tolerations": [
                     {"key": "nvidia.com/gpu", "operator": "Exists", "effect": "NoSchedule"},
                     {"key": "node.kubernetes.io/disk-pressure", "operator": "Exists"},
                     {"key": "node.kubernetes.io/memory-pressure", "operator": "Exists"},
+                    {"key": "node.kubernetes.io/not-ready", "operator": "Exists", "effect": "NoExecute"},
+                    {"key": "node.kubernetes.io/unreachable", "operator": "Exists", "effect": "NoExecute"},
+                    {"key": "node.kubernetes.io/disk-pressure", "operator": "Exists", "effect": "NoSchedule"},
+                    {"key": "node.kubernetes.io/memory-pressure", "operator": "Exists", "effect": "NoSchedule"},
+                    {"key": "node.kubernetes.io/pid-pressure", "operator": "Exists", "effect": "NoSchedule"},
+                    {"key": "node.kubernetes.io/unschedulable", "operator": "Exists", "effect": "NoSchedule"},
                 ],
                 "containers": [
                     {
@@ -380,6 +387,10 @@ class KubernetesOrchestrator(BaseOrchestrator):
                         "image": image_name,
                         "imagePullPolicy": "IfNotPresent",
                         "securityContext": {"privileged": True},
+                        "envFrom": [
+                            {"configMapRef": {"name": "train-service-global-config"}},
+                            {"secretRef": {"name": "train-service-secrets"}},
+                        ],
                         "env": [{"name": k, "value": str(v)} for k, v in environments.items()],
                         "command": ["bash", "-c", command_str],
                         "volumeMounts": [
@@ -480,11 +491,18 @@ class KubernetesOrchestrator(BaseOrchestrator):
             },
             "spec": {
                 "nodeName": self.node_name,
+                "priorityClassName": "system-node-critical",
                 "restartPolicy": "Never",
                 "tolerations": [
                     {"key": "nvidia.com/gpu", "operator": "Exists", "effect": "NoSchedule"},
                     {"key": "node.kubernetes.io/disk-pressure", "operator": "Exists"},
                     {"key": "node.kubernetes.io/memory-pressure", "operator": "Exists"},
+                    {"key": "node.kubernetes.io/not-ready", "operator": "Exists", "effect": "NoExecute"},
+                    {"key": "node.kubernetes.io/unreachable", "operator": "Exists", "effect": "NoExecute"},
+                    {"key": "node.kubernetes.io/disk-pressure", "operator": "Exists", "effect": "NoSchedule"},
+                    {"key": "node.kubernetes.io/memory-pressure", "operator": "Exists", "effect": "NoSchedule"},
+                    {"key": "node.kubernetes.io/pid-pressure", "operator": "Exists", "effect": "NoSchedule"},
+                    {"key": "node.kubernetes.io/unschedulable", "operator": "Exists", "effect": "NoSchedule"},
                 ],
                 "containers": [
                     {
@@ -670,6 +688,13 @@ class KubernetesOrchestrator(BaseOrchestrator):
                     exit_code = term_state.get("exitCode", 0)
                 elif p_status.get("phase") == "Failed":
                     exit_code = 1
+                    fail_msg = p_status.get("message") or p_status.get("reason")
+                    if fail_msg:
+                        print(f"--- [INVOKER][K8s] Pod {pod_name} failed: {fail_msg} ---", flush=True)
+                        if results_dir:
+                            with open(log_file_path, "a", encoding="utf-8") as log_file:
+                                log_file.write(f"\n--- [K8s Pod Failure Reason: {fail_msg}] ---\n")
+                                log_file.flush()
             elif final_resp.status_code == 404 or user_deleted:
                 raise RuntimeError(f"Executor pod {pod_name} was deleted/cancelled by user.")
         except Exception as exc:
