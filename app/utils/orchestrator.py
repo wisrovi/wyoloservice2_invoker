@@ -253,6 +253,17 @@ class DockerOrchestrator(BaseOrchestrator):
             monitor_thread.join(timeout=2)
             log_thread.join(timeout=5)
 
+        if exit_code != 0 and results_dir:
+            try:
+                tail_logs = container.logs(tail=200).decode("utf-8", errors="replace")
+                if tail_logs:
+                    with open(log_file_path, "a", encoding="utf-8") as log_file:
+                        log_file.write(f"\n--- [Docker Container Final Failure Logs (ExitCode: {exit_code})] ---\n")
+                        log_file.write(tail_logs)
+                        log_file.flush()
+            except Exception as log_err:
+                print(f"--- [INVOKER][Docker] Could not capture final logs: {log_err} ---")
+
         if results_dir:
             telemetry_file = os.path.join(results_dir, f"telemetry_{executor_name}.json")
             try:
@@ -481,6 +492,10 @@ class KubernetesOrchestrator(BaseOrchestrator):
                         "image": image_name,
                         "imagePullPolicy": "IfNotPresent",
                         "securityContext": {"privileged": True},
+                        "envFrom": [
+                            {"configMapRef": {"name": "train-service-global-config"}},
+                            {"secretRef": {"name": "train-service-secrets"}},
+                        ],
                         "env": [{"name": k, "value": str(v)} for k, v in environments.items()],
                         "resources": {
                             "limits": {
@@ -660,6 +675,23 @@ class KubernetesOrchestrator(BaseOrchestrator):
         except Exception as exc:
             if user_deleted or "deleted" in str(exc).lower():
                 raise RuntimeError(f"Executor pod {pod_name} was deleted/cancelled by user.") from exc
+
+        # Capture failure logs if exit_code != 0
+        if exit_code != 0 and results_dir:
+            try:
+                tail_resp = requests.get(
+                    f"{self.base_url}/api/v1/namespaces/{self.namespace}/pods/{pod_name}/log?tailLines=200",
+                    headers=self.headers,
+                    verify=self.ca_cert,
+                    timeout=5,
+                )
+                if tail_resp.status_code == 200 and tail_resp.text:
+                    with open(log_file_path, "a", encoding="utf-8") as log_file:
+                        log_file.write(f"\n--- [K8s Pod Final Failure Logs (ExitCode: {exit_code})] ---\n")
+                        log_file.write(tail_resp.text)
+                        log_file.flush()
+            except Exception as log_err:
+                print(f"--- [INVOKER][K8s] Could not capture final logs: {log_err} ---")
 
         # Cleanup Pod post-execution
         self._delete_pod_if_exists(pod_name)
