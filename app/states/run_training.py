@@ -135,7 +135,7 @@ class RunTraining:
     """
 
     NAME: str = __name__
-    VERSION: str = "1.0.3"
+    VERSION: str = "1.0.4"
 
     def __init__(self, config: dict[str, Any]):
         """Initializes the RunTraining instance.
@@ -189,6 +189,11 @@ class RunTraining:
         environments.update(load_env_file("/app/config/control_host.env"))
         environments.update(load_env_file("/app/config/user.env"))
 
+        # Fallback cluster defaults to prevent localhost CIFS mount failures
+        environments.setdefault("CONTROL_HOST", "192.168.10.252")
+        environments.setdefault("CIFS_USER", "wisrovi")
+        environments.setdefault("CIFS_PASS", "wyoloservice")
+
         # Check dynamic limits from Redis hash invoker:<worker_ip>:resources
         worker_ip = os.getenv("WORKER_HOST") or environments.get("WORKER_HOST")
         if worker_ip:
@@ -200,7 +205,9 @@ class RunTraining:
                 res_hash = r_cli.hgetall(f"invoker:{worker_ip}:resources")
                 if res_hash:
                     decoded_res = {
-                        k.decode("utf-8") if isinstance(k, bytes) else str(k): v.decode("utf-8") if isinstance(v, bytes) else str(v)
+                        k.decode("utf-8") if isinstance(k, bytes) else str(k): v.decode("utf-8")
+                        if isinstance(v, bytes)
+                        else str(v)
                         for k, v in res_hash.items()
                     }
                     if decoded_res.get("max_gpu_percent"):
