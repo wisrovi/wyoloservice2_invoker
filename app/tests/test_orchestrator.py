@@ -128,3 +128,9 @@ class TestOrchestrator:
         posted_manifest = mock_post.call_args[1]["json"]
         assert posted_manifest["spec"]["nodeName"] == "node-test-01"
         assert posted_manifest["metadata"]["labels"]["app"] == "wyolo-executor"
+        assert "envFrom" in posted_manifest["spec"]["containers"][0]
+        assert (
+            posted_manifest["spec"]["containers"][0]["envFrom"][0]["configMapRef"]["name"]
+            == "train-service-global-config"
+        )
+        assert posted_manifest["spec"]["containers"][0]["envFrom"][1]["secretRef"]["name"] == "train-service-secrets"
