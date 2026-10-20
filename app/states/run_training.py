@@ -373,23 +373,41 @@ class RunTraining:
             private_queue = os.getenv("WORKER_NAME", "unknown")
             print(f"--- [INVOKER:{private_queue}] Error in docker_run: {exc} ---")
 
+            # Mark MLflow run as FAILED if MLFLOW_RUN_ID is available
+            mlflow_run_id = environments.get("MLFLOW_RUN_ID")
+            mlflow_tracking_uri = environments.get("MLFLOW_TRACKING_URI", os.getenv("MLFLOW_TRACKING_URI"))
+            if mlflow_run_id and mlflow_tracking_uri:
+                try:
+                    import requests
+
+                    requests.post(
+                        f"{mlflow_tracking_uri.rstrip('/')}/api/2.0/mlflow/runs/update",
+                        json={
+                            "run_id": mlflow_run_id,
+                            "status": "FAILED",
+                            "end_time": int(time.time() * 1000),
+                        },
+                        timeout=5,
+                    )
+                    print(f"--- [INVOKER] Marked MLflow run {mlflow_run_id} as FAILED ---")
+                except Exception as ml_err:
+                    print(f"--- [INVOKER] Warning: Failed to update MLflow run to FAILED: {ml_err} ---")
+
             # put -1 in results.json to indicate failure for Optuna
             results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
             os.makedirs(results_dir, exist_ok=True)
 
             final_result_path: str = os.path.join(results_dir, "results.json")
 
-            # Write failure result only if it doesn't exist (to avoid overwriting partial success if any)
-            if not os.path.exists(final_result_path):
-                try:
-                    with open(final_result_path, "w", encoding="utf-8") as file:
-                        json.dump(
-                            {"accuracy": -1.0, "status": "failed", "error": str(exc)},
-                            file,
-                            indent=4,
-                        )
-                except Exception as e:
-                    print(f"--- [INVOKER] Failed to write results.json: {e} ---")
+            try:
+                with open(final_result_path, "w", encoding="utf-8") as file:
+                    json.dump(
+                        {"accuracy": -1.0, "status": "failed", "error": str(exc)},
+                        file,
+                        indent=4,
+                    )
+            except Exception as e:
+                print(f"--- [INVOKER] Failed to write results.json: {e} ---")
 
             raise exc
 
@@ -430,8 +448,6 @@ class RunTraining:
         clean_config = make_serializable(training_config)
 
         if clean_config.get("dry_run") is True or clean_config.get("sweeper", {}).get("dry_run") is True:
-            import time
-
             print(
                 f"--- [INVOKER:{invoker_name}] DRY RUN MODE ENABLED. Simulating training... ---",
                 flush=True,
@@ -461,6 +477,20 @@ class RunTraining:
             with open(config_path, "w", encoding="utf-8") as file:
                 json.dump(clean_config, file, indent=4)
 
+            # Ensure stale results.json is purged before launching trial
+            results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
+            stale_results_file = os.path.join(results_dir, "results.json")
+            if os.path.exists(stale_results_file):
+                try:
+                    os.remove(stale_results_file)
+                    print(f"--- [INVOKER:{invoker_name}] Purged pre-existing results.json ---")
+                except OSError as os_err:
+                    print(
+                        f"--- [INVOKER:{invoker_name}] Warning: Could not purge pre-existing results.json: {os_err} ---"
+                    )
+
+            trial_start_time = time.time()
+
             # 2. Run the EXECUTOR
             # name_for_logs = f"wyolo_executor_{invoker_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             name_for_logs = f"wyolo_executor_{invoker_name}"
@@ -476,18 +506,26 @@ class RunTraining:
 
             # 3. Recover Metric: Optuna needs the accuracy to proceed
             # The executor writes results to /wyolo/worker/train_service_results/results.json
-            # which is mapped to a path in the invoker (default: /results)
-            results_dir = self.config.get("results_dir", "/results")
             result_file_path: str = os.path.join(results_dir, "results.json")
             if os.path.exists(result_file_path):
+                file_mtime = os.path.getmtime(result_file_path)
+                if file_mtime < trial_start_time - 2.0:
+                    raise RuntimeError(
+                        f"Stale results.json detected (mtime: {file_mtime} < start: {trial_start_time}). "
+                        f"Rejecting leftover results from previous executions."
+                    )
+
                 with open(result_file_path, encoding="utf-8") as file:
                     result: dict[str, Any] = json.load(file)
 
+                # Check for explicit failure or provisional status
+                res_status = str(result.get("status", "")).lower()
+                if res_status in ("failed", "error", "provisional"):
+                    raise RuntimeError(f"Executor produced non-completed status in results.json: {result}")
+
                 accuracy: float = float(result.get("accuracy", 0.0))
                 print(f"--- [INVOKER:{invoker_name}] Trial completed. Metric: {accuracy} ---")
-                evaluation_dir = os.path.join(
-                    self.config.get("results_dir", "/home/wyolo/train_service_results"), "evaluation_metrics"
-                )
+                evaluation_dir = os.path.join(results_dir, "evaluation_metrics")
                 return {
                     "status": "done",
                     "accuracy": accuracy,
