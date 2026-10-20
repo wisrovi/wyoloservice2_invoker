@@ -602,7 +602,7 @@ class KubernetesOrchestrator(BaseOrchestrator):
 
         print(f"--- [INVOKER][K8s] Executor Pod {pod_name} is running. Streaming logs in real-time... ---", flush=True)
 
-        stop_monitor = False
+        stop_event = threading.Event()
         user_deleted = False
         log_file_path = os.path.join(results_dir, f"logs_{executor_name}.txt")
 
@@ -623,10 +623,10 @@ class KubernetesOrchestrator(BaseOrchestrator):
                 pass
             return "N/A"
 
-        def monitor_k8s_pod():
+        def monitor_k8s_pod() -> None:
             """Monitor Kubernetes Pod phase and write telemetry."""
             nonlocal user_deleted
-            while not stop_monitor:
+            while not stop_event.is_set():
                 try:
                     p_resp = requests.get(pod_url, headers=self.headers, verify=self.ca_cert, timeout=10)
                     if p_resp.status_code == 404:
@@ -665,58 +665,95 @@ class KubernetesOrchestrator(BaseOrchestrator):
                             pass
                 except Exception:
                     pass
-                time.sleep(2)
+                if stop_event.wait(2.0):
+                    break
+
+        def stream_logs() -> None:
+            """Stream pod logs in real-time with automatic reconnection."""
+            last_log_time = time.time()
+            reconnecting = False
+            while not stop_event.is_set():
+                try:
+                    query_url = log_url
+                    if reconnecting:
+                        since_sec = max(1, int(time.time() - last_log_time) + 2)
+                        query_url = f"{log_url}&sinceSeconds={since_sec}"
+                    with requests.get(
+                        query_url,
+                        headers=self.headers,
+                        verify=self.ca_cert,
+                        stream=True,
+                        timeout=30,
+                    ) as resp:
+                        if resp.status_code == 200:
+                            for line in resp.iter_lines():
+                                if stop_event.is_set():
+                                    break
+                                if line:
+                                    last_log_time = time.time()
+                                    decoded = line.decode("utf-8", errors="replace").rstrip()
+                                    print(f"[{pod_name}] {decoded}", flush=True)
+                                    with open(log_file_path, "a", encoding="utf-8") as log_file:
+                                        log_file.write(decoded + "\n")
+                                        log_file.flush()
+                except Exception:
+                    if stop_event.is_set():
+                        break
+                reconnecting = True
+                if stop_event.wait(2.0):
+                    break
+
+        # Initialize empty log file
+        with open(log_file_path, "w", encoding="utf-8"):
+            pass
 
         monitor_thread = threading.Thread(target=monitor_k8s_pod, daemon=True)
+        log_thread = threading.Thread(target=stream_logs, daemon=True)
         monitor_thread.start()
+        log_thread.start()
 
-        exit_code = 0
+        exit_code = 1
+        start_wait_terminal = time.time()
         try:
-            with open(log_file_path, "w", encoding="utf-8") as log_file:
-                # Stream logs via chunked HTTP stream
-                log_stream_resp = requests.get(
-                    log_url,
-                    headers=self.headers,
-                    verify=self.ca_cert,
-                    stream=True,
-                    timeout=timeout_seconds,
+            while time.time() - start_wait_terminal < timeout_seconds:
+                if user_deleted:
+                    raise RuntimeError(f"Executor pod {pod_name} was deleted/cancelled by user.")
+                try:
+                    final_resp = requests.get(pod_url, headers=self.headers, verify=self.ca_cert, timeout=10)
+                    if final_resp.status_code == 200:
+                        p_status = final_resp.json().get("status", {})
+                        phase = p_status.get("phase", "Unknown")
+                        if phase in ("Succeeded", "Failed"):
+                            container_statuses = p_status.get("containerStatuses", [])
+                            if container_statuses:
+                                term_state = container_statuses[0].get("state", {}).get("terminated", {})
+                                exit_code = term_state.get("exitCode", 0 if phase == "Succeeded" else 1)
+                            else:
+                                exit_code = 0 if phase == "Succeeded" else 1
+                            if phase == "Failed":
+                                fail_msg = p_status.get("message") or p_status.get("reason")
+                                if fail_msg:
+                                    print(f"--- [INVOKER][K8s] Pod {pod_name} failed: {fail_msg} ---", flush=True)
+                                    with open(log_file_path, "a", encoding="utf-8") as log_file:
+                                        log_file.write(f"\n--- [K8s Pod Failure Reason: {fail_msg}] ---\n")
+                                        log_file.flush()
+                            break
+                    elif final_resp.status_code == 404:
+                        user_deleted = True
+                        raise RuntimeError(f"Executor pod {pod_name} was deleted/cancelled by user.")
+                except requests.exceptions.RequestException:
+                    pass
+                if stop_event.wait(2.0):
+                    break
+            else:
+                exit_code = 124
+                raise TimeoutError(
+                    f"Executor pod {pod_name} exceeded timeout of {timeout_seconds}s without terminating."
                 )
-                if log_stream_resp.status_code == 200:
-                    for line in log_stream_resp.iter_lines():
-                        if line:
-                            decoded = line.decode("utf-8", errors="replace").rstrip()
-                            print(f"[{pod_name}] {decoded}", flush=True)
-                            log_file.write(decoded + "\n")
-                            log_file.flush()
-        except Exception as exc:
-            print(f"--- [INVOKER][K8s] Log streaming ended: {exc} ---", flush=True)
         finally:
-            stop_monitor = True
+            stop_event.set()
             monitor_thread.join(timeout=2)
-
-        # Check final Pod status
-        try:
-            final_resp = requests.get(pod_url, headers=self.headers, verify=self.ca_cert, timeout=10)
-            if final_resp.status_code == 200:
-                p_status = final_resp.json().get("status", {})
-                container_statuses = p_status.get("containerStatuses", [])
-                if container_statuses:
-                    term_state = container_statuses[0].get("state", {}).get("terminated", {})
-                    exit_code = term_state.get("exitCode", 0)
-                elif p_status.get("phase") == "Failed":
-                    exit_code = 1
-                    fail_msg = p_status.get("message") or p_status.get("reason")
-                    if fail_msg:
-                        print(f"--- [INVOKER][K8s] Pod {pod_name} failed: {fail_msg} ---", flush=True)
-                        if results_dir:
-                            with open(log_file_path, "a", encoding="utf-8") as log_file:
-                                log_file.write(f"\n--- [K8s Pod Failure Reason: {fail_msg}] ---\n")
-                                log_file.flush()
-            elif final_resp.status_code == 404 or user_deleted:
-                raise RuntimeError(f"Executor pod {pod_name} was deleted/cancelled by user.")
-        except Exception as exc:
-            if user_deleted or "deleted" in str(exc).lower():
-                raise RuntimeError(f"Executor pod {pod_name} was deleted/cancelled by user.") from exc
+            log_thread.join(timeout=3)
 
         # Capture failure logs if exit_code != 0
         if exit_code != 0 and results_dir:
