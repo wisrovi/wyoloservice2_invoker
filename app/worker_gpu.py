@@ -65,6 +65,7 @@ pipe_posttrain.set_steps(
 
 
 def _suggest_from_space(trial: optuna.trial.Trial, search_space: dict[str, Any], prefix: str = "") -> dict[str, Any]:
+    """Suggest hyperparameters from defined search space."""
     suggested = {}
     for key, val in search_space.items():
         param_name = f"{prefix}{key}"
@@ -85,6 +86,7 @@ def _suggest_from_space(trial: optuna.trial.Trial, search_space: dict[str, Any],
 
 
 def _merge_configs(base: dict[str, Any], suggested: dict[str, Any]) -> dict[str, Any]:
+    """Merge base configuration with suggested values."""
     for key, val in suggested.items():
         if isinstance(val, dict) and key in base and isinstance(base[key], dict):
             _merge_configs(base[key], val)
@@ -159,6 +161,7 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
     latest_accuracy = 0.0
 
     def objective(trial: optuna.trial.Trial) -> float:
+        """Optuna trial objective function."""
         nonlocal latest_accuracy
         # Deep copy config to ensure trials are isolated
         trial_config = json.loads(json.dumps(training_config))
@@ -193,6 +196,7 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
 
 
 def welcome():
+    """Print the welcome startup banner with host configuration."""
     console = Console()
 
     # Tabla estructurada con espaciado óptimo
@@ -283,6 +287,27 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
     invoker_name = PRIVATE_QUEUE
     user_id: str = training_config.get("user_id", "unknown")
     study_id = training_config.get("study_id")
+    task_id = self.request.id
+
+    # Concurrency Lock: Prevent duplicate execution from visibility timeout redelivery
+    lock_key = f"wyolo:task_lock:{task_id}"
+    try:
+        r_lock = redis.from_url(app.conf.broker_url)
+        if not r_lock.set(lock_key, invoker_name, nx=True, ex=86400):
+            existing_holder = r_lock.get(lock_key)
+            existing_str = existing_holder.decode() if existing_holder else "unknown"
+            print(
+                f"⚠️ [CONCURRENCY LOCK] Task {task_id} is already actively running on '{existing_str}'. "
+                "Skipping duplicate execution caused by message redelivery.",
+                flush=True,
+            )
+            return {
+                "status": "skipped_duplicate",
+                "invoker": invoker_name,
+                "message": f"Task already running on node {existing_str}",
+            }
+    except Exception as lock_err:
+        print(f"Warning: Could not check task lock in Redis: {lock_err}")
 
     self.update_state(
         state="RUNNING",
@@ -415,6 +440,27 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
     invoker_name = PRIVATE_QUEUE
     user_id = training_config.get("user_id", "unknown")
     study_id = training_config.get("study_id")
+    task_id = self.request.id
+
+    # Concurrency Lock: Prevent duplicate execution from visibility timeout redelivery
+    lock_key = f"wyolo:task_lock:{task_id}"
+    try:
+        r_lock = redis.from_url(app.conf.broker_url)
+        if not r_lock.set(lock_key, invoker_name, nx=True, ex=86400):
+            existing_holder = r_lock.get(lock_key)
+            existing_str = existing_holder.decode() if existing_holder else "unknown"
+            print(
+                f"⚠️ [CONCURRENCY LOCK] Task {task_id} is already actively running on '{existing_str}'. "
+                "Skipping duplicate execution caused by message redelivery.",
+                flush=True,
+            )
+            return {
+                "status": "skipped_duplicate",
+                "invoker": invoker_name,
+                "message": f"Task already running on node {existing_str}",
+            }
+    except Exception as lock_err:
+        print(f"Warning: Could not check task lock in Redis: {lock_err}")
 
     console = Console()
 
@@ -755,6 +801,7 @@ def force_docker_pull(state, image_name):
 
 @app.task(name="tasks.run_eda", bind=True)
 def run_eda(self, config: dict) -> dict:
+    """Run exploratory data analysis task."""
     invoker_name = PRIVATE_QUEUE
     print(f"--- [INVOKER:{invoker_name}] Starting standalone EDA task ---")
     try:
@@ -766,6 +813,7 @@ def run_eda(self, config: dict) -> dict:
 
 @app.task(name="tasks.run_llm_analizer", bind=True)
 def run_llm_analizer(self, config: dict) -> dict:
+    """Run post-training LLM analysis task."""
     invoker_name = PRIVATE_QUEUE
     print(f"--- [INVOKER:{invoker_name}] Starting standalone LLM Analyzer task ---")
     try:
