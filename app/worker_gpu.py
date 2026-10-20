@@ -156,7 +156,10 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
         load_if_exists=True,
     )
 
+    latest_accuracy = 0.0
+
     def objective(trial: optuna.trial.Trial) -> float:
+        nonlocal latest_accuracy
         # Deep copy config to ensure trials are isolated
         trial_config = json.loads(json.dumps(training_config))
         if search_space:
@@ -165,7 +168,9 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
 
         try:
             resultado = pipe_train.run(trial_config)
-            return float(resultado.get("accuracy", 0.0))
+            acc = float(resultado.get("accuracy", 0.0))
+            latest_accuracy = acc
+            return acc
         except Exception as exc:
             print(f"Pipeline fallido en trial: {str(exc)}")
             raise exc
@@ -175,7 +180,16 @@ def optuna_search(training_config: dict[str, Any]) -> dict[str, Any]:
         n_trials=trials_count,
         show_progress_bar=True,
     )
-    return study.best_params
+
+    try:
+        best_value = float(study.best_value)
+    except (ValueError, TypeError):
+        best_value = latest_accuracy
+
+    result = dict(study.best_params)
+    result["accuracy"] = best_value
+    result["fitness"] = best_value
+    return result
 
 
 def welcome():
