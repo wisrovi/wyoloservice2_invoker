@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import tempfile
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -50,18 +51,20 @@ class TestRunTraining:
         1. The RunTraining class correctly delegates container execution to docker_run.
         2. When the executor successfully writes a results.json file, the class recovers
            and returns the metrics (accuracy) and status correctly.
-        
+
         To achieve this cleanly, we mock the `docker_run` method. In the mocked method's
         side effect, we simulate the container writing the `results.json` output file to
         the shared results directory. This prevents the real `docker_run` from executing and
         deleting the file we set up before it runs.
         """
+
         # Set up side effect to create results.json inside the temp results dir
         # simulating the docker executor writing the results on completion
         def create_results_file(*args, **kwargs):
+            """Simulate executor writing completed results on finish."""
             results_path = os.path.join(temp_results_dir, "results.json")
             with open(results_path, "w", encoding="utf-8") as f:
-                json.dump({"accuracy": 0.95}, f)
+                json.dump({"accuracy": 0.95, "status": "completed"}, f)
 
         mock_docker_run.side_effect = create_results_file
 
@@ -92,4 +95,38 @@ class TestRunTraining:
             FileNotFoundError,
             match="Executor finished but 'results.json' was not found in the shared volume",
         ):
+            run_training(training_config)
+
+    @patch.object(RunTraining, "docker_run")
+    def test_call_stale_results_rejected(self, mock_docker_run, config, training_config, temp_results_dir):
+        """Validates that a stale results.json from previous executions is rejected."""
+
+        def write_stale_file(*args, **kwargs):
+            """Simulate executor writing or reviving a file with an old modification time."""
+            results_path = os.path.join(temp_results_dir, "results.json")
+            with open(results_path, "w", encoding="utf-8") as f:
+                json.dump({"accuracy": 0.50}, f)
+            past_time = time.time() - 60.0
+            os.utime(results_path, (past_time, past_time))
+
+        mock_docker_run.side_effect = write_stale_file
+
+        run_training = RunTraining(config)
+        with pytest.raises(RuntimeError, match="Stale results.json detected"):
+            run_training(training_config)
+
+    @patch.object(RunTraining, "docker_run")
+    def test_call_provisional_status_rejected(self, mock_docker_run, config, training_config, temp_results_dir):
+        """Validates that provisional or failed status results are rejected."""
+
+        def write_provisional_file(*args, **kwargs):
+            """Simulate executor writing provisional metrics during initialization."""
+            results_path = os.path.join(temp_results_dir, "results.json")
+            with open(results_path, "w", encoding="utf-8") as f:
+                json.dump({"accuracy": 0.0, "status": "provisional"}, f)
+
+        mock_docker_run.side_effect = write_provisional_file
+
+        run_training = RunTraining(config)
+        with pytest.raises(RuntimeError, match="Executor produced non-completed status"):
             run_training(training_config)
