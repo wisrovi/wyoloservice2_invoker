@@ -219,7 +219,11 @@ class RunTraining:
                         for k, v in res_hash.items()
                     }
                     if decoded_res.get("max_gpu_percent"):
-                        environments["MAX_GPU"] = decoded_res["max_gpu_percent"]
+                        raw_gpu = decoded_res["max_gpu_percent"]
+                        try:
+                            environments["MAX_GPU"] = str(int(float(raw_gpu)))
+                        except (ValueError, TypeError):
+                            environments["MAX_GPU"] = str(raw_gpu)
                     if decoded_res.get("max_ram"):
                         environments["WORKER_RAM_MEMORY"] = decoded_res["max_ram"]
                     if decoded_res.get("max_cpu_cores"):
