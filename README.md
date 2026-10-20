@@ -13,7 +13,7 @@
 - **High Performance**: Native parallelism and efficient memory management.
 - **Enterprise Security**: Scanned with Bandit, zero exposed credentials.
 - **Clean Code**: Pylint score > 9.5 across all Python modules.
-- **Resiliency**: Built-in retry mechanisms and state recovery.
+- **Resiliency**: Built-in retry mechanisms, collision-resistant Kubernetes pod names, and metric contract preservation.
 
 ## Technical Stack & Key Libraries
 - **Language & Runtime:** Python 3.10
@@ -278,12 +278,12 @@ This project features a Graphify-powered knowledge graph located in the `graphif
 
 ---
 
-## 👤 Autor & Afiliación Oficial
+## 👤 Author & Afiliación Official
 
 * **William Steve Rodriguez Villamizar (Wisrovi)**
 * **Cargo:** Principal AI Engineer & Applied AI Solutions Architect | Scientific Researcher
 * 📧 **Email:** [wisrovi.rodriguez@gmail.com](mailto:wisrovi.rodriguez@gmail.com)
-* 🌐 **Portal Oficial:** [wisrovi.dev](https://wisrovi.dev)
+* 🌐 **Portal Official:** [wisrovi.dev](https://wisrovi.dev)
 * 💼 **LinkedIn:** [wisrovi-rodriguez](https://www.linkedin.com/in/wisrovi-rodriguez/)
 * 🆔 **ORCID:** [0009-0005-0710-1861](https://orcid.org/0009-0005-0710-1861)
 * 📦 **PyPI:** [pypi.org/user/wisrovi/](https://pypi.org/user/wisrovi/)
