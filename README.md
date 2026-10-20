@@ -113,7 +113,14 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.9.5 (Current Release) - 2026-10-06
+### Version 1.9.9 (Current Release) - 2026-10-20
+*   **Kubernetes Pod Terminal State Wait (`orchestrator.py`):** Explicitly awaits terminal Pod phases (`Succeeded` or `Failed`) and retrieves the actual container exit code, strictly prohibiting premature assumptions of `exit_code=0` when the log stream closes while the Pod remains in `Running` state.
+*   **Resilient Auto-Reconnecting Log Stream:** Wraps Kubernetes log streaming in a reconnection loop with `sinceSeconds` offset pagination, preventing stream drops or socket timeouts from interrupting execution or losing logs.
+*   **Temporal and Status Metric Contract Enforcement (`run_training.py`):** Rejects stale `results.json` files generated prior to trial execution and validates that results contain a completed status, preventing fake `0.0` accuracy metrics from polluting Optuna HPO studies.
+*   **Automatic MLflow Zombie Run Cancellation:** Catches unhandled executor failures or aborts to immediately update active MLflow runs to `status: FAILED`.
+*   **Version Update to v1.9.9:** Bumped invoker core version to `v1.9.9` and `RunTraining` to `1.0.5`.
+
+### Version 1.9.5 - 2026-10-06
 *   **Hybrid Orchestration Architecture (`orchestrator.py`):** Introduced dual orchestration engine supporting both standalone Docker hosts and native Kubernetes clusters (`k8s`/in-cluster ServiceAccount).
 *   **Kubernetes Pod Lifecycle & Node Pinning:** In Kubernetes mode, tasks are spawned directly as ephemeral Pods (`v1.Pod`) pinned to the local node (`spec.nodeName: WORKER_HOSTNAME`) with GPU, RAM, CPU, and SHM limits.
 *   **Dozzle Web UI Real-Time Streaming & 1-Click Pod Deletion:** Live container and pod logs stream directly into Dozzle (`http://localhost:8888`), allowing web users without terminal access to monitor or delete running executor pods with a single click.
