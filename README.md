@@ -301,6 +301,7 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+- **v1.9.9 (2026-10-20)**: Added dynamic float-to-integer string sanitization for `MAX_GPU` environment variable passed to Executor containers and Pods to prevent downstream integer parsing errors.
 - **v1.9.8 (2026-10-19)**: Enhanced Kubernetes execution resilience by injecting ConfigMap (`train-service-global-config`) and Secrets (`train-service-secrets`) `envFrom` references into ephemeral Executor Pod manifests, adding defensive cluster defaults for `CONTROL_HOST` and CIFS Samba credentials, and implementing automatic failure log capture on non-zero exit codes.
 - **v1.9.7 (2026-10-07)**: Added GPU memory telemetry (`worker_gpu_memory` and `physical_gpu_memory_total`) in Redis metadata registration with automatic `nvidia-smi` fallback detection.
 - **v1.9.6 (2026-10-07)**: Added dynamic resources Hash registration (`invoker:<worker_ip>:resources`) in Redis on startup and runtime dynamic limits injection (`MAX_GPU`, RAM, CPU cores) in `run_training.py` without restarting containers.
