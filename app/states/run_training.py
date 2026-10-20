@@ -150,7 +150,14 @@ class RunTraining:
         self.yaml_path: str = self.config.get("yaml_path", YAML_PATH)
         print(f"Executor timeout configured: {self.config.get('executor_timeout_seconds', 43200)}")
 
-    def docker_run(self, image_name: str, executor_name: str, _temp_dir: str, study_id: str | None = None) -> None:
+    def docker_run(
+        self,
+        image_name: str,
+        executor_name: str,
+        _temp_dir: str,
+        study_id: str | None = None,
+        task_id: str | None = None,
+    ) -> None:
         """Runs a Docker container with the specified configuration.
 
         Args:
@@ -158,6 +165,7 @@ class RunTraining:
             executor_name (str): The name to assign to the running container.
             _temp_dir (str): The local directory to bind as a volume (unused for now).
             study_id (str): Optional Optuna study identifier.
+            task_id (str): Optional task identifier.
         """
         results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
         telemetry_file = os.path.join(results_dir, "telemetry.json")
@@ -230,6 +238,8 @@ class RunTraining:
                 "NVIDIA_DRIVER_CAPABILITIES": "all",
                 "TZ": "Europe/Madrid",
                 "PYTHONUNBUFFERED": "1",
+                "TASK_ID": str(task_id or ""),
+                "STUDY_ID": str(study_id or ""),
             }
         )
 
@@ -451,11 +461,13 @@ class RunTraining:
             # name_for_logs = f"wyolo_executor_{invoker_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             name_for_logs = f"wyolo_executor_{invoker_name}"
             study_id = training_config.get("study_id")
+            task_id = training_config.get("task_id") or clean_config.get("task_id")
             self.docker_run(
                 image_name=self.config.get("executor_image", DEFAULT_TRAIN_IMAGE),
                 executor_name=name_for_logs,
                 _temp_dir=temp_dir,
                 study_id=study_id,
+                task_id=task_id,
             )
 
             # 3. Recover Metric: Optuna needs the accuracy to proceed
