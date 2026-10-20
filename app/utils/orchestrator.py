@@ -348,7 +348,11 @@ class KubernetesOrchestrator(BaseOrchestrator):
         command: List[str],
     ) -> str:
         """Run temporary EDA Pod using in-cluster Kubernetes API."""
-        pod_name = sanitize_k8s_name(name)
+        import uuid
+
+        eda_uid = uuid.uuid4().hex[:6]
+        base_name = f"{name}-{self.node_name}" if self.node_name and self.node_name not in name else name
+        pod_name = sanitize_k8s_name(f"{base_name}-{eda_uid}")
         self._delete_pod_if_exists(pod_name)
 
         command_str = " ".join(command) if isinstance(command, list) else str(command)
@@ -464,7 +468,20 @@ class KubernetesOrchestrator(BaseOrchestrator):
         redis_client: Any,
     ) -> int:
         """Start the training executor as a Kubernetes Pod pinned to local node."""
-        pod_name = sanitize_k8s_name(executor_name)
+        import uuid
+
+        task_suffix = environments.get("TRIAL_ID") or environments.get("TASK_ID") or ""
+        if not task_suffix or task_suffix == "default":
+            task_suffix = environments.get("CELERY_TASK_ID", "")[:8]
+        if not task_suffix:
+            task_suffix = uuid.uuid4().hex[:8]
+
+        base_name = (
+            f"{executor_name}-{self.node_name}"
+            if self.node_name and self.node_name not in executor_name
+            else executor_name
+        )
+        pod_name = sanitize_k8s_name(f"{base_name}-{task_suffix}")
         self._delete_pod_if_exists(pod_name)
 
         trial_id = environments.get("TRIAL_ID", "default")
