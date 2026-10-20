@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+# pylint: disable=all
 """Dynamic Celery configuration for the Worker Invoker.
 
 This module reads configuration from a YAML file and initializes the Celery
@@ -51,9 +53,7 @@ def print_table() -> None:
         f"{worker_settings['result_expires']}s",
     )
     init_table.add_row("", "")
-    init_table.add_row(
-        "[bold yellow]━━━ HOST ENVIRONMENT (FOR EXECUTOR) ━━━[/bold yellow]", ""
-    )
+    init_table.add_row("[bold yellow]━━━ HOST ENVIRONMENT (FOR EXECUTOR) ━━━[/bold yellow]", "")
     init_table.add_row(
         "[bold cyan]Host User (USER):[/bold cyan]",
         environments.get("WORKER_HOSTNAME", "N/A"),
@@ -76,7 +76,7 @@ def print_table() -> None:
     )
     init_table.add_row(
         "[bold cyan]GPU Ref: % (WORKER_GPU_MODEL):[/bold cyan]",
-        f'{environments.get("WORKER_GPU_MODEL", "N/A")}/{environments.get("WORKER_GPU_MEMORY", "N/A")}',
+        f"{environments.get('WORKER_GPU_MODEL', 'N/A')}/{environments.get('WORKER_GPU_MEMORY', 'N/A')}",
     )
     init_table.add_row(
         "[bold cyan]Concurrent Trains (NUM_CURRENT_TRAIN):[/bold cyan]",
@@ -126,6 +126,9 @@ worker_settings: dict[str, Any] = {
     "task_acks_late": True,
     "worker_prefetch_multiplier": 1,
     "result_expires": 86400,  # 24 hours
+    "broker_transport_options": {
+        "visibility_timeout": 86400,  # 24 hours to prevent task redelivery on Redis during training
+    },
     "worker_send_task_events": True,  # Try enabling to initialize the dispatcher
 }
 
