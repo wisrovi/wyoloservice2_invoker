@@ -14,6 +14,7 @@
 - **Enterprise Security**: Scanned with Bandit, zero exposed credentials.
 - **Clean Code**: Pylint score > 9.5 across all Python modules.
 - **Resiliency**: Built-in retry mechanisms, collision-resistant Kubernetes pod names, and metric contract preservation.
+- **Concurrency & Duplicate Prevention**: Extended Redis visibility timeout (24h) and atomic distributed task locks to eliminate redundant task re-executions during prolonged deep learning training sessions.
 
 ## Technical Stack & Key Libraries
 - **Language & Runtime:** Python 3.10
