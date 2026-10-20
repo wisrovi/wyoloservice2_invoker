@@ -135,3 +135,127 @@ class TestOrchestrator:
             == "train-service-global-config"
         )
         assert posted_manifest["spec"]["containers"][0]["envFrom"][1]["secretRef"]["name"] == "train-service-secrets"
+
+    @patch.dict(os.environ, {"ORCHESTRATOR": "k8s", "WORKER_HOSTNAME": "node-test-01"}, clear=False)
+    @patch("requests.post")
+    @patch("requests.get")
+    @patch("requests.delete")
+    def test_k8s_orchestrator_terminal_state_and_log_reconnect(self, mock_del, mock_get, mock_post, tmp_path):
+        """Validates that K8s orchestrator reconnects logs and waits for terminal state.
+
+        Verifies:
+        1. Premature log drop while pod is Running does not cause premature return or deletion.
+        2. Stream reconnects and waits until Pod transitions to terminal Succeeded state.
+        3. Real exit code (0) is returned.
+        """
+        mock_post.return_value = MagicMock(status_code=201)
+        mock_del.return_value = MagicMock(status_code=200)
+
+        # Status: Running on initial check, Running after stream drop, then Succeeded
+        status_running = MagicMock(status_code=200)
+        status_running.json.return_value = {
+            "status": {
+                "phase": "Running",
+                "containerStatuses": [{"state": {"running": {"startedAt": "2026-10-20T08:00:00Z"}}}],
+            }
+        }
+
+        status_succeeded = MagicMock(status_code=200)
+        status_succeeded.json.return_value = {
+            "status": {
+                "phase": "Succeeded",
+                "containerStatuses": [{"state": {"terminated": {"exitCode": 0}}}],
+            }
+        }
+
+        # First log stream drops after one line, second stream provides remaining line
+        stream_1 = MagicMock(status_code=200)
+        stream_1.iter_lines.return_value = [b"[INFO] Epoch 1/10"]
+        stream_1.__enter__ = MagicMock(return_value=stream_1)
+        stream_1.__exit__ = MagicMock(return_value=False)
+
+        stream_2 = MagicMock(status_code=200)
+        stream_2.iter_lines.return_value = [b"[INFO] Epoch 10/10 Finished"]
+        stream_2.__enter__ = MagicMock(return_value=stream_2)
+        stream_2.__exit__ = MagicMock(return_value=False)
+
+        log_streams = [stream_1, stream_2]
+        statuses = [status_running, status_running, status_succeeded]
+
+        def dynamic_get(url, **kwargs):
+            """Return log streams or pod statuses dynamically."""
+            if "log" in url:
+                return log_streams.pop(0) if log_streams else stream_2
+            return statuses.pop(0) if statuses else status_succeeded
+
+        mock_get.side_effect = dynamic_get
+
+        orch = KubernetesOrchestrator()
+        exit_code = orch.start_executor(
+            image_name="test_image:v1.0.0",
+            executor_name="test-trial-02",
+            environments={"TRIAL_ID": "2"},
+            volumes={},
+            command_str="echo test",
+            shm_size_bytes=16 * 1024**3,
+            mem_limit=32 * 1024**3,
+            cpu_limit=4.0,
+            results_dir=str(tmp_path),
+            timeout_seconds=60,
+            invoker_name="test-invoker",
+            redis_client=None,
+        )
+
+        assert exit_code == 0
+        assert mock_del.called
+
+    @patch.dict(os.environ, {"ORCHESTRATOR": "k8s", "WORKER_HOSTNAME": "node-test-01"}, clear=False)
+    @patch("requests.post")
+    @patch("requests.get")
+    @patch("requests.delete")
+    def test_k8s_orchestrator_failed_state(self, mock_del, mock_get, mock_post, tmp_path):
+        """Validates that K8s orchestrator captures failure state and returns non-zero exit code."""
+        mock_post.return_value = MagicMock(status_code=201)
+        mock_del.return_value = MagicMock(status_code=200)
+
+        status_failed = MagicMock(status_code=200)
+        status_failed.json.return_value = {
+            "status": {
+                "phase": "Failed",
+                "message": "OOMKilled container",
+                "containerStatuses": [{"state": {"terminated": {"exitCode": 137}}}],
+            }
+        }
+
+        mock_logs = MagicMock(status_code=200)
+        mock_logs.iter_lines.return_value = [b"[ERROR] CUDA Out of memory"]
+        mock_logs.text = "[ERROR] CUDA Out of memory"
+        mock_logs.__enter__ = MagicMock(return_value=mock_logs)
+        mock_logs.__exit__ = MagicMock(return_value=False)
+
+        def dynamic_get(url, **kwargs):
+            """Return mock failure logs or failed pod status."""
+            if "log" in url:
+                return mock_logs
+            return status_failed
+
+        mock_get.side_effect = dynamic_get
+
+        orch = KubernetesOrchestrator()
+        exit_code = orch.start_executor(
+            image_name="test_image:v1.0.0",
+            executor_name="test-trial-fail",
+            environments={"TRIAL_ID": "3"},
+            volumes={},
+            command_str="echo fail",
+            shm_size_bytes=16 * 1024**3,
+            mem_limit=32 * 1024**3,
+            cpu_limit=4.0,
+            results_dir=str(tmp_path),
+            timeout_seconds=60,
+            invoker_name="test-invoker",
+            redis_client=None,
+        )
+
+        assert exit_code == 137
+        assert mock_del.called
