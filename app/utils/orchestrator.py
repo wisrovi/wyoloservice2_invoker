@@ -11,6 +11,7 @@ Supports dual orchestration modes:
 import json
 import os
 import re
+import subprocess
 import threading
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -35,6 +36,70 @@ def sanitize_k8s_name(name: str) -> str:
     if not sanitized:
         sanitized = "wyolo-task"
     return sanitized[:63]
+
+
+def get_optimal_gpu_device(preferred_gpu: Optional[str] = None) -> List[str]:
+    """Determine the optimal target GPU device ID(s) for task execution.
+
+    If preferred_gpu is provided (e.g. '1', '0,1', or 'all'), uses that specification.
+    Otherwise, queries nvidia-smi to automatically pick the GPU with the highest
+    free VRAM to prevent Out-Of-Memory (OOM) collisions. Defaults to ['0'] on failure.
+
+    Args:
+        preferred_gpu: Optional override specifying preferred GPU index or 'all'.
+
+    Returns:
+        List[str]: List of GPU device index strings, or ['all'].
+    """
+    if preferred_gpu:
+        pref = str(preferred_gpu).strip()
+        if pref.lower() in ("all", "-1"):
+            return ["all"]
+        return [g.strip() for g in pref.split(",") if g.strip()]
+
+    try:
+        out = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=index,memory.free", "--format=csv,noheader,nounits"],
+            text=True,
+            timeout=3,
+        ).strip()
+        gpus: List[Tuple[str, float]] = []
+        for line in out.splitlines():
+            parts = [p.strip() for p in line.split(",")]
+            if len(parts) >= 2:
+                try:
+                    gpus.append((parts[0], float(parts[1])))
+                except ValueError:
+                    pass
+        if gpus:
+            gpus.sort(key=lambda x: x[1], reverse=True)
+            return [gpus[0][0]]
+    except Exception:
+        pass
+    return ["0"]
+
+
+def get_gpu_utilization(target_gpu: str = "0") -> float:
+    """Retrieve actual GPU compute utilization percentage via nvidia-smi.
+
+    Args:
+        target_gpu: Target GPU index (or 'all').
+
+    Returns:
+        float: GPU utilization percentage between 0.0 and 100.0.
+    """
+    try:
+        gpu_id = "0" if target_gpu == "all" else target_gpu
+        out = subprocess.check_output(
+            ["nvidia-smi", f"--id={gpu_id}", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
+            text=True,
+            timeout=2,
+        ).strip()
+        if out:
+            return float(out.splitlines()[0])
+    except Exception:
+        pass
+    return 0.0
 
 
 class BaseOrchestrator:
@@ -67,6 +132,10 @@ class BaseOrchestrator:
         redis_client: Any,
     ) -> int:
         """Run training executor container/pod and return exit code."""
+        raise NotImplementedError
+
+    def clean_orphaned_tasks(self) -> int:
+        """Sweep and remove lingering executor and eda containers or pods."""
         raise NotImplementedError
 
 
@@ -109,6 +178,27 @@ class DockerOrchestrator(BaseOrchestrator):
         )
         return container_output.decode("utf-8", errors="ignore")
 
+    def clean_orphaned_tasks(self) -> int:
+        """Sweep and remove lingering wyolo executor and eda containers."""
+        cleaned = 0
+        try:
+            containers = self.client.containers.list(all=True)
+            for c in containers:
+                c_name = getattr(c, "name", "")
+                if c_name and (c_name.startswith("wyolo_executor_") or c_name.startswith("wyolo_eda_runner_")):
+                    print(
+                        f"🧹 [ORPHAN SWEEPER][Docker] Removing stale/orphaned container: {c_name} (Status: {getattr(c, 'status', 'unknown')})",
+                        flush=True,
+                    )
+                    try:
+                        c.remove(force=True)
+                        cleaned += 1
+                    except Exception as e:
+                        print(f"⚠️ [ORPHAN SWEEPER] Failed to remove {c_name}: {e}")
+        except Exception as exc:
+            print(f"⚠️ [ORPHAN SWEEPER] Error listing docker containers: {exc}")
+        return cleaned
+
     def start_executor(
         self,
         image_name: str,
@@ -134,6 +224,22 @@ class DockerOrchestrator(BaseOrchestrator):
         except Exception:
             pass
 
+        target_gpu_pref = (
+            environments.get("GPU_DEVICE_ID")
+            or environments.get("CUDA_VISIBLE_DEVICES")
+            or (self.config.get("gpu_device_id") if isinstance(self.config, dict) else None)
+        )
+        selected_gpus = get_optimal_gpu_device(target_gpu_pref)
+
+        if "all" in selected_gpus:
+            dev_requests = [docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])]
+            environments["CUDA_VISIBLE_DEVICES"] = "all"
+        else:
+            dev_requests = [docker.types.DeviceRequest(device_ids=selected_gpus, capabilities=[["gpu"]])]
+            gpu_str = ",".join(selected_gpus)
+            environments["CUDA_VISIBLE_DEVICES"] = gpu_str
+            environments["NVIDIA_VISIBLE_DEVICES"] = gpu_str
+
         container = self.client.containers.run(
             image=image_name,
             name=executor_name,
@@ -147,7 +253,7 @@ class DockerOrchestrator(BaseOrchestrator):
             nano_cpus=int(cpu_limit * 1e9),
             mem_limit=mem_limit,
             cap_add=["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
-            device_requests=[docker.types.DeviceRequest(device_ids=["0"], capabilities=[["gpu"]])],
+            device_requests=dev_requests,
             environment=environments,
             labels={
                 "autoheal": "true",
@@ -160,7 +266,28 @@ class DockerOrchestrator(BaseOrchestrator):
         print(f"--- [INVOKER][Docker] Executor {executor_name} started. Streaming logs... ---", flush=True)
 
         stop_monitor = False
+        user_cancelled = False
         log_file_path = os.path.join(results_dir, f"logs_{executor_name}.txt")
+
+        task_id = environments.get("TASK_ID") or environments.get("CELERY_TASK_ID")
+        study_id = environments.get("STUDY_ID")
+
+        def check_docker_cancellation() -> bool:
+            """Check Redis for cancellation requests targeting this task or study."""
+            if not redis_client:
+                return False
+            try:
+                keys = []
+                if task_id:
+                    keys.extend([f"wyolo:task:{task_id}:cancel", f"task:{task_id}:cancel"])
+                if study_id:
+                    keys.extend([f"study:{study_id}:cancel", f"wyolo:study:{study_id}:cancel"])
+                for k in keys:
+                    if redis_client.get(k):
+                        return True
+            except Exception:
+                pass
+            return False
 
         def get_current_epoch() -> str:
             """Extract current epoch from container logs."""
@@ -174,9 +301,26 @@ class DockerOrchestrator(BaseOrchestrator):
             return "N/A"
 
         def monitor_resources():
-            """Monitor container resource usage and write telemetry."""
+            """Monitor container resource usage, check for cancellation, and write telemetry."""
+            nonlocal user_cancelled
             while not stop_monitor:
                 try:
+                    if check_docker_cancellation():
+                        user_cancelled = True
+                        print(
+                            f"⚠️ [INVOKER][Docker] Cancellation signal detected for task {task_id}! "
+                            f"Killing container {executor_name}...",
+                            flush=True,
+                        )
+                        try:
+                            container.kill()
+                        except Exception:
+                            try:
+                                container.stop(timeout=5)
+                            except Exception:
+                                pass
+                        break
+
                     container.reload()
                     stats = container.stats(stream=False)
                     cpu_stats = stats.get("cpu_stats", {})
@@ -192,11 +336,14 @@ class DockerOrchestrator(BaseOrchestrator):
                     memory_usage = stats.get("memory_stats", {}).get("usage", 0)
                     ram_mb = memory_usage / (1024 * 1024) if memory_usage else 0.0
 
+                    primary_gpu = selected_gpus[0] if selected_gpus and selected_gpus[0] != "all" else "0"
+                    real_gpu_pct = get_gpu_utilization(primary_gpu)
+
                     stats_payload = {
-                        "status": "running",
+                        "status": "cancelled" if user_cancelled else "running",
                         "cpu": round(cpu_percent, 2),
                         "ram_mb": round(ram_mb, 2),
-                        "gpu": 0.0,
+                        "gpu": real_gpu_pct,
                         "epoch": get_current_epoch(),
                         "timestamp": time.time(),
                     }
@@ -252,6 +399,14 @@ class DockerOrchestrator(BaseOrchestrator):
             stop_monitor = True
             monitor_thread.join(timeout=2)
             log_thread.join(timeout=5)
+
+        if user_cancelled:
+            try:
+                container.stop(timeout=10)
+                container.remove(force=True)
+            except Exception:
+                pass
+            raise RuntimeError(f"Executor {executor_name} was cancelled by user/operator request.")
 
         if exit_code != 0 and results_dir:
             try:
@@ -338,6 +493,31 @@ class KubernetesOrchestrator(BaseOrchestrator):
                         break
         except Exception:
             pass
+
+    def clean_orphaned_tasks(self) -> int:
+        """Sweep and remove lingering wyolo executor and eda pods on this node."""
+        cleaned = 0
+        try:
+            query_url = (
+                f"{self.base_url}/api/v1/namespaces/{self.namespace}/pods"
+                "?labelSelector=app in (wyolo-executor,wyolo-eda)"
+            )
+            resp = requests.get(query_url, headers=self.headers, verify=self.ca_cert, timeout=10)
+            if resp.status_code == 200:
+                items = resp.json().get("items", [])
+                for pod in items:
+                    pod_node = pod.get("spec", {}).get("nodeName", "")
+                    pod_name = pod.get("metadata", {}).get("name", "")
+                    if not self.node_name or pod_node == self.node_name:
+                        print(
+                            f"🧹 [ORPHAN SWEEPER][K8s] Deleting orphaned pod: {pod_name} on node {pod_node}",
+                            flush=True,
+                        )
+                        self._delete_pod_if_exists(pod_name)
+                        cleaned += 1
+        except Exception as exc:
+            print(f"⚠️ [ORPHAN SWEEPER] Error listing K8s pods: {exc}")
+        return cleaned
 
     def run_eda(
         self,
@@ -494,6 +674,11 @@ class KubernetesOrchestrator(BaseOrchestrator):
             flush=True,
         )
 
+        gpu_req = environments.get("GPU_COUNT") or (
+            self.config.get("gpu_count") if isinstance(self.config, dict) else "1"
+        )
+        gpu_str = str(gpu_req) if str(gpu_req).isdigit() and int(gpu_req) > 0 else "1"
+
         pod_manifest = {
             "apiVersion": "v1",
             "kind": "Pod",
@@ -534,12 +719,12 @@ class KubernetesOrchestrator(BaseOrchestrator):
                         "env": [{"name": k, "value": str(v)} for k, v in environments.items()],
                         "resources": {
                             "limits": {
-                                "nvidia.com/gpu": "1",
+                                "nvidia.com/gpu": gpu_str,
                                 "memory": f"{mem_gb}Gi",
                                 "cpu": str(cpu_val),
                             },
                             "requests": {
-                                "nvidia.com/gpu": "1",
+                                "nvidia.com/gpu": gpu_str,
                                 "memory": "4Gi",
                                 "cpu": "2",
                             },
@@ -606,6 +791,56 @@ class KubernetesOrchestrator(BaseOrchestrator):
         user_deleted = False
         log_file_path = os.path.join(results_dir, f"logs_{executor_name}.txt")
 
+        task_id = environments.get("TASK_ID") or environments.get("CELERY_TASK_ID")
+        study_id = environments.get("STUDY_ID")
+
+        def check_k8s_cancellation() -> bool:
+            """Check Redis for cancellation requests targeting this task or study."""
+            if not redis_client:
+                return False
+            try:
+                keys = []
+                if task_id:
+                    keys.extend([f"wyolo:task:{task_id}:cancel", f"task:{task_id}:cancel"])
+                if study_id:
+                    keys.extend([f"study:{study_id}:cancel", f"wyolo:study:{study_id}:cancel"])
+                for k in keys:
+                    if redis_client.get(k):
+                        return True
+            except Exception:
+                pass
+            return False
+
+        def get_k8s_pod_metrics() -> Tuple[float, float, float]:
+            """Retrieve real CPU, RAM (MB), and GPU utilization for the K8s pod."""
+            cpu_val_metric = 0.0
+            ram_val_metric = 0.0
+            gpu_val_metric = get_gpu_utilization("0")
+
+            try:
+                metrics_url = f"{self.base_url}/apis/metrics.k8s.io/v1beta1/namespaces/{self.namespace}/pods/{pod_name}"
+                m_resp = requests.get(metrics_url, headers=self.headers, verify=self.ca_cert, timeout=3)
+                if m_resp.status_code == 200:
+                    c_metrics = m_resp.json().get("containers", [])
+                    if c_metrics:
+                        usage = c_metrics[0].get("usage", {})
+                        cpu_raw = usage.get("cpu", "0")
+                        if cpu_raw.endswith("n"):
+                            cpu_val_metric = round(float(cpu_raw[:-1]) / 1e9 * 100.0, 2)
+                        elif cpu_raw.endswith("m"):
+                            cpu_val_metric = round(float(cpu_raw[:-1]) / 10.0, 2)
+
+                        mem_raw = usage.get("memory", "0")
+                        if mem_raw.endswith("Ki"):
+                            ram_val_metric = round(float(mem_raw[:-2]) / 1024.0, 2)
+                        elif mem_raw.endswith("Mi"):
+                            ram_val_metric = round(float(mem_raw[:-2]), 2)
+                        elif mem_raw.endswith("Gi"):
+                            ram_val_metric = round(float(mem_raw[:-2]) * 1024.0, 2)
+            except Exception:
+                pass
+            return cpu_val_metric, ram_val_metric, gpu_val_metric
+
         def get_k8s_current_epoch() -> str:
             """Extract current epoch from Kubernetes pod logs."""
             try:
@@ -628,6 +863,15 @@ class KubernetesOrchestrator(BaseOrchestrator):
             nonlocal user_deleted
             while not stop_event.is_set():
                 try:
+                    if check_k8s_cancellation():
+                        user_deleted = True
+                        print(
+                            f"⚠️ [INVOKER][K8s] Cancellation signal detected for pod {pod_name}. Deleting pod...",
+                            flush=True,
+                        )
+                        self._delete_pod_if_exists(pod_name)
+                        break
+
                     p_resp = requests.get(pod_url, headers=self.headers, verify=self.ca_cert, timeout=10)
                     if p_resp.status_code == 404:
                         user_deleted = True
@@ -640,11 +884,13 @@ class KubernetesOrchestrator(BaseOrchestrator):
                     data = p_resp.json().get("status", {})
                     phase = data.get("phase", "Unknown")
 
+                    real_cpu, real_ram, real_gpu = get_k8s_pod_metrics()
+
                     stats_payload = {
-                        "status": "running" if phase == "Running" else phase.lower(),
-                        "cpu": 0.0,
-                        "ram_mb": 0.0,
-                        "gpu": 0.0,
+                        "status": "cancelled" if user_deleted else ("running" if phase == "Running" else phase.lower()),
+                        "cpu": real_cpu,
+                        "ram_mb": real_ram,
+                        "gpu": real_gpu,
                         "epoch": get_k8s_current_epoch(),
                         "timestamp": time.time(),
                     }
