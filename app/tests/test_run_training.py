@@ -6,12 +6,17 @@
 import json
 import os
 import shutil
+import sys
 import tempfile
 import time
 from unittest.mock import MagicMock, patch
 
+if "optuna" not in sys.modules:
+    sys.modules["optuna"] = MagicMock()
+
 import pytest
 from states.run_training import RunTraining
+from worker_gpu import check_gpu_health
 
 
 class TestRunTraining:
@@ -130,3 +135,44 @@ class TestRunTraining:
         run_training = RunTraining(config)
         with pytest.raises(RuntimeError, match="Executor produced non-completed status"):
             run_training(training_config)
+
+    @patch("utils.orchestrator.get_orchestrator")
+    def test_call_user_cancellation_recorded(self, mock_get_orch, config, training_config, temp_results_dir):
+        """Validates that user cancellation writes status 'cancelled' into results.json."""
+        mock_orch = MagicMock()
+        mock_orch.start_executor.side_effect = RuntimeError("Executor wyolo_executor was cancelled by user request.")
+        mock_get_orch.return_value = mock_orch
+
+        run_training = RunTraining(config)
+        with pytest.raises(RuntimeError, match="cancelled by user request"):
+            run_training(training_config)
+
+        results_path = os.path.join(temp_results_dir, "results.json")
+        assert os.path.exists(results_path)
+        with open(results_path, "r", encoding="utf-8") as f:
+            saved_data = json.load(f)
+        assert saved_data["status"] == "cancelled"
+        assert saved_data["accuracy"] == -1.0
+
+    @patch("subprocess.run")
+    def test_check_gpu_health_success(self, mock_sub):
+        """Validates check_gpu_health returning healthy status on valid nvidia-smi output."""
+        mock_res = MagicMock()
+        mock_res.stdout = "NVIDIA GeForce RTX 3060, 550.54, 45\n"
+        mock_res.returncode = 0
+        mock_sub.return_value = mock_res
+
+        is_healthy, msg = check_gpu_health()
+        assert is_healthy is True
+        assert "RTX 3060" in msg
+
+    @patch("subprocess.run")
+    def test_check_gpu_health_failure(self, mock_sub):
+        """Validates check_gpu_health returning unhealthy status when nvidia-smi fails."""
+        import subprocess
+
+        mock_sub.side_effect = subprocess.CalledProcessError(1, ["nvidia-smi"], stderr="Driver error")
+
+        is_healthy, msg = check_gpu_health()
+        assert is_healthy is False
+        assert "Driver error" in msg
