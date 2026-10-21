@@ -3,23 +3,29 @@
   <a href="https://wisrovi.dev"><img src="https://img.shields.io/badge/Author-wisrovi.dev-111827?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Portal" /></a>
   <a href="https://orcid.org/0009-0005-0710-1861"><img src="https://img.shields.io/badge/ORCID-0009--0005--0710--1861-A6CE39?style=for-the-badge&logo=orcid&logoColor=white" alt="ORCID" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License" /></a>
+  <img src="https://img.shields.io/badge/version-v2.1.0-blue.svg?style=for-the-badge" alt="Version" />
 </p>
 
 # GPU Invoker (Hive Worker)
 
-> The Celery-based worker node that manages GPU allocation and Samba dataset mounting.
+> The Celery-based worker node that manages GPU allocation, container lifecycle, and network storage mounting.
 
 ## Key Features
-- **High Performance**: Native parallelism and efficient memory management.
+- **High Performance & Hybrid Execution**: Native dual orchestration supporting ephemeral Docker containers and Kubernetes Pods pinned to local worker nodes.
+- **Real-Time Task Cancellation & Abort**: Dynamic monitoring of Redis cancellation keys (`wyolo:task:{task_id}:cancel`, `study:{study_id}:cancel`) terminating Docker containers (`container.kill()`) or K8s Pods in seconds upon user request.
+- **Dynamic & Multi-GPU Allocation**: Automated detection of optimal GPU index based on highest free VRAM via `nvidia-smi`, with multi-device (`0,1`) and `all` distributed training support.
+- **Real Hardware & GPU Telemetry**: Live extraction of compute utilization (%) and VRAM metrics in Docker and K8s environments written directly to Redis and `telemetry.json`.
+- **Pre-Flight GPU Health Checks**: Automated hardware verification before task dispatch, pausing public queues if the NVIDIA driver or PCIe bus experiences errors (preventing queue burn).
+- **Node Vitality Heartbeat & Storage Guard**: Real-time 30-second TTL heartbeat (`invoker:{worker_host}:heartbeat`) renewed every 10s, coupled with continuous disk space monitoring of `/home/wyolo` (< 5% critical pause).
+- **Startup Orphan Sweeper**: Automated purge of lingering or orphaned executor containers and Pods upon invoker boot.
 - **Enterprise Security**: Scanned with Bandit, zero exposed credentials.
-- **Clean Code**: Pylint score > 9.5 across all Python modules.
-- **Resiliency**: Built-in retry mechanisms, collision-resistant Kubernetes pod names, and metric contract preservation.
-- **Concurrency & Duplicate Prevention**: Extended Redis visibility timeout (24h) and atomic distributed task locks to eliminate redundant task re-executions during prolonged deep learning training sessions.
+- **Concurrency & Duplicate Prevention**: Extended Redis visibility timeout (24h) and atomic distributed task locks to eliminate redundant task re-executions.
 
 ## Technical Stack & Key Libraries
-- **Language & Runtime:** Python 3.10
+- **Language & Runtime:** Python 3.10 / 3.13 (`python:3.10-slim`, `python:3.13-slim`)
 - **Distributed Task Execution:** Celery (Redis broker & result backend)
-- **Container & Cluster Orchestration:** Docker SDK (`docker-py`), Kubernetes in-cluster API (`requests`), Dozzle Web Log Streamer
+- **Container & Cluster Orchestration:** Docker SDK (`docker-py`), Kubernetes in-cluster REST API (`requests`), Dozzle Web Log Streamer
+- **Hardware Telemetry & Accelerator Monitoring:** NVIDIA System Management Interface (`nvidia-smi`), K8s Metrics Server API (`metrics.k8s.io/v1beta1`), `pynvml`
 - **Hyperparameter Tuning:** Optuna with dedicated PostgreSQL backend (`optuna_db`)
 - **Networking & Storage:** Samba (CIFS) with host mounts for datasets, results, events, and request configs
 - **Telemetry & Terminal UI:** Redis, Rich (`Console`, `Table`, `Panel`), PyYAML
@@ -114,7 +120,16 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 1.9.9 (Current Release) - 2026-10-20
+### Version 2.1.0 (Current Release) - 2026-10-21
+*   **Live Task Cancellation & Abort:** Supports immediate interruption via Redis keys (`wyolo:task:{task_id}:cancel`, `study:{study_id}:cancel`). Dynamically intercepts Docker containers (`SIGTERM`/`SIGKILL`) and K8s Pods, marking Optuna and execution states as `cancelled`.
+*   **Real Telemetry Collection:** Replaced stubbed metrics with real-time host/container GPU utilization and VRAM polling via `nvidia-smi` and Kubernetes Metrics Server API.
+*   **Dynamic & Multi-GPU Assignment:** Extended orchestrators with `get_optimal_gpu_device` to automatically route jobs to GPUs with the lowest memory usage or honor user-defined configurations (`gpu_id: "0,1"` or `"all"`).
+*   **Startup Orphan Container Sweeper:** Automatically detects and purges lingering `wyolo_executor_*` and `wyolo_eda_runner_*` containers or Pods on worker startup.
+*   **Pre-Flight GPU Health Diagnostics:** Validates hardware accessibility before consuming training jobs, pausing worker execution if GPUs are offline or inaccessible.
+*   **Node Vitality Heartbeat & Storage Guard:** Registers an active Redis heartbeat (`invoker:{worker_host}:heartbeat`) renewed every 10s and enforces storage quota safety checks on `/home/wyolo` (< 5% threshold).
+*   **Unified Queue Support:** Subscribes workers to both host-specific private queues and the generic cluster queue `wyolo_gpu_queue`.
+
+### Version 1.9.9 - 2026-10-20
 *   **Kubernetes Pod Terminal State Wait (`orchestrator.py`):** Explicitly awaits terminal Pod phases (`Succeeded` or `Failed`) and retrieves the actual container exit code, strictly prohibiting premature assumptions of `exit_code=0` when the log stream closes while the Pod remains in `Running` state.
 *   **Resilient Auto-Reconnecting Log Stream:** Wraps Kubernetes log streaming in a reconnection loop with `sinceSeconds` offset pagination, preventing stream drops or socket timeouts from interrupting execution or losing logs.
 *   **Temporal and Status Metric Contract Enforcement (`run_training.py`):** Rejects stale `results.json` files generated prior to trial execution and validates that results contain a completed status, preventing fake `0.0` accuracy metrics from polluting Optuna HPO studies.
