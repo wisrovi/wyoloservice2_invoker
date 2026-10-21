@@ -236,10 +236,21 @@ class RunTraining:
             except Exception as r_err:
                 print(f"--- [INVOKER:{invoker_name}] Warning: Could not fetch dynamic limits from Redis: {r_err} ---")
 
+        t_cfg = getattr(self, "current_training_config", {}) or {}
+        target_gpu = (
+            t_cfg.get("train", {}).get("gpu_id")
+            or t_cfg.get("gpu_id")
+            or environments.get("GPU_DEVICE_ID")
+            or os.getenv("GPU_DEVICE_ID")
+        )
+        if target_gpu:
+            environments["GPU_DEVICE_ID"] = str(target_gpu)
+            environments["NVIDIA_VISIBLE_DEVICES"] = str(target_gpu)
+        else:
+            environments["NVIDIA_DRIVER_CAPABILITIES"] = "all"
+
         environments.update(
             {
-                "NVIDIA_VISIBLE_DEVICES": "0",
-                "NVIDIA_DRIVER_CAPABILITIES": "all",
                 "TZ": "Europe/Madrid",
                 "PYTHONUNBUFFERED": "1",
                 "TASK_ID": str(task_id or ""),
@@ -393,7 +404,8 @@ class RunTraining:
                 except Exception as ml_err:
                     print(f"--- [INVOKER] Warning: Failed to update MLflow run to FAILED: {ml_err} ---")
 
-            # put -1 in results.json to indicate failure for Optuna
+            # Put -1 in results.json to indicate failure or cancellation for Optuna/Manager
+            is_cancelled = "cancelled" in str(exc).lower() or "aborted" in str(exc).lower()
             results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
             os.makedirs(results_dir, exist_ok=True)
 
@@ -402,7 +414,11 @@ class RunTraining:
             try:
                 with open(final_result_path, "w", encoding="utf-8") as file:
                     json.dump(
-                        {"accuracy": -1.0, "status": "failed", "error": str(exc)},
+                        {
+                            "accuracy": -1.0,
+                            "status": "cancelled" if is_cancelled else "failed",
+                            "error": str(exc),
+                        },
                         file,
                         indent=4,
                     )
@@ -446,6 +462,7 @@ class RunTraining:
                 return str(data)
 
         clean_config = make_serializable(training_config)
+        self.current_training_config = clean_config
 
         if clean_config.get("dry_run") is True or clean_config.get("sweeper", {}).get("dry_run") is True:
             print(
