@@ -1,5 +1,31 @@
 # Changelog - GPU Invoker (Hive)
 
+## [2.1.0] - 2026-10-21
+### Added
+- **Real-Time Task Cancellation & Abort:**
+  - Integrated live cancellation listeners in `DockerOrchestrator` and `KubernetesOrchestrator` checking `wyolo:task:{task_id}:cancel`, `study:{study_id}:cancel`, and `task:{task_id}:cancel` in Redis.
+  - Aborts running Docker executor containers (`container.kill()`) and cleans up Kubernetes Pods immediately, freeing GPU memory in seconds.
+  - Generates `status: "cancelled"` in `results.json` upon operator-triggered abort.
+- **Dynamic & Multi-GPU Assignment:**
+  - Added `get_optimal_gpu_device` helper that automatically selects the GPU with highest free VRAM via `nvidia-smi` when not explicitly specified, eliminating OOM collisions.
+  - Added support for explicit GPU indexing (`gpu_id: "1"`), multi-GPU device list (`device_ids: ["0", "1"]`), and `gpu_id: "all"` for distributed data-parallel (DDP) training.
+- **Real Hardware & GPU Telemetry:**
+  - Added real GPU utilization reporting via `nvidia-smi` into Redis stats and `telemetry.json` across both Docker and Kubernetes orchestration modes.
+  - Integrated Kubernetes Metrics Server API queries (`/apis/metrics.k8s.io/v1beta1/...`) to extract real pod CPU and memory usage in K8s environments.
+- **Pre-Flight GPU Health Checks:**
+  - Implemented `check_gpu_health()` utilizing `nvidia-smi` to test driver responsiveness and detect hardware PCIe bus / Xid errors before launching training tasks.
+  - Integrated automated public queue pause when GPU errors are detected to avoid burning valid queue tasks.
+- **Node Heartbeat TTL & Storage Guard:**
+  - Added lightweight Redis heartbeat (`invoker:{worker_host}:heartbeat`) with 30-second TTL updated every 10 seconds for real-time node liveness detection.
+  - Added continuous disk space guard on `/home/wyolo` and results volumes, pausing public consumers if disk capacity drops below critical thresholds (< 5%).
+- **Startup Orphan Container Sweeper:**
+  - Added automated cleanup sweeping stale or orphaned `wyolo_executor_*` and `wyolo_eda_runner_*` containers and Pods when the invoker worker boots up.
+- **Queue Alignment & Legacy Drain:**
+  - Added `wyolo_gpu_queue` to default Celery queue consumers in Docker Compose and dynamic pause monitor to ensure stranded legacy tasks are drained.
+
+### Version Update
+- Synchronized Invoker version to `v2.1.0` matching the global `train_service2` ecosystem.
+
 ## [1.9.5] - 2026-10-06
 ### Added
 - **Hybrid Orchestration Architecture (`orchestrator.py`):**
