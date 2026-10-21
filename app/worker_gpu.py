@@ -31,8 +31,39 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v1.9.9"
+VERSION = "v2.1.0"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
+
+
+def check_gpu_health() -> tuple[bool, str]:
+    """Check GPU health and NVIDIA driver responsiveness via nvidia-smi.
+
+    Returns:
+        tuple[bool, str]: A tuple of (is_healthy, status_message).
+    """
+    try:
+        import subprocess
+
+        res = subprocess.run(
+            ["nvidia-smi", "--query-gpu=gpu_name,driver_version,temperature.gpu", "--format=csv,noheader"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=True,
+        )
+        output = res.stdout.strip()
+        if not output:
+            return False, "nvidia-smi returned empty output"
+        return True, output.splitlines()[0]
+    except subprocess.CalledProcessError as err:
+        return False, f"nvidia-smi returned exit code {err.returncode}: {err.stderr.strip()}"
+    except subprocess.TimeoutExpired:
+        return False, "nvidia-smi timed out after 5 seconds (GPU PCIe bus hang)"
+    except FileNotFoundError:
+        return True, "nvidia-smi not found (CPU or development mode)"
+    except Exception as exc:
+        return False, f"Unexpected GPU healthcheck error: {str(exc)}"
+
 
 # Load local worker configuration
 CONFIG: dict[str, Any] = {}
@@ -289,6 +320,14 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
     study_id = training_config.get("study_id")
     task_id = self.request.id
 
+    # Pre-flight GPU Health Check
+    gpu_healthy, gpu_msg = check_gpu_health()
+    if not gpu_healthy:
+        error_msg = f"Host GPU is unhealthy on node {invoker_name}: {gpu_msg}"
+        print(f"❌ [INVOKER:{invoker_name}] Pre-flight check failed: {error_msg}", flush=True)
+        self.update_state(state="FAILURE", meta={"error": error_msg, "invoker": invoker_name})
+        raise RuntimeError(error_msg)
+
     # Concurrency Lock: Prevent duplicate execution from visibility timeout redelivery
     lock_key = f"wyolo:task_lock:{task_id}"
     try:
@@ -442,6 +481,14 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
     study_id = training_config.get("study_id")
     task_id = self.request.id
 
+    # Pre-flight GPU Health Check
+    gpu_healthy, gpu_msg = check_gpu_health()
+    if not gpu_healthy:
+        error_msg = f"Host GPU is unhealthy on node {invoker_name}: {gpu_msg}"
+        print(f"❌ [INVOKER:{invoker_name}] Pre-flight check failed: {error_msg}", flush=True)
+        self.update_state(state="FAILURE", meta={"error": error_msg, "invoker": invoker_name})
+        raise RuntimeError(error_msg)
+
     # Concurrency Lock: Prevent duplicate execution from visibility timeout redelivery
     lock_key = f"wyolo:task_lock:{task_id}"
     try:
@@ -592,22 +639,36 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
 
 
 def pause_monitor_thread(app_inst, node_name: str, private_queue_ip: str, default_hours: float):
-    """Monitors the pause state in Redis and cancels/adds public queues dynamically."""
+    """Monitors pause state, GPU health, disk space, and publishes heartbeats to Redis.
+
+    Features:
+    1. Dynamic Celery consumer management for public queues (including wyolo_gpu_queue).
+    2. Heartbeat key (invoker:{private_queue_ip}:heartbeat) with 30s TTL for real-time node vitality.
+    3. Continuous GPU health checks via nvidia-smi with automatic queue pause on hardware failure.
+    4. Disk space guard monitoring /home/wyolo to prevent storage exhaustion during training.
+    """
+    import shutil
+
     print(f"[PAUSE MONITOR] Starting monitor thread for node: {node_name} (IP: {private_queue_ip})")
 
     # Celery public queues to manage
-    public_queues = ["gpus_high", "gpus_medium", "gpus_low"]
+    public_queues = ["gpus_high", "gpus_medium", "gpus_low", "wyolo_gpu_queue"]
 
     # Start as active
     public_queues_active = True
+    gpu_error_active = False
+
+    results_dir = CONFIG.get("results_dir", "/home/wyolo/train_service_results")
+    check_path = results_dir if os.path.exists(results_dir) else "/"
 
     while True:
         try:
-            # We connect/reconnect each time or reuse connection
             redis_client = redis.from_url(app_inst.conf.broker_url)
 
             state_key = f"invoker:{private_queue_ip}:pause_state"
             until_key = f"invoker:{private_queue_ip}:pause_until"
+            res_key = f"invoker:{private_queue_ip}:resources"
+            heartbeat_key = f"invoker:{private_queue_ip}:heartbeat"
 
             state_bytes = redis_client.get(state_key)
             state = state_bytes.decode("utf-8") if state_bytes else "active"
@@ -620,21 +681,74 @@ def pause_monitor_thread(app_inst, node_name: str, private_queue_ip: str, defaul
                 if until_bytes:
                     pause_until = float(until_bytes.decode("utf-8"))
                     if now >= pause_until:
-                        # Expiró la pausa temporal
                         redis_client.set(state_key, "active")
                         redis_client.delete(until_key)
                         state = "active"
                         print(f"[PAUSE MONITOR] Temporal pause expired. Activating node {node_name}")
                 else:
-                    # Si está en paused_temporal pero no tiene hasta cuándo,
-                    # por seguridad lo reactivamos.
                     redis_client.set(state_key, "active")
                     state = "active"
 
-            # Apply pause or active state
-            if state in ("paused_perpetual", "paused_temporal"):
+            # 1. GPU Health Monitoring
+            gpu_healthy, gpu_msg = check_gpu_health()
+            if not gpu_healthy:
+                if not gpu_error_active:
+                    print(f"⚠️ [HEALTH CHECK] GPU unhealthy: {gpu_msg}. Pausing public queues!", flush=True)
+                    redis_client.hset(res_key, "status", "gpu_unhealthy")
+                    redis_client.hset(res_key, "gpu_error", gpu_msg)
+                    gpu_error_active = True
+            elif gpu_error_active:
+                print(f"✅ [HEALTH CHECK] GPU recovered: {gpu_msg}. Restoring online status.", flush=True)
+                redis_client.hset(res_key, "status", "online")
+                redis_client.hdel(res_key, "gpu_error")
+                gpu_error_active = False
+
+            # 2. Disk Space Guard
+            disk_critical = False
+            try:
+                du = shutil.disk_usage(check_path)
+                free_gb = du.free / (1024**3)
+                total_gb = du.total / (1024**3)
+                free_pct = (du.free / du.total) * 100.0 if du.total > 0 else 0.0
+                disk_warning = free_pct < 10.0 or free_gb < 5.0
+                disk_critical = free_pct < 5.0 or free_gb < 2.0
+
+                redis_client.hset(
+                    res_key,
+                    mapping={
+                        "disk_free_gb": f"{free_gb:.1f}",
+                        "disk_total_gb": f"{total_gb:.1f}",
+                        "disk_free_pct": f"{free_pct:.1f}",
+                        "disk_warning": "true" if disk_warning else "false",
+                    },
+                )
+                if disk_critical:
+                    print(
+                        f"⚠️ [DISK GUARD] Critical low disk space ({free_gb:.1f} GB, {free_pct:.1f}% free). "
+                        "Pausing public queues to avoid corruption!",
+                        flush=True,
+                    )
+            except Exception:
+                pass
+
+            # 3. Publish Redis Heartbeat (TTL 30 seconds)
+            heartbeat_payload = {
+                "hostname": node_name,
+                "ip": private_queue_ip,
+                "version": VERSION,
+                "status": "gpu_unhealthy" if not gpu_healthy else state,
+                "timestamp": now,
+            }
+            redis_client.set(heartbeat_key, json.dumps(heartbeat_payload), ex=30)
+            redis_client.hset(res_key, "last_seen", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+            # 4. Apply queue suspension or activation
+            should_pause = state in ("paused_perpetual", "paused_temporal") or not gpu_healthy or disk_critical
+
+            if should_pause:
                 if public_queues_active:
-                    print(f"[PAUSE MONITOR] Node {node_name} entering PAUSE. Cancelling public queues...")
+                    reason = "User Pause" if state != "active" else ("GPU Failure" if not gpu_healthy else "Disk Full")
+                    print(f"[PAUSE MONITOR] Node {node_name} entering PAUSE ({reason}). Cancelling public queues...")
                     for q in public_queues:
                         app_inst.control.cancel_consumer(q, destination=[node_name])
                     public_queues_active = False
@@ -660,6 +774,20 @@ def setup_pause_monitor(sender=None, **kwargs):
     # Get the worker host IP from PRIVATE_QUEUE environment or sender name
     private_queue_ip = os.getenv("WORKER_HOST", "unknown")
     default_hours = float(CONFIG.get("pause_duration_hours", 4))
+
+    # Clean orphaned executor containers/pods on worker startup
+    try:
+        from utils.orchestrator import get_orchestrator
+
+        orch = get_orchestrator(CONFIG)
+        cleaned_orphans = orch.clean_orphaned_tasks()
+        if cleaned_orphans > 0:
+            print(
+                f"[STARTUP SWEEPER] Cleaned {cleaned_orphans} orphaned executor container(s)/pod(s).",
+                flush=True,
+            )
+    except Exception as sweep_err:
+        print(f"[STARTUP SWEEPER] Warning during orphan sweep: {sweep_err}", flush=True)
 
     # Register invoker metadata in Redis on startup
     try:
