@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   worker:
-    image: wisrovi/train_service:worker_invoker_v1.0.0
+    image: wisrovi/train_service:worker_invoker_v2.1.0
     container_name: wyolo_invoker_${WORKER_NAME}
     hostname: wyolo_invoker_${WORKER_NAME}
     restart: always
@@ -31,7 +31,7 @@ services:
       timeout: 10s
       retries: 3
     command: >
-      celery -A worker_gpu worker -Q ${WORKER_NAME},gpus_high,gpus_medium,gpus_low
+      celery -A worker_gpu worker -Q ${WORKER_NAME},gpus_high,gpus_medium,gpus_low,wyolo_gpu_queue
       --loglevel=info --concurrency=1 --prefetch-multiplier=1 -Ofair
       --max-tasks-per-child=1 --max-memory-per-child=250000
       --without-gossip --without-mingle --without-heartbeat
