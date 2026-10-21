@@ -17,6 +17,8 @@ import pytest
 from utils.orchestrator import (
     DockerOrchestrator,
     KubernetesOrchestrator,
+    get_gpu_utilization,
+    get_optimal_gpu_device,
     get_orchestrator,
     is_k8s_environment,
     sanitize_k8s_name,
@@ -258,4 +260,66 @@ class TestOrchestrator:
         )
 
         assert exit_code == 137
+        assert mock_del.called
+
+    @patch("subprocess.check_output")
+    def test_get_optimal_gpu_device_auto_select(self, mock_smi):
+        """Validates that get_optimal_gpu_device selects the GPU with max free memory."""
+        mock_smi.return_value = "0, 2048\n1, 10240\n2, 4096\n"
+        selected = get_optimal_gpu_device(None)
+        assert selected == ["1"]
+
+    def test_get_optimal_gpu_device_explicit(self):
+        """Validates explicit GPU device specification."""
+        assert get_optimal_gpu_device("2") == ["2"]
+        assert get_optimal_gpu_device("0,1") == ["0", "1"]
+        assert get_optimal_gpu_device("all") == ["all"]
+
+    @patch("docker.from_env")
+    def test_docker_clean_orphaned_tasks(self, mock_docker_from_env):
+        """Validates that DockerOrchestrator removes lingering executor and eda containers."""
+        mock_client = MagicMock()
+        mock_docker_from_env.return_value = mock_client
+
+        c1 = MagicMock()
+        c1.name = "wyolo_executor_worker1_trial123"
+        c2 = MagicMock()
+        c2.name = "wyolo_eda_runner_worker1"
+        c3 = MagicMock()
+        c3.name = "redis_database"
+        mock_client.containers.list.return_value = [c1, c2, c3]
+
+        orch = DockerOrchestrator()
+        cleaned = orch.clean_orphaned_tasks()
+
+        assert cleaned == 2
+        c1.remove.assert_called_once_with(force=True)
+        c2.remove.assert_called_once_with(force=True)
+        c3.remove.assert_not_called()
+
+    @patch.dict(os.environ, {"ORCHESTRATOR": "k8s", "WORKER_HOSTNAME": "node-test-01"}, clear=False)
+    @patch("requests.get")
+    @patch("requests.delete")
+    def test_k8s_clean_orphaned_tasks(self, mock_del, mock_get):
+        """Validates that KubernetesOrchestrator sweeps orphaned pods matching node."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "items": [
+                {
+                    "metadata": {"name": "wyolo-executor-test-1"},
+                    "spec": {"nodeName": "node-test-01"},
+                },
+                {
+                    "metadata": {"name": "wyolo-executor-other-node"},
+                    "spec": {"nodeName": "other-node"},
+                },
+            ]
+        }
+        mock_get.return_value = mock_resp
+
+        orch = KubernetesOrchestrator()
+        cleaned = orch.clean_orphaned_tasks()
+
+        assert cleaned == 1
         assert mock_del.called
