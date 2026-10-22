@@ -31,7 +31,7 @@ from states.run_training import RunTraining
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v2.1.0"
+VERSION = "v2.2.0"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 
@@ -740,14 +740,21 @@ def pause_monitor_thread(app_inst, node_name: str, private_queue_ip: str, defaul
                 "timestamp": now,
             }
             redis_client.set(heartbeat_key, json.dumps(heartbeat_payload), ex=30)
+            redis_client.set(f"invoker:{private_queue_ip}:celery_node_name", node_name, ex=86400 * 7)
             redis_client.hset(res_key, "last_seen", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             # 4. Apply queue suspension or activation
-            should_pause = state in ("paused_perpetual", "paused_temporal") or not gpu_healthy or disk_critical
+            should_pause = (
+                state in ("paused_perpetual", "paused_temporal", "draining") or not gpu_healthy or disk_critical
+            )
 
             if should_pause:
                 if public_queues_active:
-                    reason = "User Pause" if state != "active" else ("GPU Failure" if not gpu_healthy else "Disk Full")
+                    reason = (
+                        "User Pause / Drain"
+                        if state != "active"
+                        else ("GPU Failure" if not gpu_healthy else "Disk Full")
+                    )
                     print(f"[PAUSE MONITOR] Node {node_name} entering PAUSE ({reason}). Cancelling public queues...")
                     for q in public_queues:
                         app_inst.control.cancel_consumer(q, destination=[node_name])
@@ -851,6 +858,7 @@ def setup_pause_monitor(sender=None, **kwargs):
         }
 
         redis_client.set(f"invoker:{worker_host}:version", json.dumps(metadata))
+        redis_client.set(f"invoker:{worker_host}:celery_node_name", node_name, ex=86400 * 7)
         print(f"[METADATA REGISTRATION] Saved host metadata to Redis key 'invoker:{worker_host}:version'")
 
         # Register or update dynamic resource limits hash in Redis (invoker:<worker_host>:resources)
