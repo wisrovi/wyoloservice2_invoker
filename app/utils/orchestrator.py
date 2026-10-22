@@ -273,7 +273,7 @@ class DockerOrchestrator(BaseOrchestrator):
         study_id = environments.get("STUDY_ID")
 
         def check_docker_cancellation() -> bool:
-            """Check Redis for cancellation requests targeting this task or study."""
+            """Check Redis for cancellation requests targeting this task, study, or host node drain."""
             if not redis_client:
                 return False
             try:
@@ -281,7 +281,21 @@ class DockerOrchestrator(BaseOrchestrator):
                 if task_id:
                     keys.extend([f"wyolo:task:{task_id}:cancel", f"task:{task_id}:cancel"])
                 if study_id:
-                    keys.extend([f"study:{study_id}:cancel", f"wyolo:study:{study_id}:cancel"])
+                    keys.extend(
+                        [f"study:{study_id}:cancel", f"wyolo:study:{study_id}:cancel", f"study:{study_id}:cancelled"]
+                    )
+                # Check host node-level drain or eviction
+                worker_ip = environments.get("WORKER_HOST") or os.getenv("WORKER_HOST")
+                if worker_ip:
+                    keys.append(f"invoker:{worker_ip}:cancel_active")
+                    drain_val = redis_client.get(f"invoker:{worker_ip}:drain")
+                    if drain_val:
+                        try:
+                            drain_data = json.loads(drain_val.decode() if isinstance(drain_val, bytes) else drain_val)
+                            if drain_data.get("draining") and drain_data.get("evict", True):
+                                return True
+                        except Exception:
+                            pass
                 for k in keys:
                     if redis_client.get(k):
                         return True
@@ -795,7 +809,7 @@ class KubernetesOrchestrator(BaseOrchestrator):
         study_id = environments.get("STUDY_ID")
 
         def check_k8s_cancellation() -> bool:
-            """Check Redis for cancellation requests targeting this task or study."""
+            """Check Redis for cancellation requests targeting this task, study, or host node drain."""
             if not redis_client:
                 return False
             try:
@@ -803,7 +817,21 @@ class KubernetesOrchestrator(BaseOrchestrator):
                 if task_id:
                     keys.extend([f"wyolo:task:{task_id}:cancel", f"task:{task_id}:cancel"])
                 if study_id:
-                    keys.extend([f"study:{study_id}:cancel", f"wyolo:study:{study_id}:cancel"])
+                    keys.extend(
+                        [f"study:{study_id}:cancel", f"wyolo:study:{study_id}:cancel", f"study:{study_id}:cancelled"]
+                    )
+                # Check host node-level drain or eviction
+                worker_ip = environments.get("WORKER_HOST") or os.getenv("WORKER_HOST")
+                if worker_ip:
+                    keys.append(f"invoker:{worker_ip}:cancel_active")
+                    drain_val = redis_client.get(f"invoker:{worker_ip}:drain")
+                    if drain_val:
+                        try:
+                            drain_data = json.loads(drain_val.decode() if isinstance(drain_val, bytes) else drain_val)
+                            if drain_data.get("draining") and drain_data.get("evict", True):
+                                return True
+                        except Exception:
+                            pass
                 for k in keys:
                     if redis_client.get(k):
                         return True
