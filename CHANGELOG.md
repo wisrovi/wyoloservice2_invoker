@@ -1,5 +1,17 @@
 # Changelog - GPU Invoker (Hive)
 
+## [2.2.0] - 2026-10-22
+### Added
+- **Node-Level Drain & Eviction Monitoring:**
+  - Added checks in `DockerOrchestrator` and `KubernetesOrchestrator` (`check_docker_cancellation` and `check_k8s_cancellation`) for `invoker:{worker_ip}:cancel_active` and `invoker:{worker_ip}:drain` (with `evict: true`).
+  - When an invoker node is marked for draining with eviction by the cluster controller, active executor containers and pods are immediately terminated (`container.kill()`), terminating the training trial in seconds and freeing up GPUs.
+  - Added support for `:cancelled` key alongside `:cancel`.
+- **Drain Mode Celery Queue Suppression:**
+  - Updated `setup_pause_monitor` in `worker_gpu.py` to recognize `"draining"` state and automatically suppress public Celery queue consumers (`gpus_high`, `gpus_medium`, `gpus_low`, `wyolo_gpu_queue`).
+
+### Version Update
+- Synchronized Invoker version to `v2.2.0` matching the global `train_service2` ecosystem.
+
 ## [2.1.0] - 2026-10-21
 ### Added
 - **Real-Time Task Cancellation & Abort:**
