@@ -3,7 +3,7 @@
   <a href="https://wisrovi.dev"><img src="https://img.shields.io/badge/Author-wisrovi.dev-111827?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Portal" /></a>
   <a href="https://orcid.org/0009-0005-0710-1861"><img src="https://img.shields.io/badge/ORCID-0009--0005--0710--1861-A6CE39?style=for-the-badge&logo=orcid&logoColor=white" alt="ORCID" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v2.1.0-blue.svg?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v2.2.0-blue.svg?style=for-the-badge" alt="Version" />
 </p>
 
 # GPU Invoker (Hive Worker)
@@ -11,6 +11,7 @@
 > The Celery-based worker node that manages GPU allocation, container lifecycle, and network storage mounting.
 
 ## Key Features
+- **Graceful Node Drain & Workload Eviction**: Dynamic detection of node-level drain commands (`invoker:{worker_ip}:drain` and `invoker:{worker_ip}:cancel_active`), instantly aborting executing training containers or pods and releasing GPU allocation.
 - **High Performance & Hybrid Execution**: Native dual orchestration supporting ephemeral Docker containers and Kubernetes Pods pinned to local worker nodes.
 - **Real-Time Task Cancellation & Abort**: Dynamic monitoring of Redis cancellation keys (`wyolo:task:{task_id}:cancel`, `study:{study_id}:cancel`) terminating Docker containers (`container.kill()`) or K8s Pods in seconds upon user request.
 - **Dynamic & Multi-GPU Allocation**: Automated detection of optimal GPU index based on highest free VRAM via `nvidia-smi`, with multi-device (`0,1`) and `all` distributed training support.
