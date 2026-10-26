@@ -68,14 +68,14 @@ if [[ "$BASH_MODE" == false ]]; then
             echo "ERROR: Config file not found: $CONFIG_FILE" >&2
             exit 1
         fi
-        
+
         FILENAME=$(basename "$CONFIG_FILE")
         TARGET_HOST_PATH="/wyolo/worker/request/$FILENAME"
-        
+
         echo "[INVOKER] Copying external config $CONFIG_FILE to $TARGET_HOST_PATH"
         cp "$CONFIG_FILE" "$TARGET_HOST_PATH"
         chmod 666 "$TARGET_HOST_PATH"
-        
+
         # Update CONFIG_FILE variable to point to the location inside the container mapping
         CONFIG_FILE="$TARGET_HOST_PATH"
     fi
@@ -123,7 +123,7 @@ if [[ "$BASH_MODE" == true ]]; then
     CMD="zsh"
     DOCKER_RUN_ARGS=(--rm -it --name wyolo_executor_test)
 else
-    CMD="nvidia-smi && echo \"[EXECUTOR] Starting mount...\" && /usr/local/bin/mount-cifs.sh && echo \"[EXECUTOR] Mount OK. Starting training...\" && python main.py --file \"$CONTAINER_CONFIG\""
+    CMD="(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi || true) && echo \"[EXECUTOR] Starting mount...\" && /usr/local/bin/mount-cifs.sh && echo \"[EXECUTOR] Mount OK. Starting training...\" && python main.py --file \"$CONTAINER_CONFIG\""
 fi
 
 # Execute Docker container (communicating via mapped socket to host Docker daemon)
@@ -133,9 +133,9 @@ docker run "${DOCKER_RUN_ARGS[@]}" \
   --hostname default_user \
   --privileged \
   --network host \
-  --shm-size=${SHM_GB}g \
-  --cpus=${CPU_CORES} \
-  --memory=${RAM_GB}g \
+  --shm-size="${SHM_GB}"g \
+  --cpus="${CPU_CORES}" \
+  --memory="${RAM_GB}"g \
   --cap-add=SYS_ADMIN \
   --cap-add=DAC_READ_SEARCH \
   --cap-add=NET_ADMIN \
