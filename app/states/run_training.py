@@ -324,17 +324,32 @@ class RunTraining:
                 print(f"--- [INVOKER:{invoker_name}] Warning: Could not fetch dynamic limits from Redis: {r_err} ---")
 
         t_cfg = getattr(self, "current_training_config", {}) or {}
+        raw_device = (
+            t_cfg.get("train", {}).get("device")
+            if t_cfg.get("train", {}).get("device") is not None
+            else t_cfg.get("device")
+        )
         target_gpu = (
             t_cfg.get("train", {}).get("gpu_id")
-            or t_cfg.get("gpu_id")
-            or environments.get("GPU_DEVICE_ID")
-            or os.getenv("GPU_DEVICE_ID")
+            if t_cfg.get("train", {}).get("gpu_id") is not None
+            else (
+                raw_device
+                if raw_device is not None
+                else (
+                    t_cfg.get("gpu_id")
+                    if t_cfg.get("gpu_id") is not None
+                    else (environments.get("GPU_DEVICE_ID") or os.getenv("GPU_DEVICE_ID"))
+                )
+            )
         )
-        if target_gpu:
+        if target_gpu is not None:
             environments["GPU_DEVICE_ID"] = str(target_gpu)
             environments["NVIDIA_VISIBLE_DEVICES"] = str(target_gpu)
         else:
-            environments["NVIDIA_DRIVER_CAPABILITIES"] = "all"
+            environments["GPU_DEVICE_ID"] = "0"
+            environments["NVIDIA_VISIBLE_DEVICES"] = "0"
+
+        environments["NVIDIA_DRIVER_CAPABILITIES"] = "all"
 
         environments.update(
             {
