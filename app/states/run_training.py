@@ -32,6 +32,83 @@ BASE_DIR = "/wyolo/worker/request"
 FILE = "config_train.yaml"
 YAML_PATH = os.path.join(BASE_DIR, FILE)
 
+DEFAULT_REFERENCE_TIME_HOURS: float = 12.0
+POST_TRAIN_MARGIN_RATIO: float = 0.30
+MIN_POST_TRAIN_MARGIN_SECONDS: int = 2700  # Minimum 45 minutes reserved for post-train
+DEFAULT_EXECUTOR_TIMEOUT_SECONDS: int = int(DEFAULT_REFERENCE_TIME_HOURS * 3600) + max(
+    int(DEFAULT_REFERENCE_TIME_HOURS * 3600 * POST_TRAIN_MARGIN_RATIO),
+    MIN_POST_TRAIN_MARGIN_SECONDS,
+)  # 56160 seconds (15.6 hours)
+DEFAULT_REDIS_TTL_SECONDS: int = 86400  # Minimum 24 hours
+
+
+def parse_user_train_time_hours(training_config: dict[str, Any] | None) -> float | None:
+    """Extract a valid user-defined training time limit (in hours) from config.
+
+    Returns None when `train.time` is omitted, None, boolean, non-numeric, or <= 0,
+    preserving Ultralytics' default epoch-based training behavior.
+    """
+    if not isinstance(training_config, dict):
+        return None
+    train_section = training_config.get("train")
+    if not isinstance(train_section, dict):
+        return None
+    raw_time = train_section.get("time")
+    if raw_time is None or isinstance(raw_time, bool):
+        return None
+    try:
+        parsed = float(raw_time)
+        return parsed if parsed > 0.0 else None
+    except (ValueError, TypeError):
+        return None
+
+
+def resolve_training_timeouts(
+    training_config: dict[str, Any] | None = None,
+    invoker_config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve cascading timeouts (Ultralytics 1.0x, Invoker 1.3x, Redis 2.0x).
+
+    - If `train.time` is omitted by the user, Ultralytics trains by `epochs`
+      (`user_time_hours = None`), while infrastructure timeouts use `12.0` hours
+      as their reference base (`ref_hours = 12.0`).
+    - If `train.time` is defined by the user (> 0), Ultralytics trains by time
+      (`user_time_hours = float(train.time)`), and infrastructure timeouts scale
+      from `ref_hours = user_time_hours`.
+    """
+    t_cfg = training_config if isinstance(training_config, dict) else {}
+    i_cfg = invoker_config if isinstance(invoker_config, dict) else {}
+
+    user_time_hours = parse_user_train_time_hours(t_cfg)
+    ref_hours = user_time_hours if user_time_hours is not None else DEFAULT_REFERENCE_TIME_HOURS
+
+    base_seconds = int(ref_hours * 3600)
+    margin_seconds = max(int(base_seconds * POST_TRAIN_MARGIN_RATIO), MIN_POST_TRAIN_MARGIN_SECONDS)
+    calculated_timeout = base_seconds + margin_seconds
+
+    if "executor_timeout_seconds" in t_cfg and t_cfg["executor_timeout_seconds"] is not None:
+        timeout_seconds = int(t_cfg["executor_timeout_seconds"])
+    elif (
+        user_time_hours is None
+        and "executor_timeout_seconds" in i_cfg
+        and i_cfg["executor_timeout_seconds"] is not None
+        and int(i_cfg["executor_timeout_seconds"]) != 43200
+    ):
+        timeout_seconds = int(i_cfg["executor_timeout_seconds"])
+    else:
+        timeout_seconds = calculated_timeout
+
+    redis_ttl_seconds = max(DEFAULT_REDIS_TTL_SECONDS, int(ref_hours * 3600 * 2))
+
+    return {
+        "user_time_hours": user_time_hours,
+        "ref_hours": ref_hours,
+        "base_seconds": base_seconds,
+        "margin_seconds": margin_seconds,
+        "timeout_seconds": timeout_seconds,
+        "redis_ttl_seconds": redis_ttl_seconds,
+    }
+
 
 def parse_memory_to_bytes(mem_str: str) -> int:
     """Parses a memory limit string (e.g., '28g', '512m') to bytes."""
@@ -135,7 +212,7 @@ class RunTraining:
     """
 
     NAME: str = __name__
-    VERSION: str = "1.0.5"
+    VERSION: str = "1.1.1"
 
     def __init__(self, config: dict[str, Any]):
         """Initializes the RunTraining instance.
@@ -148,7 +225,8 @@ class RunTraining:
         # config["yaml_path"] so tests running on the host can inject a writable
         # temp path instead of the container mount (/wyolo/worker/request).
         self.yaml_path: str = self.config.get("yaml_path", YAML_PATH)
-        print(f"Executor timeout configured: {self.config.get('executor_timeout_seconds', 43200)}")
+        default_timeout = resolve_training_timeouts(None, self.config)["timeout_seconds"]
+        print(f"Executor timeout configured: {default_timeout}")
 
     def docker_run(
         self,
@@ -171,9 +249,18 @@ class RunTraining:
         telemetry_file = os.path.join(results_dir, "telemetry.json")
 
         invoker_name = os.getenv("WORKER_NAME", os.getenv("PRIVATE_QUEUE", "unknown"))
-        timeout_seconds = self.config.get(
-            "executor_timeout_seconds",
-            43200,
+        t_cfg = getattr(self, "current_training_config", {}) or {}
+        timeout_info = resolve_training_timeouts(t_cfg, self.config)
+        timeout_seconds = timeout_info["timeout_seconds"]
+        mode_desc = (
+            f"time-based ({timeout_info['user_time_hours']}h)"
+            if timeout_info["user_time_hours"] is not None
+            else f"epochs-based (default ref {timeout_info['ref_hours']}h)"
+        )
+        print(
+            f"--- [INVOKER:{invoker_name}] Timeout resolution [{mode_desc}]: "
+            f"base={timeout_info['base_seconds']}s + margin={timeout_info['margin_seconds']}s "
+            f"-> watchdog={timeout_seconds}s ---"
         )
 
         def load_env_file(path: str) -> dict[str, str]:
@@ -349,7 +436,7 @@ class RunTraining:
             }
 
             command_str = (
-                f'bash -c \'nvidia-smi && echo "[EXECUTOR] Starting mount..." && '
+                f'bash -c \'(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi || true) && echo "[EXECUTOR] Starting mount..." && '
                 f'/usr/local/bin/mount-cifs.sh && echo "[EXECUTOR] Mount OK. Starting training..." && '
                 f"python main.py --file {self.yaml_path}'"
             )
@@ -462,6 +549,12 @@ class RunTraining:
                 return str(data)
 
         clean_config = make_serializable(training_config)
+        user_time_hours = parse_user_train_time_hours(clean_config)
+        if user_time_hours is not None:
+            clean_config.setdefault("train", {})["time"] = user_time_hours
+        elif isinstance(clean_config.get("train"), dict):
+            clean_config["train"].pop("time", None)
+
         self.current_training_config = clean_config
 
         if clean_config.get("dry_run") is True or clean_config.get("sweeper", {}).get("dry_run") is True:
