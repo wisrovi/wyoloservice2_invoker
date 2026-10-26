@@ -3,7 +3,7 @@
   <a href="https://wisrovi.dev"><img src="https://img.shields.io/badge/Author-wisrovi.dev-111827?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Portal" /></a>
   <a href="https://orcid.org/0009-0005-0710-1861"><img src="https://img.shields.io/badge/ORCID-0009--0005--0710--1861-A6CE39?style=for-the-badge&logo=orcid&logoColor=white" alt="ORCID" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v2.2.0-blue.svg?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v2.3.1-blue.svg?style=for-the-badge" alt="Version" />
 </p>
 
 # GPU Invoker (Hive Worker)
@@ -11,6 +11,7 @@
 > The Celery-based worker node that manages GPU allocation, container lifecycle, and network storage mounting.
 
 ## Key Features
+- **Configurable Training Time (`train.time`) & Cascading Timeouts (`1.3x` / `2.0x`)**: Honors optional `train.time` (in hours) from the training YAML. When omitted, Ultralytics trains by `epochs` while the Invoker watchdog defaults to `15.6h` (`12h + 30%` post-train margin = `56,160s`) and Redis TTLs default to `24h` (`86,400s`). When `train.time` is provided (e.g., `30`), Ultralytics trains cleanly for `30h`, the Docker/K8s Pod watchdog scales to `1.3x` (`39.0h` = `140,400s`, with a minimum `+45m` post-train floor), and Redis TTLs scale to `2.0x` (`60.0h` = `216,000s`).
 - **Graceful Node Drain & Workload Eviction**: Dynamic detection of node-level drain commands (`invoker:{worker_ip}:drain` and `invoker:{worker_ip}:cancel_active`), instantly aborting executing training containers or pods and releasing GPU allocation.
 - **High Performance & Hybrid Execution**: Native dual orchestration supporting ephemeral Docker containers and Kubernetes Pods pinned to local worker nodes.
 - **Real-Time Task Cancellation & Abort**: Dynamic monitoring of Redis cancellation keys (`wyolo:task:{task_id}:cancel`, `study:{study_id}:cancel`) terminating Docker containers (`container.kill()`) or K8s Pods in seconds upon user request.
@@ -121,7 +122,10 @@ make stop-all
 
 ## 📜 Changelog & Version History
 
-### Version 2.1.0 (Current Release) - 2026-10-21
+### Version 2.3.0 (Current Release) - 2026-10-23
+*   **Configurable `train.time` & Cascading Timeouts (`1.3x` Invoker / `2.0x` Redis):** Added `parse_user_train_time_hours` and `resolve_training_timeouts` in `app/states/run_training.py`. Omits `time` from Ultralytics config when not defined by the user (preserving epoch-based training) and injects `time` when `> 0`. Scales Docker wait and Kubernetes Pod `activeDeadlineSeconds` to `1.3x` (minimum `+45m` floor for post-train) and scales Redis task locks and study metadata TTLs to `2.0x` (minimum `24h`). Raised Celery `visibility_timeout` and `result_expires` to 7 days (`604,800s`).
+
+### Version 2.1.0 - 2026-10-21
 *   **Live Task Cancellation & Abort:** Supports immediate interruption via Redis keys (`wyolo:task:{task_id}:cancel`, `study:{study_id}:cancel`). Dynamically intercepts Docker containers (`SIGTERM`/`SIGKILL`) and K8s Pods, marking Optuna and execution states as `cancelled`.
 *   **Real Telemetry Collection:** Replaced stubbed metrics with real-time host/container GPU utilization and VRAM polling via `nvidia-smi` and Kubernetes Metrics Server API.
 *   **Dynamic & Multi-GPU Assignment:** Extended orchestrators with `get_optimal_gpu_device` to automatically route jobs to GPUs with the lowest memory usage or honor user-defined configurations (`gpu_id: "0,1"` or `"all"`).
@@ -325,6 +329,7 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+- **v2.3.1 (2026-10-26)**: Made `nvidia-smi` invocation defensive in Executor launch commands (`(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi || true)`) to prevent premature exit code 127 in Kubernetes environments where `nvidia-smi` is not mounted.
 - **v1.9.9 (2026-10-20)**: Added dynamic float-to-integer string sanitization for `MAX_GPU` environment variable passed to Executor containers and Pods to prevent downstream integer parsing errors.
 - **v1.9.8 (2026-10-19)**: Enhanced Kubernetes execution resilience by injecting ConfigMap (`train-service-global-config`) and Secrets (`train-service-secrets`) `envFrom` references into ephemeral Executor Pod manifests, adding defensive cluster defaults for `CONTROL_HOST` and CIFS Samba credentials, and implementing automatic failure log capture on non-zero exit codes.
 - **v1.9.7 (2026-10-07)**: Added GPU memory telemetry (`worker_gpu_memory` and `physical_gpu_memory_total`) in Redis metadata registration with automatic `nvidia-smi` fallback detection.
