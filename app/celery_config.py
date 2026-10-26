@@ -125,9 +125,9 @@ worker_settings: dict[str, Any] = {
     # Reliability settings for long-running tasks
     "task_acks_late": True,
     "worker_prefetch_multiplier": 1,
-    "result_expires": 86400,  # 24 hours
+    "result_expires": 604800,  # 7 days (168 hours) to support extended multi-day training trials
     "broker_transport_options": {
-        "visibility_timeout": 86400,  # 24 hours to prevent task redelivery on Redis during training
+        "visibility_timeout": 604800,  # 7 days (168 hours) to prevent task redelivery during long trainings
     },
     "worker_send_task_events": True,  # Try enabling to initialize the dispatcher
 }
