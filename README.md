@@ -3,7 +3,7 @@
   <a href="https://wisrovi.dev"><img src="https://img.shields.io/badge/Author-wisrovi.dev-111827?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Portal" /></a>
   <a href="https://orcid.org/0009-0005-0710-1861"><img src="https://img.shields.io/badge/ORCID-0009--0005--0710--1861-A6CE39?style=for-the-badge&logo=orcid&logoColor=white" alt="ORCID" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v2.3.1-blue.svg?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v2.3.2-blue.svg?style=for-the-badge" alt="Version" />
 </p>
 
 # GPU Invoker (Hive Worker)
@@ -329,6 +329,7 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+- **v2.3.2 (2026-10-26)**: Added support for Ultralytics YOLO `train.device` config extraction and enforced non-void `NVIDIA_VISIBLE_DEVICES` fallback (`"0"` / `"all"`) in ephemeral Kubernetes Pod manifests to ensure CUDA device availability.
 - **v2.3.1 (2026-10-26)**: Made `nvidia-smi` invocation defensive in Executor launch commands (`(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi || true)`) to prevent premature exit code 127 in Kubernetes environments where `nvidia-smi` is not mounted.
 - **v1.9.9 (2026-10-20)**: Added dynamic float-to-integer string sanitization for `MAX_GPU` environment variable passed to Executor containers and Pods to prevent downstream integer parsing errors.
 - **v1.9.8 (2026-10-19)**: Enhanced Kubernetes execution resilience by injecting ConfigMap (`train-service-global-config`) and Secrets (`train-service-secrets`) `envFrom` references into ephemeral Executor Pod manifests, adding defensive cluster defaults for `CONTROL_HOST` and CIFS Samba credentials, and implementing automatic failure log capture on non-zero exit codes.
