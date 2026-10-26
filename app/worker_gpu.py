@@ -27,11 +27,11 @@ from rich.panel import Panel
 from rich.table import Table
 from states.eda import EDA
 from states.llm_analizer import LlmAnalizer
-from states.run_training import RunTraining
+from states.run_training import RunTraining, resolve_training_timeouts
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v2.2.0"
+VERSION = "v2.3.1"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 
@@ -328,11 +328,15 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
         self.update_state(state="FAILURE", meta={"error": error_msg, "invoker": invoker_name})
         raise RuntimeError(error_msg)
 
+    # Resolve dynamic Redis TTL (2.0x reference training time, minimum 24 hours)
+    timeout_info = resolve_training_timeouts(training_config, CONFIG)
+    redis_ttl = timeout_info["redis_ttl_seconds"]
+
     # Concurrency Lock: Prevent duplicate execution from visibility timeout redelivery
     lock_key = f"wyolo:task_lock:{task_id}"
     try:
         r_lock = redis.from_url(app.conf.broker_url)
-        if not r_lock.set(lock_key, invoker_name, nx=True, ex=86400):
+        if not r_lock.set(lock_key, invoker_name, nx=True, ex=redis_ttl):
             existing_holder = r_lock.get(lock_key)
             existing_str = existing_holder.decode() if existing_holder else "unknown"
             print(
@@ -402,19 +406,19 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
                 "start_time": time.time(),
                 "details": invoker_details,
             }
-            redis_client.set(f"study:{study_id}:active_trial", json.dumps(active_info), ex=3600)
+            redis_client.set(f"study:{study_id}:active_trial", json.dumps(active_info), ex=redis_ttl)
             # Store full JSON details in a dedicated key
             redis_client.set(
                 f"study:{study_id}:invoker_details",
                 json.dumps(invoker_details),
-                ex=86400,
+                ex=redis_ttl,
             )
             # Store an enriched, readable string in the classic key for UI compatibility
             invoker_readable = f"{invoker_name} (IP: {worker_host} | Host: {worker_hostname})"
-            redis_client.set(f"study:{study_id}:invoker", invoker_readable, ex=86400)
+            redis_client.set(f"study:{study_id}:invoker", invoker_readable, ex=redis_ttl)
 
             redis_client.sadd(f"study:{study_id}:all_invokers", invoker_name)
-            redis_client.expire(f"study:{study_id}:all_invokers", 86400)
+            redis_client.expire(f"study:{study_id}:all_invokers", redis_ttl)
         except Exception as e:
             print(f"Warning: Could not set active trial or invoker telemetry in Redis: {e}")
 
@@ -457,7 +461,7 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
                     "error": str(exc),
                     "timestamp": time.time(),
                 }
-                redis_client.set(f"study:{study_id}:error", json.dumps(error_info), ex=86400)
+                redis_client.set(f"study:{study_id}:error", json.dumps(error_info), ex=redis_ttl)
             except Exception as e:
                 print(f"Warning: Could not log error to Redis: {e}")
         raise exc
@@ -489,11 +493,15 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
         self.update_state(state="FAILURE", meta={"error": error_msg, "invoker": invoker_name})
         raise RuntimeError(error_msg)
 
+    # Resolve dynamic Redis TTL (2.0x reference training time, minimum 24 hours)
+    timeout_info = resolve_training_timeouts(training_config, CONFIG)
+    redis_ttl = timeout_info["redis_ttl_seconds"]
+
     # Concurrency Lock: Prevent duplicate execution from visibility timeout redelivery
     lock_key = f"wyolo:task_lock:{task_id}"
     try:
         r_lock = redis.from_url(app.conf.broker_url)
-        if not r_lock.set(lock_key, invoker_name, nx=True, ex=86400):
+        if not r_lock.set(lock_key, invoker_name, nx=True, ex=redis_ttl):
             existing_holder = r_lock.get(lock_key)
             existing_str = existing_holder.decode() if existing_holder else "unknown"
             print(
@@ -556,19 +564,19 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
                 "start_time": time.time(),
                 "details": invoker_details,
             }
-            redis_client.set(f"study:{study_id}:active_trial", json.dumps(active_info), ex=3600)
+            redis_client.set(f"study:{study_id}:active_trial", json.dumps(active_info), ex=redis_ttl)
             # Store full JSON details in a dedicated key
             redis_client.set(
                 f"study:{study_id}:invoker_details",
                 json.dumps(invoker_details),
-                ex=86400,
+                ex=redis_ttl,
             )
             # Store an enriched, readable string in the classic key for UI compatibility
             invoker_readable = f"{invoker_name} (IP: {worker_host} | Host: {worker_hostname})"
-            redis_client.set(f"study:{study_id}:invoker", invoker_readable, ex=86400)
+            redis_client.set(f"study:{study_id}:invoker", invoker_readable, ex=redis_ttl)
 
             redis_client.sadd(f"study:{study_id}:all_invokers", invoker_name)
-            redis_client.expire(f"study:{study_id}:all_invokers", 86400)
+            redis_client.expire(f"study:{study_id}:all_invokers", redis_ttl)
         except Exception as e:
             print(f"Warning: Could not set active trial or invoker telemetry in Redis: {e}")
 
@@ -632,7 +640,7 @@ def train_on_gpu_simple(self: Task, training_config: dict[str, Any]) -> dict[str
                     "error": str(exc),
                     "timestamp": time.time(),
                 }
-                redis_client.set(f"study:{study_id}:error", json.dumps(error_info), ex=86400)
+                redis_client.set(f"study:{study_id}:error", json.dumps(error_info), ex=redis_ttl)
             except Exception as e:
                 print(f"Warning: Could not log error to Redis: {e}")
         raise exc
