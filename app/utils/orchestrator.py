@@ -709,6 +709,7 @@ class KubernetesOrchestrator(BaseOrchestrator):
                 "nodeName": self.node_name,
                 "priorityClassName": "system-node-critical",
                 "restartPolicy": "Never",
+                "activeDeadlineSeconds": max(1, int(timeout_seconds)),
                 "tolerations": [
                     {"key": "nvidia.com/gpu", "operator": "Exists", "effect": "NoSchedule"},
                     {"key": "node.kubernetes.io/disk-pressure", "operator": "Exists"},
