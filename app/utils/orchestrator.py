@@ -551,6 +551,10 @@ class KubernetesOrchestrator(BaseOrchestrator):
 
         command_str = " ".join(command) if isinstance(command, list) else str(command)
 
+        if environments.get("NVIDIA_VISIBLE_DEVICES") in ("void", None, ""):
+            environments["NVIDIA_VISIBLE_DEVICES"] = "0"
+        environments["NVIDIA_DRIVER_CAPABILITIES"] = "all"
+
         print(f"[EDA][K8s] Spawning temp Pod {pod_name} on node {self.node_name} with image {image_name}...")
 
         pod_manifest = {
@@ -692,6 +696,10 @@ class KubernetesOrchestrator(BaseOrchestrator):
             self.config.get("gpu_count") if isinstance(self.config, dict) else "1"
         )
         gpu_str = str(gpu_req) if str(gpu_req).isdigit() and int(gpu_req) > 0 else "1"
+
+        if environments.get("NVIDIA_VISIBLE_DEVICES") in ("void", None, ""):
+            environments["NVIDIA_VISIBLE_DEVICES"] = "0"
+        environments["NVIDIA_DRIVER_CAPABILITIES"] = "all"
 
         pod_manifest = {
             "apiVersion": "v1",
