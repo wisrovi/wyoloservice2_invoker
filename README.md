@@ -3,7 +3,7 @@
   <a href="https://wisrovi.dev"><img src="https://img.shields.io/badge/Author-wisrovi.dev-111827?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Portal" /></a>
   <a href="https://orcid.org/0009-0005-0710-1861"><img src="https://img.shields.io/badge/ORCID-0009--0005--0710--1861-A6CE39?style=for-the-badge&logo=orcid&logoColor=white" alt="ORCID" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v2.3.2-blue.svg?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v2.3.4-blue.svg?style=for-the-badge" alt="Version" />
 </p>
 
 # GPU Invoker (Hive Worker)
@@ -11,6 +11,7 @@
 > The Celery-based worker node that manages GPU allocation, container lifecycle, and network storage mounting.
 
 ## Key Features
+- **Developer Desktop Freeze Prevention & Defensive Resource Caps**: Automatically runs training workloads at idle background priority (`nice -n 19 ionice -c 3`) and caps OpenMP/MKL/PyTorch CPU threads (`OMP_NUM_THREADS <= 4`), guaranteeing seamless interactive desktop performance for developers while training locally. Strictly bounds container memory to at most 60% of total physical RAM (preserving at least 4-6GB for the desktop), caps `/dev/shm` tmpfs between 2Gi and 8Gi to prevent swap thrashing, and removes dangerous `system-node-critical` priorities in Kubernetes.
 - **Configurable Training Time (`train.time`) & Cascading Timeouts (`1.3x` / `2.0x`)**: Honors optional `train.time` (in hours) from the training YAML. When omitted, Ultralytics trains by `epochs` while the Invoker watchdog defaults to `15.6h` (`12h + 30%` post-train margin = `56,160s`) and Redis TTLs default to `24h` (`86,400s`). When `train.time` is provided (e.g., `30`), Ultralytics trains cleanly for `30h`, the Docker/K8s Pod watchdog scales to `1.3x` (`39.0h` = `140,400s`, with a minimum `+45m` post-train floor), and Redis TTLs scale to `2.0x` (`60.0h` = `216,000s`).
 - **Graceful Node Drain & Workload Eviction**: Dynamic detection of node-level drain commands (`invoker:{worker_ip}:drain` and `invoker:{worker_ip}:cancel_active`), instantly aborting executing training containers or pods and releasing GPU allocation.
 - **High Performance & Hybrid Execution**: Native dual orchestration supporting ephemeral Docker containers and Kubernetes Pods pinned to local worker nodes.
@@ -329,6 +330,8 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+- **v2.3.4 (2026-10-29)**: Established baseline natural restrictions (30% GPU, 6GB RAM, 2 cores, 8GB SHM) so all unconfigured or newly joined invokers run safely without starving developer desktops.
+- **v2.3.3 (2026-10-28)**: Enforced idle process priority (`nice -n 19 ionice -c 3`), thread capping, dynamic RAM reserve, and bounded `/dev/shm` tmpfs allocation.
 - **v2.3.2 (2026-10-26)**: Added support for Ultralytics YOLO `train.device` config extraction and enforced non-void `NVIDIA_VISIBLE_DEVICES` fallback (`"0"` / `"all"`) in ephemeral Kubernetes Pod manifests to ensure CUDA device availability.
 - **v2.3.1 (2026-10-26)**: Made `nvidia-smi` invocation defensive in Executor launch commands (`(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi || true)`) to prevent premature exit code 127 in Kubernetes environments where `nvidia-smi` is not mounted.
 - **v1.9.9 (2026-10-20)**: Added dynamic float-to-integer string sanitization for `MAX_GPU` environment variable passed to Executor containers and Pods to prevent downstream integer parsing errors.
