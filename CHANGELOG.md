@@ -1,5 +1,22 @@
 # Changelog - GPU Invoker (Hive)
 
+## [2.3.4] - 2026-10-29
+### Added
+- **Default Natural Resource Bounds (30% GPU, 6GB RAM, 2 CPU cores, 8GB SHM):**
+  - Configured baseline natural limits in `run_training.py` (`MAX_GPU=30`, `WORKER_RAM_MEMORY=6g`, `WORKER_CPU_CORES_AVAILABLE=2.0`, `WORKER_SHM_MEMORY=8g`) ensuring that newly started or unconfigured invokers never consume beyond these boundaries, safeguarding developer desktop responsiveness during active work.
+
+## [2.3.3] - 2026-10-28
+### Fixed
+- **Host Desktop Freeze & Resource Starvation Prevention:**
+  - Enforced idle process priority (`nice -n 19 ionice -c 3`) on the training executor command, guaranteeing that the Linux kernel CFS scheduler immediately yields CPU cycles to interactive developer applications (X11, Wayland, IDEs, browser).
+  - Enforced defensive OpenMP, MKL, OpenBLAS, and PyTorch CPU thread caps (`OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `TORCH_NUM_THREADS <= 4`) to prevent CPU thread explosion and 100% host CPU lockups.
+  - Dynamically reserved at least 35-40% of host RAM (minimum 4-6GB) strictly for the host operating system and developer desktop apps, capping executor RAM to at most 60% of total physical RAM to eliminate swap thrashing.
+  - Replaced hardcoded 16GB minimum `/dev/shm` tmpfs allocation with bounded size (`max(2Gi, min(8Gi, 35% RAM))`), preventing unswappable kernel memory exhaustion on <= 24GB workstations.
+  - Removed `priorityClassName: system-node-critical` from Kubernetes executor Pod manifests to prevent preemption and starvation of interactive host and system processes.
+
+### Version Update
+- Bumped Invoker version to `v2.3.3` and `RunTraining` state version to `1.1.2`.
+
 ## [2.2.0] - 2026-10-22
 ### Added
 - **Node-Level Drain & Eviction Monitoring:**
