@@ -129,7 +129,7 @@ class TestOrchestrator:
         # Check manifest posted
         posted_manifest = mock_post.call_args[1]["json"]
         assert posted_manifest["spec"]["nodeName"] == "node-test-01"
-        assert posted_manifest["spec"]["priorityClassName"] == "system-node-critical"
+        assert "priorityClassName" not in posted_manifest["spec"]
         assert posted_manifest["metadata"]["labels"]["app"] == "wyolo-executor"
         assert "envFrom" in posted_manifest["spec"]["containers"][0]
         assert (
