@@ -3,7 +3,7 @@
   <a href="https://wisrovi.dev"><img src="https://img.shields.io/badge/Author-wisrovi.dev-111827?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Portal" /></a>
   <a href="https://orcid.org/0009-0005-0710-1861"><img src="https://img.shields.io/badge/ORCID-0009--0005--0710--1861-A6CE39?style=for-the-badge&logo=orcid&logoColor=white" alt="ORCID" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v2.3.4-blue.svg?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v2.3.5-blue.svg?style=for-the-badge" alt="Version" />
 </p>
 
 # GPU Invoker (Hive Worker)
@@ -330,6 +330,7 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+- **v2.3.5 (2026-10-29)**: Enhanced node hardware capacity detection to extract and register true physical RAM (`physical_ram_total`) and SWAP (`physical_swap_total`) into Redis metadata rather than default allocated limits, enabling accurate cluster administration telemetry and unconstrained shared memory allocation backed by swap.
 - **v2.3.4 (2026-10-29)**: Established baseline natural restrictions (30% GPU, 6GB RAM, 2 cores, 8GB SHM) so all unconfigured or newly joined invokers run safely without starving developer desktops.
 - **v2.3.3 (2026-10-28)**: Enforced idle process priority (`nice -n 19 ionice -c 3`), thread capping, dynamic RAM reserve, and bounded `/dev/shm` tmpfs allocation.
 - **v2.3.2 (2026-10-26)**: Added support for Ultralytics YOLO `train.device` config extraction and enforced non-void `NVIDIA_VISIBLE_DEVICES` fallback (`"0"` / `"all"`) in ephemeral Kubernetes Pod manifests to ensure CUDA device availability.
