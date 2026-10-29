@@ -134,7 +134,12 @@ def parse_memory_to_bytes(mem_str: str) -> int:
 
 
 def get_system_limits(config: dict[str, Any], environments: dict[str, str]) -> tuple[float, int]:
-    """Calculates the hardware limits based on the host system and config.
+    """Calculates safe hardware limits for the executor without starving developer desktop.
+
+    Ensures that:
+    1. At least 2-4 CPU cores are always preserved for host OS & interactive IDE/browser.
+    2. At least 35-40% of host RAM (or at least 6GB to 10GB) is guaranteed free to prevent swap thrashing.
+    3. Threading parameters are bounded to avoid pegging all CPU cores.
 
     Args:
         config (Dict[str, Any]): The worker configuration dictionary.
@@ -143,10 +148,27 @@ def get_system_limits(config: dict[str, Any], environments: dict[str, str]) -> t
     Returns:
         tuple: (cpu_limit, mem_limit_bytes)
     """
-    cpu_pct = float(config.get("cpu_limit_pct", 0.85))
+    cpu_pct = float(config.get("cpu_limit_pct", 0.65))
     mem_pct = float(config.get("mem_limit_pct", 0.60))
 
-    # 1. CPU: Priority: WORKER_CPU_CORES_AVAILABLE > WORKER_CPU_CORES > Percentage of total cores
+    # Host physical resources
+    total_cpus = multiprocessing.cpu_count()
+    try:
+        total_mem_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+    except Exception:
+        total_mem_bytes = 16 * 1024**3  # Safe fallback 16GB
+
+    # Safe CPU ceiling: leave at least 2 cores on <= 8-core CPUs, at least 4 cores on > 8-core CPUs
+    if total_cpus <= 4:
+        safe_max_cpus = max(1.0, float(total_cpus - 1))
+    elif total_cpus <= 8:
+        safe_max_cpus = max(2.0, float(total_cpus - 2))
+    elif total_cpus <= 16:
+        safe_max_cpus = max(4.0, float(total_cpus - 4))
+    else:
+        safe_max_cpus = max(4.0, min(float(total_cpus - 4), total_cpus * 0.65))
+
+    # 1. CPU: Priority: WORKER_CPU_CORES_AVAILABLE > WORKER_CPU_CORES > Natural default 2.0 cores
     cores_env = (
         environments.get("WORKER_CPU_CORES_AVAILABLE")
         or environments.get("WORKER_CPU_CORES")
@@ -155,25 +177,29 @@ def get_system_limits(config: dict[str, Any], environments: dict[str, str]) -> t
     )
     if cores_env:
         try:
-            cpu_limit = float(cores_env)
+            req_cpus = float(cores_env)
+            cpu_limit = min(req_cpus, safe_max_cpus)
         except ValueError:
-            total_cpus = multiprocessing.cpu_count()
-            cpu_limit = float(total_cpus * cpu_pct)
+            cpu_limit = min(2.0, safe_max_cpus)
     else:
-        total_cpus = multiprocessing.cpu_count()
-        cpu_limit = float(total_cpus * cpu_pct)
+        cpu_limit = min(2.0, safe_max_cpus)
 
-    # 2. RAM: Priority: WORKER_RAM_MEMORY > Percentage of total host memory
+    # Safe RAM ceiling: leave at least 6GB (or 35% of total RAM) for developer desktop
+    min_host_reserve_bytes = max(int(4 * 1024**3), int(total_mem_bytes * 0.35))
+    safe_max_mem_bytes = max(int(2 * 1024**3), total_mem_bytes - min_host_reserve_bytes)
+    safe_max_mem_bytes = min(safe_max_mem_bytes, int(total_mem_bytes * mem_pct))
+
+    # 2. RAM: Priority: WORKER_RAM_MEMORY > Natural default 6g
     ram_env = environments.get("WORKER_RAM_MEMORY") or os.getenv("WORKER_RAM_MEMORY")
+    default_mem_limit = min(parse_memory_to_bytes("6g"), safe_max_mem_bytes)
     if ram_env:
         try:
-            mem_limit_bytes = parse_memory_to_bytes(ram_env)
+            req_mem_bytes = parse_memory_to_bytes(ram_env)
+            mem_limit_bytes = min(req_mem_bytes, safe_max_mem_bytes)
         except Exception:
-            total_mem_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
-            mem_limit_bytes = int(total_mem_bytes * mem_pct)
+            mem_limit_bytes = default_mem_limit
     else:
-        total_mem_bytes = os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
-        mem_limit_bytes = int(total_mem_bytes * mem_pct)
+        mem_limit_bytes = default_mem_limit
 
     return cpu_limit, mem_limit_bytes
 
@@ -212,7 +238,7 @@ class RunTraining:
     """
 
     NAME: str = __name__
-    VERSION: str = "1.1.1"
+    VERSION: str = "1.1.2"
 
     def __init__(self, config: dict[str, Any]):
         """Initializes the RunTraining instance.
@@ -289,6 +315,12 @@ class RunTraining:
         environments.setdefault("CIFS_USER", "wisrovi")
         environments.setdefault("CIFS_PASS", "wyoloservice")
 
+        # Natural baseline restrictions (30% GPU, 6GB RAM, 2 cores, 8GB SHM) so host machines never hang
+        environments.setdefault("MAX_GPU", "30")
+        environments.setdefault("WORKER_RAM_MEMORY", "6g")
+        environments.setdefault("WORKER_CPU_CORES_AVAILABLE", "2.0")
+        environments.setdefault("WORKER_SHM_MEMORY", "8g")
+
         # Check dynamic limits from Redis hash invoker:<worker_ip>:resources
         worker_ip = os.getenv("WORKER_HOST") or environments.get("WORKER_HOST")
         if worker_ip:
@@ -315,10 +347,16 @@ class RunTraining:
                         environments["WORKER_RAM_MEMORY"] = decoded_res["max_ram"]
                     if decoded_res.get("max_cpu_cores"):
                         environments["WORKER_CPU_CORES_AVAILABLE"] = decoded_res["max_cpu_cores"]
+                    if decoded_res.get("shm_size_gb"):
+                        raw_shm = decoded_res["shm_size_gb"]
+                        environments["WORKER_SHM_MEMORY"] = (
+                            f"{raw_shm}g" if not str(raw_shm).endswith(("g", "m", "k", "b")) else str(raw_shm)
+                        )
                     print(
                         f"--- [INVOKER:{invoker_name}] Applied dynamic resources from Redis: "
                         f"MAX_GPU={environments.get('MAX_GPU')}%, RAM={environments.get('WORKER_RAM_MEMORY')}, "
-                        f"CPU={environments.get('WORKER_CPU_CORES_AVAILABLE')} ---"
+                        f"CPU={environments.get('WORKER_CPU_CORES_AVAILABLE')}, "
+                        f"SHM={environments.get('WORKER_SHM_MEMORY')} ---"
                     )
             except Exception as r_err:
                 print(f"--- [INVOKER:{invoker_name}] Warning: Could not fetch dynamic limits from Redis: {r_err} ---")
@@ -362,6 +400,15 @@ class RunTraining:
 
         # Calculate hardware limits dynamically from config and environment variables
         cpu_limit, mem_limit = get_system_limits(self.config, environments)
+
+        # Restrict PyTorch / OpenMP / BLAS thread explosion so background training never hogs 100% of all CPU threads
+        max_threads = str(max(1, min(4, int(cpu_limit))))
+        environments.setdefault("OMP_NUM_THREADS", max_threads)
+        environments.setdefault("MKL_NUM_THREADS", max_threads)
+        environments.setdefault("OPENBLAS_NUM_THREADS", max_threads)
+        environments.setdefault("VECLIB_MAXIMUM_THREADS", max_threads)
+        environments.setdefault("NUMEXPR_NUM_THREADS", max_threads)
+        environments.setdefault("TORCH_NUM_THREADS", max_threads)
 
         print(
             f"--- [INVOKER:{invoker_name}] Launching executor: {executor_name} with limits "
@@ -431,9 +478,16 @@ class RunTraining:
                     sys.path.insert(0, "/app")
                 from utils.orchestrator import get_orchestrator
 
-            # Calculate shm_size: minimum 16g (17179869184 bytes), or use mem_limit if mem_limit > 16g
-            min_shm_bytes = 16 * 1024**3
-            shm_size_bytes = max(min_shm_bytes, mem_limit)
+            # Calculate safe shm_size: honors user setting if provided, bounded safely within container memory limits
+            shm_env = environments.get("WORKER_SHM_MEMORY")
+            if shm_env:
+                try:
+                    user_shm_bytes = parse_memory_to_bytes(shm_env)
+                    shm_size_bytes = max(2 * 1024**3, min(user_shm_bytes, int(mem_limit * 0.5)))
+                except Exception:
+                    shm_size_bytes = max(2 * 1024**3, min(8 * 1024**3, int(mem_limit * 0.35)))
+            else:
+                shm_size_bytes = max(2 * 1024**3, min(8 * 1024**3, int(mem_limit * 0.35)))
 
             volumes = {
                 "/home/wyolo/events": {
@@ -451,9 +505,12 @@ class RunTraining:
             }
 
             command_str = (
-                f'bash -c \'(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi || true) && echo "[EXECUTOR] Starting mount..." && '
-                f'/usr/local/bin/mount-cifs.sh && echo "[EXECUTOR] Mount OK. Starting training..." && '
-                f"python main.py --file {self.yaml_path}'"
+                f"bash -c '(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi || true) && "
+                f'echo "[EXECUTOR] Starting mount..." && /usr/local/bin/mount-cifs.sh && '
+                f'echo "[EXECUTOR] Mount OK. Starting training with developer-friendly background priority..." && '
+                f"(nice -n 19 ionice -c 3 python main.py --file {self.yaml_path} 2>/dev/null || "
+                f"nice -n 19 python main.py --file {self.yaml_path} || "
+                f"python main.py --file {self.yaml_path})'"
             )
 
             redis_client = None
