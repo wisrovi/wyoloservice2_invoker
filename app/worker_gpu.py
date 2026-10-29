@@ -31,7 +31,7 @@ from states.run_training import RunTraining, resolve_training_timeouts
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v2.3.4"
+VERSION = "v2.3.5"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 
@@ -848,6 +848,41 @@ def setup_pause_monitor(sender=None, **kwargs):
         ram_env = os.getenv("WORKER_RAM_MEMORY")
         allocated_ram = ram_env if ram_env else f"{int(mem_pct * 100)}% of total host RAM"
 
+        # Physical RAM and SWAP detection
+        phys_ram_total = os.getenv("WORKER_PHYSICAL_RAM_TOTAL")
+        if not phys_ram_total:
+            try:
+                import psutil
+
+                phys_ram_total = f"{round(psutil.virtual_memory().total / (1024**3))}g"
+            except Exception:
+                try:
+                    with open("/proc/meminfo") as f:
+                        for line in f:
+                            if line.startswith("MemTotal:"):
+                                kb = int(line.split()[1])
+                                phys_ram_total = f"{round((kb + 524288) / 1048576)}g"
+                                break
+                except Exception:
+                    phys_ram_total = allocated_ram
+
+        phys_swap_total = os.getenv("WORKER_SWAP_TOTAL")
+        if not phys_swap_total:
+            try:
+                import psutil
+
+                phys_swap_total = f"{round(psutil.swap_memory().total / (1024**3))}g"
+            except Exception:
+                try:
+                    with open("/proc/meminfo") as f:
+                        for line in f:
+                            if line.startswith("SwapTotal:"):
+                                kb = int(line.split()[1])
+                                phys_swap_total = f"{round((kb + 524288) / 1048576)}g"
+                                break
+                except Exception:
+                    phys_swap_total = "32g"
+
         metadata = {
             "version": VERSION,
             "worker_host": worker_host,
@@ -883,7 +918,8 @@ def setup_pause_monitor(sender=None, **kwargs):
             "physical_gpu_model": worker_gpu_model,
             "physical_gpu_count": str(worker_gpu_count),
             "physical_gpu_memory_total": str(worker_gpu_memory),
-            "physical_ram_total": str(allocated_ram),
+            "physical_ram_total": str(phys_ram_total),
+            "physical_swap_total": str(phys_swap_total),
             "physical_cpu_cores": str(worker_cpus),
             "status": "online",
             "last_seen": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
