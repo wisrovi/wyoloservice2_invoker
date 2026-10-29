@@ -24,9 +24,17 @@ user.env:
 	echo "WORKER_GPU_MODEL=$$(nvidia-smi --query-gpu=name --format=csv,noheader | head -n 1)" >> user.env
 	echo "WORKER_GPU_MEMORY=$$(nvidia-smi --query-gpu=memory.total --format=csv,noheader | head -n 1)" >> user.env
 	echo "WORKER_GPU_MEMORY=$$(nvidia-smi --query-gpu=memory.total --format=csv,noheader | head -n 1)" >> user.env
-	MEM_TOTAL=$$(awk '/^MemTotal:/ {print $$2}' /proc/meminfo); \
-    echo "WORKER_RAM_MEMORY=$$((MEM_TOTAL / 1048576 * 8 / 10))g" >> user.env
-	echo "WORKER_CPU_CORES=$$((`nproc` - 1)).0" >> user.env
+	MEM_TOTAL_KB=$$(awk '/^MemTotal:/ {print $$2}' /proc/meminfo); \
+	MEM_TOTAL_GB=$$((MEM_TOTAL_KB / 1048576)); \
+	SAFE_RAM_GB=$$((MEM_TOTAL_GB * 6 / 10)); \
+	[ "$$SAFE_RAM_GB" -lt 4 ] && SAFE_RAM_GB=4; \
+	echo "WORKER_RAM_MEMORY=$${SAFE_RAM_GB}g" >> user.env
+	NPROCS=$$(nproc); \
+	if [ "$$NPROCS" -le 4 ]; then AVAIL=2; \
+	elif [ "$$NPROCS" -le 8 ]; then AVAIL=$$((NPROCS - 2)); \
+	elif [ "$$NPROCS" -le 16 ]; then AVAIL=$$((NPROCS - 4)); \
+	else AVAIL=$$((NPROCS - 6)); fi; \
+	echo "WORKER_CPU_CORES=$${AVAIL}.0" >> user.env
 	echo "PRIVATE_QUEUE=$$(hostname -I | awk '{print $$1}')" >> user.env
 
 
