@@ -240,28 +240,47 @@ class DockerOrchestrator(BaseOrchestrator):
             environments["CUDA_VISIBLE_DEVICES"] = gpu_str
             environments["NVIDIA_VISIBLE_DEVICES"] = gpu_str
 
-        container = self.client.containers.run(
-            image=image_name,
-            name=executor_name,
-            hostname=environments.get("USER", "default_user"),
-            detach=True,
-            remove=False,
-            privileged=True,
-            network_mode="host",
-            shm_size=shm_size_bytes,
-            tty=False,
-            nano_cpus=int(cpu_limit * 1e9),
-            mem_limit=mem_limit,
-            cap_add=["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
-            device_requests=dev_requests,
-            environment=environments,
-            labels={
+        # Defensive thread limits to prevent multi-threading CPU freeze
+        cpu_val = max(1, int(cpu_limit)) if cpu_limit > 0 else 2
+        max_threads = str(min(4, max(1, cpu_val)))
+        thread_vars = {
+            "OMP_NUM_THREADS": max_threads,
+            "MKL_NUM_THREADS": max_threads,
+            "OPENBLAS_NUM_THREADS": max_threads,
+            "VECLIB_MAXIMUM_THREADS": max_threads,
+            "NUMEXPR_NUM_THREADS": max_threads,
+            "TORCH_NUM_THREADS": max_threads,
+        }
+        for var_name, var_val in thread_vars.items():
+            if var_name not in environments:
+                environments[var_name] = var_val
+
+        run_kwargs = {
+            "image": image_name,
+            "name": executor_name,
+            "hostname": environments.get("USER", "default_user"),
+            "detach": True,
+            "remove": False,
+            "privileged": True,
+            "network_mode": "host",
+            "shm_size": shm_size_bytes,
+            "tty": False,
+            "nano_cpus": int(cpu_limit * 1e9),
+            "mem_limit": mem_limit,
+            "cap_add": ["SYS_ADMIN", "DAC_READ_SEARCH", "NET_ADMIN", "SYS_RESOURCE"],
+            "device_requests": dev_requests,
+            "environment": environments,
+            "labels": {
                 "autoheal": "true",
                 "com.centurylinklabs.watchtower.enable": "true",
             },
-            volumes=volumes,
-            command=command_str,
-        )
+            "volumes": volumes,
+            "command": command_str,
+        }
+        if mem_limit > 0:
+            run_kwargs["memswap_limit"] = mem_limit
+
+        container = self.client.containers.run(**run_kwargs)
 
         print(f"--- [INVOKER][Docker] Executor {executor_name} started. Streaming logs... ---", flush=True)
 
@@ -570,7 +589,6 @@ class KubernetesOrchestrator(BaseOrchestrator):
             },
             "spec": {
                 "nodeName": self.node_name,
-                "priorityClassName": "system-node-critical",
                 "restartPolicy": "Never",
                 "tolerations": [
                     {"key": "nvidia.com/gpu", "operator": "Exists", "effect": "NoSchedule"},
@@ -589,6 +607,16 @@ class KubernetesOrchestrator(BaseOrchestrator):
                         "image": image_name,
                         "imagePullPolicy": "IfNotPresent",
                         "securityContext": {"privileged": True},
+                        "resources": {
+                            "limits": {
+                                "cpu": "2",
+                                "memory": "4Gi",
+                            },
+                            "requests": {
+                                "cpu": "500m",
+                                "memory": "1Gi",
+                            },
+                        },
                         "envFrom": [
                             {"configMapRef": {"name": "train-service-global-config"}},
                             {"secretRef": {"name": "train-service-secrets"}},
@@ -683,9 +711,29 @@ class KubernetesOrchestrator(BaseOrchestrator):
         self._delete_pod_if_exists(pod_name)
 
         trial_id = environments.get("TRIAL_ID", "default")
-        shm_gb = max(16, int(shm_size_bytes / (1024**3)))
-        mem_gb = max(16, int(mem_limit / (1024**3))) if mem_limit > 0 else 32
-        cpu_val = max(2, int(cpu_limit)) if cpu_limit > 0 else 4
+        # Ensure SHM is bounded between 2Gi and 8Gi to prevent host swap thrashing
+        if shm_size_bytes > 0:
+            shm_gb = max(2, min(8, int(shm_size_bytes / (1024**3))))
+        else:
+            shm_gb = 4
+
+        # Safe memory limit: min 4Gi, fallback 16Gi
+        mem_gb = max(4, int(mem_limit / (1024**3))) if mem_limit > 0 else 16
+        cpu_val = max(1, int(cpu_limit)) if cpu_limit > 0 else 4
+
+        # Defensive thread limits to prevent multi-threading CPU freeze
+        max_threads = str(min(4, max(1, cpu_val)))
+        thread_vars = {
+            "OMP_NUM_THREADS": max_threads,
+            "MKL_NUM_THREADS": max_threads,
+            "OPENBLAS_NUM_THREADS": max_threads,
+            "VECLIB_MAXIMUM_THREADS": max_threads,
+            "NUMEXPR_NUM_THREADS": max_threads,
+            "TORCH_NUM_THREADS": max_threads,
+        }
+        for var_name, var_val in thread_vars.items():
+            if var_name not in environments:
+                environments[var_name] = var_val
 
         print(
             f"--- [INVOKER][K8s] Spawning Executor Pod '{pod_name}' on node '{self.node_name}' (Image: {image_name}) ---",
@@ -715,7 +763,6 @@ class KubernetesOrchestrator(BaseOrchestrator):
             },
             "spec": {
                 "nodeName": self.node_name,
-                "priorityClassName": "system-node-critical",
                 "restartPolicy": "Never",
                 "activeDeadlineSeconds": max(1, int(timeout_seconds)),
                 "tolerations": [
@@ -748,8 +795,8 @@ class KubernetesOrchestrator(BaseOrchestrator):
                             },
                             "requests": {
                                 "nvidia.com/gpu": gpu_str,
-                                "memory": "4Gi",
-                                "cpu": "2",
+                                "memory": f"{max(2, min(4, mem_gb // 2))}Gi",
+                                "cpu": "1",
                             },
                         },
                         "command": ["bash", "-c", command_str],
