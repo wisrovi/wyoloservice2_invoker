@@ -1,5 +1,12 @@
 # Changelog - GPU Invoker (Hive)
 
+## [2.3.5] - 2026-10-29
+### Fixed
+- **Physical RAM vs Allocated RAM Disambiguation & SWAP Telemetry:**
+  - Fixed an issue where `physical_ram_total` was registering `allocated_ram` (the safe cap of 60% host RAM) instead of the true total physical RAM of the machine.
+  - Added detection of true physical RAM (`MemTotal`) and SWAP (`SwapTotal`) from host `/proc/meminfo` or `psutil`.
+  - Added `physical_swap_total` field registration in Redis hash `invoker:<worker_host>:resources`.
+
 ## [2.3.4] - 2026-10-29
 ### Added
 - **Default Natural Resource Bounds (30% GPU, 6GB RAM, 2 CPU cores, 8GB SHM):**
