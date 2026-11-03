@@ -31,7 +31,7 @@ from states.run_training import RunTraining, resolve_training_timeouts
 from wpipe.pipe import Pipeline
 
 # INVOKER VERSION
-VERSION = "v2.3.5"
+VERSION = "v2.3.6"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 
