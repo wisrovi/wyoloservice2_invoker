@@ -1,5 +1,13 @@
 # Changelog - GPU Invoker (Hive)
 
+## [2.3.6] - 2026-11-03
+### Added
+- **Simplified Training Configuration Delivery:** Verified that `RunTraining` cleanly serializes and delivers minimal YAML configurations (where `batch` is omitted for AutoBatch and `style`/`task` is preserved) to the Docker executor volume (`config_train.yaml` and `config.json`).
+- **Unit Testing:** Added `tests/test_invoker_minimal_config.py` verifying file generation, timeout defaults, and task metadata serialization.
+
+### Version Update
+- Bumped Invoker version to `v2.3.6` and `RunTraining` state version to `1.1.3`.
+
 ## [2.3.5] - 2026-10-29
 ### Fixed
 - **Physical RAM vs Allocated RAM Disambiguation & SWAP Telemetry:**
