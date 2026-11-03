@@ -238,7 +238,7 @@ class RunTraining:
     """
 
     NAME: str = __name__
-    VERSION: str = "1.1.2"
+    VERSION: str = "1.1.3"
 
     def __init__(self, config: dict[str, Any]):
         """Initializes the RunTraining instance.
