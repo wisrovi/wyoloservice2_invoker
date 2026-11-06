@@ -72,6 +72,9 @@ def wait_for_k8s_pod_completion(
             return 130
         try:
             resp = requests.get(url, headers=headers, verify=ca_cert, timeout=5)
+            if resp.status_code == 404 and time.time() - start > 20:
+                print(f"[INVOKER] Pod {pod_name} not found after 20s. Aborting wait.", flush=True)
+                return 1
             if resp.status_code == 200:
                 phase = resp.json().get("status", {}).get("phase", "Running")
                 payload = {"status": phase.lower(), "gpu": get_gpu_utilization("0"), "timestamp": time.time()}
