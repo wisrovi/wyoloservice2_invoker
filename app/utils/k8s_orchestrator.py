@@ -91,7 +91,9 @@ class KubernetesOrchestrator(BaseOrchestrator):
         pod_name = sanitize_k8s_name(f"{name}-{self.node_name}")
         delete_k8s_pod_safely(self.base_url, self.namespace, pod_name, self.headers, self.ca_cert)
         cmd_str = " ".join(command) if isinstance(command, list) else str(command)
-        environments.setdefault("NVIDIA_VISIBLE_DEVICES", "0")
+        for forbidden in ("LD_LIBRARY_PATH", "LIBRARY_PATH", "PYTHONPATH"):
+            environments.pop(forbidden, None)
+        environments["NVIDIA_VISIBLE_DEVICES"] = "0"
         environments["NVIDIA_DRIVER_CAPABILITIES"] = "all"
 
         manifest = build_k8s_pod_manifest(
@@ -168,8 +170,11 @@ class KubernetesOrchestrator(BaseOrchestrator):
         gpu_str = str(environments.get("GPU_COUNT") or environments.get("WORKER_GPU_COUNT") or "1")
         trial_id = str(environments.get("TRIAL_ID", "default"))
 
-        environments.setdefault("NVIDIA_VISIBLE_DEVICES", "all")
-        environments.setdefault("NVIDIA_DRIVER_CAPABILITIES", "all")
+        # Strip host/invoker specific library and path overrides that interfere with executor container
+        for forbidden in ("LD_LIBRARY_PATH", "LIBRARY_PATH", "PYTHONPATH"):
+            environments.pop(forbidden, None)
+        environments["NVIDIA_VISIBLE_DEVICES"] = "all"
+        environments["NVIDIA_DRIVER_CAPABILITIES"] = "all"
 
         manifest = build_k8s_pod_manifest(
             pod_name,
