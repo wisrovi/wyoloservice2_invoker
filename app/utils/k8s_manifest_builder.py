@@ -1,23 +1,24 @@
 """Kubernetes Pod specification and manifest builder utilities."""
 
-from typing import Any, Dict
+from typing import Any
 
 
+# pylint: disable=too-many-arguments,too-many-locals
 def build_k8s_pod_manifest(
     pod_name: str,
     namespace: str,
     node_name: str,
     image_name: str,
     command_str: str,
-    environments: Dict[str, str],
-    volumes: Dict[str, Any],
+    environments: dict[str, str],
+    volumes: dict[str, Any],
     shm_gb: int,
     mem_gb: int,
     cpu_limit: float,
     timeout_seconds: int,
     trial_id: str,
     gpu_str: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Generate a validated Kubernetes Pod specification manifest.
 
     Args:
@@ -39,24 +40,22 @@ def build_k8s_pod_manifest(
         Dict[str, Any]: Complete Kubernetes Pod definition dictionary.
     """
     env_list = [{"name": str(k), "value": str(v)} for k, v in environments.items()]
-    pod_volumes: list[Dict[str, Any]] = [
-        {"name": "dshm", "emptyDir": {"medium": "Memory", "sizeLimit": f"{shm_gb}Gi"}}
-    ]
-    volume_mounts: list[Dict[str, Any]] = [{"name": "dshm", "mountPath": "/dev/shm"}]
+    pod_volumes: list[dict[str, Any]] = [{"name": "dshm", "emptyDir": {"medium": "Memory", "sizeLimit": f"{shm_gb}Gi"}}]
+    volume_mounts: list[dict[str, Any]] = [{"name": "dshm", "mountPath": "/dev/shm"}]  # nosec B108
 
-    vol_idx = 0
-    for host_path, mount_cfg in volumes.items():
+    for vol_idx, (host_path, mount_cfg) in enumerate(volumes.items()):
         v_name = f"vol-{vol_idx}"
-        vol_idx += 1
         m_path = mount_cfg.get("bind", host_path) if isinstance(mount_cfg, dict) else host_path
         pod_volumes.append({"name": v_name, "hostPath": {"path": host_path, "type": "DirectoryOrCreate"}})
         volume_mounts.append({"name": v_name, "mountPath": m_path})
 
-    limits: Dict[str, Any] = {"memory": f"{mem_gb}Gi"}
+    limits: dict[str, Any] = {"memory": f"{mem_gb}Gi"}
+    requests: dict[str, Any] = {"memory": "2Gi", "cpu": "1000m"}
     if cpu_limit > 0:
         limits["cpu"] = str(cpu_limit)
     if gpu_str != "0":
         limits["nvidia.com/gpu"] = gpu_str
+        requests["nvidia.com/gpu"] = gpu_str
 
     return {
         "apiVersion": "v1",
@@ -83,7 +82,7 @@ def build_k8s_pod_manifest(
                     "env": env_list,
                     "volumeMounts": volume_mounts,
                     "securityContext": {"privileged": True},
-                    "resources": {"limits": limits, "requests": {"memory": "2Gi", "cpu": "1000m"}},
+                    "resources": {"limits": limits, "requests": requests},
                 }
             ],
             "volumes": pod_volumes,
