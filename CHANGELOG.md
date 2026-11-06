@@ -1,5 +1,15 @@
 # Changelog - GPU Invoker (Hive)
 
+## [2.3.7] - 2026-11-06
+### Fixed
+- **Kubernetes Pod Lifecycle & Monitoring:**
+  - Guaranteed unique pod naming (`{pod_base}-{unique_id}`) preventing HTTP 409 Conflict with terminating pods.
+  - Pod log retrieval prior to safe pod deletion on both Succeeded and Failed states for full execution observability.
+  - Streamlined container start command eliminating nested shell wrappers and enabling transparent background execution.
+
+### Version Update
+- Bumped Invoker version to `v2.3.7`.
+
 ## [2.3.6] - 2026-11-03
 ### Added
 - **Simplified Training Configuration Delivery:** Verified that `RunTraining` cleanly serializes and delivers minimal YAML configurations (where `batch` is omitted for AutoBatch and `style`/`task` is preserved) to the Docker executor volume (`config_train.yaml` and `config.json`).
