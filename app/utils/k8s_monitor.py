@@ -79,18 +79,15 @@ def wait_for_k8s_pod_completion(
                 phase = resp.json().get("status", {}).get("phase", "Running")
                 payload = {"status": phase.lower(), "gpu": get_gpu_utilization("0"), "timestamp": time.time()}
                 write_telemetry_snapshot(results_dir, executor_name, payload, redis_client)
-                if phase == "Succeeded":
-                    delete_k8s_pod_safely(base_url, namespace, pod_name, headers, ca_cert)
-                    return 0
-                if phase == "Failed":
+                if phase in ("Succeeded", "Failed"):
                     try:
                         log_url = f"{url}/log"
                         pod_log = requests.get(log_url, headers=headers, verify=ca_cert, timeout=10).text
-                        print(f"[INVOKER] Pod {pod_name} FAILED! Logs:\n{pod_log}", flush=True)
+                        print(f"[INVOKER] Pod {pod_name} ({phase}) Logs:\n{pod_log}", flush=True)
                     except Exception as log_err:
-                        print(f"[INVOKER] Could not fetch failed pod logs: {log_err}", flush=True)
+                        print(f"[INVOKER] Could not fetch pod logs: {log_err}", flush=True)
                     delete_k8s_pod_safely(base_url, namespace, pod_name, headers, ca_cert)
-                    return 1
+                    return 0 if phase == "Succeeded" else 1
         except Exception:
             pass
         time.sleep(3)
