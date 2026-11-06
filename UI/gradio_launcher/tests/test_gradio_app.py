@@ -158,9 +158,7 @@ class TestValidateAndLaunch:
 
     @mock.patch("celery_client._celery_app")
     @mock.patch("celery_client._get_hm")
-    def test_respects_existing_user_id(
-        self, mock_get: mock.Mock, mock_celery: mock.Mock
-    ) -> None:
+    def test_respects_existing_user_id(self, mock_get: mock.Mock, mock_celery: mock.Mock) -> None:
         """Existing user_id is preserved."""
         mock_hm = mock.Mock()
         mock_get.return_value = mock_hm
@@ -203,9 +201,7 @@ class TestValidateAndLaunch:
 
     @mock.patch("celery_client._celery_app")
     @mock.patch("celery_client._get_hm")
-    def test_sends_to_private_queue(
-        self, mock_get: mock.Mock, mock_celery: mock.Mock
-    ) -> None:
+    def test_sends_to_private_queue(self, mock_get: mock.Mock, mock_celery: mock.Mock) -> None:
         """Requests always go to the private queue, never a public one."""
         mock_hm = mock.Mock()
         mock_get.return_value = mock_hm
@@ -439,9 +435,7 @@ class TestNamedUserTemplates:
         mock_get.return_value = mock_hm
         out = load_user_template("my_tpl")
         assert "model: yolov8n.pt" in out
-        mock_hm.read_hash.assert_called_once_with(
-            hash_name=ANY, key="my_tpl"
-        )
+        mock_hm.read_hash.assert_called_once_with(hash_name=ANY, key="my_tpl")
 
     @mock.patch("templates._get_hm")
     def test_load_empty_name_falls_back(self, mock_get: mock.Mock) -> None:
@@ -454,18 +448,17 @@ class TestNamedUserTemplates:
 
     def test_save_named_feedback_success(self) -> None:
         """The UI feedback wrapper returns success + refreshed dropdown."""
-        with mock.patch(
-            "ui.handlers.save_user_template", return_value=None
-        ), mock.patch("ui.handlers.list_user_templates", return_value=["a"]):
+        with (
+            mock.patch("ui.handlers.save_user_template", return_value=None),
+            mock.patch("ui.handlers.list_user_templates", return_value=["a"]),
+        ):
             msg, dropdown = save_named_template_with_feedback("a", "model: m")
             assert "🟢" in msg
             assert dict(dropdown)["choices"] == ["a"]
 
     def test_load_selected(self) -> None:
         """load_selected_template delegates to load_user_template."""
-        with mock.patch(
-            "ui.handlers.load_user_template", return_value="model: m"
-        ):
+        with mock.patch("ui.handlers.load_user_template", return_value="model: m"):
             assert load_selected_template("a") == "model: m"
 
 
@@ -552,9 +545,7 @@ class TestHandleTrainClick:
     """Tests for the train-click handler (auto task-id + tab switch)."""
 
     @mock.patch("ui.handlers.celery_client.validate_and_launch")
-    def test_extracts_task_id_and_switches_tab(
-        self, mock_launch: mock.Mock
-    ) -> None:
+    def test_extracts_task_id_and_switches_tab(self, mock_launch: mock.Mock) -> None:
         """A dispatched task auto-fills the Task ID and switches to Monitoring."""
         mock_launch.return_value = "🚀 **Training Task Sent!**\n\n🆔 **Task ID:** `abc-123`"
         msg, task_id, tab_update = handle_train_click("yaml")
