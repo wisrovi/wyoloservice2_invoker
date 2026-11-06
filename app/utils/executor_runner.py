@@ -64,6 +64,7 @@ def prepare_executor_environment(
     return environments, shm_bytes, mem_bytes, cpu_cores
 
 
+# pylint: disable=too-many-arguments,too-many-locals
 def execute_container_and_wait(
     config: dict[str, Any],
     image_name: str,
@@ -103,12 +104,9 @@ def execute_container_and_wait(
     }
     orchestrator = get_orchestrator(config)
     default_cmd = (
-        f"bash -c '(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi || true) && "
         f'echo "[EXECUTOR] Starting mount..." && /usr/local/bin/mount-cifs.sh && '
-        f'echo "[EXECUTOR] Mount OK. Starting training with developer-friendly background priority..." && '
-        f"(nice -n 19 ionice -c 3 python main.py --file {yaml_path} 2>/dev/null || "
-        f"nice -n 19 python main.py --file {yaml_path} || "
-        f"python main.py --file {yaml_path})'"
+        f'echo "[EXECUTOR] Mount OK. Starting training..." && '
+        f"python main.py --file {yaml_path}"
     )
     cmd = config.get("command", default_cmd)
 
