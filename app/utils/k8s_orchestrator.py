@@ -158,7 +158,9 @@ class KubernetesOrchestrator(BaseOrchestrator):
             int: Pod execution exit code.
         """
         task_suffix = environments.get("TRIAL_ID") or environments.get("TASK_ID") or "default"
-        pod_name = sanitize_k8s_name(f"{executor_name}-{self.node_name}-{task_suffix}")
+        unique_id = f"{task_suffix[:8]}-{int(time.time()) % 100000}"
+        pod_base = sanitize_k8s_name(f"{executor_name}-{self.node_name}")[:45]
+        pod_name = f"{pod_base}-{unique_id}"
         delete_k8s_pod_safely(self.base_url, self.namespace, pod_name, self.headers, self.ca_cert)
 
         shm_gb = max(2, min(8, int(shm_size_bytes / (1024**3)))) if shm_size_bytes > 0 else 4
