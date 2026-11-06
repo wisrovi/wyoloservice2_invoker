@@ -9,6 +9,7 @@ import argparse
 import os
 import sys
 import time
+
 import redis
 from celery import Celery
 
@@ -28,14 +29,14 @@ def get_celery_app(redis_host, redis_port, redis_db):
 def manage_worker(worker_ip, action, redis_host, redis_port, redis_db, mode="temporal", hours=4):
     """Sends cancel_consumer or add_consumer commands to a specific worker node and updates state in Redis."""
     app = get_celery_app(redis_host, redis_port, redis_db)
-    
+
     # Format the target node name
     node_name = f"celery@wyolo_invoker_{worker_ip}"
-    
+
     public_queues = ["gpus_high", "gpus_medium", "gpus_low"]
-    
+
     print("=" * 60)
-    print(f"📡 Remote Queue Controller")
+    print("📡 Remote Queue Controller")
     print(f"   Redis Broker : redis://{redis_host}:{redis_port}/{redis_db}")
     print(f"   Target Node  : {node_name}")
     if action == "pause":
@@ -47,13 +48,13 @@ def manage_worker(worker_ip, action, redis_host, redis_port, redis_db, mode="tem
         action_desc = "RESUME (Listen to All)"
     print(f"   Action       : {action_desc}")
     print("=" * 60)
-    
+
     # 1. Update State in Redis
     try:
         redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
         state_key = f"invoker:{worker_ip}:pause_state"
         until_key = f"invoker:{worker_ip}:pause_until"
-        
+
         if action == "pause":
             if mode == "temporal":
                 pause_until = time.time() + (hours * 3600)
@@ -63,35 +64,25 @@ def manage_worker(worker_ip, action, redis_host, redis_port, redis_db, mode="tem
             else:
                 redis_client.set(state_key, "paused_perpetual")
                 redis_client.delete(until_key)
-                print(f"   [Redis] Set state to 'paused_perpetual'")
+                print("   [Redis] Set state to 'paused_perpetual'")
         else:
             redis_client.set(state_key, "active")
             redis_client.delete(until_key)
-            print(f"   [Redis] Set state to 'active' (resumed)")
+            print("   [Redis] Set state to 'active' (resumed)")
     except Exception as e:
         print(f"⚠️ Warning: Could not update pause state in Redis: {e}")
-        
+
     # 2. Send control command to destination node (for immediate effect if online)
     results = []
     for queue in public_queues:
         if action == "pause":
             # Command to stop consuming from a queue
-            response = app.control.cancel_consumer(
-                queue,
-                destination=[node_name],
-                reply=True,
-                timeout=2.0
-            )
+            response = app.control.cancel_consumer(queue, destination=[node_name], reply=True, timeout=2.0)
         else:
             # Command to start consuming from a queue
-            response = app.control.add_consumer(
-                queue,
-                destination=[node_name],
-                reply=True,
-                timeout=2.0
-            )
+            response = app.control.add_consumer(queue, destination=[node_name], reply=True, timeout=2.0)
         results.append((queue, response))
-        
+
     # Analyze responses
     print("\nResults:")
     success = False
@@ -110,7 +101,7 @@ def manage_worker(worker_ip, action, redis_host, redis_port, redis_db, mode="tem
             # If the node is offline, we consider it a soft success because the state is persisted in Redis
             # and the node will apply the pause upon startup.
             success = True
-            
+
     print("-" * 60)
     if success:
         if action == "pause":
@@ -121,7 +112,7 @@ def manage_worker(worker_ip, action, redis_host, redis_port, redis_db, mode="tem
             print(f"   It will only consume from its private queue ({worker_ip}).")
         else:
             print(f"✅ Success: Node '{node_name}' is now BACK in public circulation.")
-            print(f"   It will consume from both public and private queues.")
+            print("   It will consume from both public and private queues.")
     else:
         print("❌ Failed: Could not process request. Check connection.")
         sys.exit(1)
@@ -131,49 +122,34 @@ def main():
     parser = argparse.ArgumentParser(
         description="Remotely pause or resume public queue consumption for a specific invoker node."
     )
-    parser.add_argument(
-        "--ip",
-        required=True,
-        help="IP address of the target invoker worker (e.g., 192.168.1.68)"
-    )
+    parser.add_argument("--ip", required=True, help="IP address of the target invoker worker (e.g., 192.168.1.68)")
     parser.add_argument(
         "--action",
         choices=["pause", "resume"],
         required=True,
-        help="Action to perform: 'pause' (out of public queues) or 'resume' (back to public queues)"
+        help="Action to perform: 'pause' (out of public queues) or 'resume' (back to public queues)",
     )
     parser.add_argument(
         "--mode",
         choices=["temporal", "perpetual"],
         default="temporal",
-        help="Pause mode: 'temporal' (resume after X hours) or 'perpetual' (wait for manual resume)"
+        help="Pause mode: 'temporal' (resume after X hours) or 'perpetual' (wait for manual resume)",
     )
-    parser.add_argument(
-        "--hours",
-        type=float,
-        default=4.0,
-        help="Number of hours for temporal pause (default: 4.0)"
-    )
+    parser.add_argument("--hours", type=float, default=4.0, help="Number of hours for temporal pause (default: 4.0)")
     parser.add_argument(
         "--redis-host",
         default=os.getenv("CONTROL_HOST", DEFAULT_REDIS_HOST),
-        help=f"Redis host address (default: {DEFAULT_REDIS_HOST} or CONTROL_HOST env)"
+        help=f"Redis host address (default: {DEFAULT_REDIS_HOST} or CONTROL_HOST env)",
     )
     parser.add_argument(
-        "--redis-port",
-        type=int,
-        default=DEFAULT_REDIS_PORT,
-        help=f"Redis port (default: {DEFAULT_REDIS_PORT})"
+        "--redis-port", type=int, default=DEFAULT_REDIS_PORT, help=f"Redis port (default: {DEFAULT_REDIS_PORT})"
     )
     parser.add_argument(
-        "--redis-db",
-        type=int,
-        default=DEFAULT_REDIS_DB,
-        help=f"Redis database index (default: {DEFAULT_REDIS_DB})"
+        "--redis-db", type=int, default=DEFAULT_REDIS_DB, help=f"Redis database index (default: {DEFAULT_REDIS_DB})"
     )
 
     args = parser.parse_args()
-    
+
     manage_worker(
         worker_ip=args.ip,
         action=args.action,
@@ -181,7 +157,7 @@ def main():
         redis_port=args.redis_port,
         redis_db=args.redis_db,
         mode=args.mode,
-        hours=args.hours
+        hours=args.hours,
     )
 
 
