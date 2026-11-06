@@ -2,17 +2,20 @@
 
 import os
 import time
-from typing import Any, Dict, List, Optional
-import requests
+from typing import Any
+
+import requests  # pylint: disable=import-error
+
 from .k8s_manifest_builder import build_k8s_pod_manifest
 from .k8s_monitor import delete_k8s_pod_safely, wait_for_k8s_pod_completion
 from .orchestrator_base import BaseOrchestrator, sanitize_k8s_name
 
 
+# pylint: disable=too-many-arguments,too-many-locals,broad-exception-caught
 class KubernetesOrchestrator(BaseOrchestrator):
     """Orchestrates tasks directly as Kubernetes Pods using in-cluster API."""
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize KubernetesOrchestrator with cluster credentials.
 
         Args:
@@ -21,7 +24,7 @@ class KubernetesOrchestrator(BaseOrchestrator):
         self.config = config or {}
         token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         if os.path.exists(token_path):
-            with open(token_path, "r", encoding="utf-8") as f:
+            with open(token_path, encoding="utf-8") as f:
                 self.token = f.read().strip()
         else:
             self.token = os.getenv("K8S_TOKEN", "")
@@ -37,7 +40,7 @@ class KubernetesOrchestrator(BaseOrchestrator):
 
         ns_file = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
         if os.path.exists(ns_file):
-            with open(ns_file, "r", encoding="utf-8") as f:
+            with open(ns_file, encoding="utf-8") as f:
                 self.namespace = f.read().strip()
         else:
             self.namespace = os.getenv("K8S_NAMESPACE", "train-service")
@@ -51,7 +54,8 @@ class KubernetesOrchestrator(BaseOrchestrator):
         """
         cleaned = 0
         try:
-            url = f"{self.base_url}/api/v1/namespaces/{self.namespace}/pods?labelSelector=app in (wyolo-executor,wyolo-eda)"
+            selector = "labelSelector=app in (wyolo-executor,wyolo-eda)"
+            url = f"{self.base_url}/api/v1/namespaces/{self.namespace}/pods?{selector}"
             resp = requests.get(url, headers=self.headers, verify=self.ca_cert, timeout=10)
             if resp.status_code == 200:
                 for pod in resp.json().get("items", []):
@@ -68,9 +72,9 @@ class KubernetesOrchestrator(BaseOrchestrator):
         self,
         image_name: str,
         name: str,
-        environments: Dict[str, str],
-        volumes: Dict[str, Any],
-        command: List[str],
+        environments: dict[str, str],
+        volumes: dict[str, Any],
+        command: list[str],
     ) -> str:
         """Run temporary EDA Pod using in-cluster Kubernetes API.
 
@@ -91,7 +95,19 @@ class KubernetesOrchestrator(BaseOrchestrator):
         environments["NVIDIA_DRIVER_CAPABILITIES"] = "all"
 
         manifest = build_k8s_pod_manifest(
-            pod_name, self.namespace, self.node_name, image_name, cmd_str, environments, volumes, 2, 4, 2.0, 600, "eda", "1"
+            pod_name,
+            self.namespace,
+            self.node_name,
+            image_name,
+            cmd_str,
+            environments,
+            volumes,
+            2,
+            4,
+            2.0,
+            600,
+            "eda",
+            "1",
         )
         url = f"{self.base_url}/api/v1/namespaces/{self.namespace}/pods"
         requests.post(url, headers=self.headers, json=manifest, verify=self.ca_cert, timeout=15)
@@ -111,8 +127,8 @@ class KubernetesOrchestrator(BaseOrchestrator):
         self,
         image_name: str,
         executor_name: str,
-        environments: Dict[str, str],
-        volumes: Dict[str, Any],
+        environments: dict[str, str],
+        volumes: dict[str, Any],
         command_str: str,
         shm_size_bytes: int,
         mem_limit: int,
@@ -147,15 +163,38 @@ class KubernetesOrchestrator(BaseOrchestrator):
 
         shm_gb = max(2, min(8, int(shm_size_bytes / (1024**3)))) if shm_size_bytes > 0 else 4
         mem_gb = max(4, int(mem_limit / (1024**3))) if mem_limit > 0 else 16
-        gpu_str = str(environments.get("GPU_COUNT", "1"))
+        gpu_str = str(environments.get("GPU_COUNT") or environments.get("WORKER_GPU_COUNT") or "1")
         trial_id = str(environments.get("TRIAL_ID", "default"))
 
+        environments.setdefault("NVIDIA_VISIBLE_DEVICES", "all")
+        environments.setdefault("NVIDIA_DRIVER_CAPABILITIES", "all")
+
         manifest = build_k8s_pod_manifest(
-            pod_name, self.namespace, self.node_name, image_name, command_str, environments, volumes,
-            shm_gb, mem_gb, cpu_limit, timeout_seconds, trial_id, gpu_str
+            pod_name,
+            self.namespace,
+            self.node_name,
+            image_name,
+            command_str,
+            environments,
+            volumes,
+            shm_gb,
+            mem_gb,
+            cpu_limit,
+            timeout_seconds,
+            trial_id,
+            gpu_str,
         )
         url = f"{self.base_url}/api/v1/namespaces/{self.namespace}/pods"
         requests.post(url, headers=self.headers, json=manifest, verify=self.ca_cert, timeout=15)
         return wait_for_k8s_pod_completion(
-            self.base_url, self.namespace, pod_name, executor_name, results_dir, timeout_seconds, environments, redis_client, self.headers, self.ca_cert
+            self.base_url,
+            self.namespace,
+            pod_name,
+            executor_name,
+            results_dir,
+            timeout_seconds,
+            environments,
+            redis_client,
+            self.headers,
+            self.ca_cert,
         )
