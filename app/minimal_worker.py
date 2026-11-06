@@ -22,7 +22,16 @@ else:
         print("--- [MINIMAL WORKER] Celery app created successfully.")
 
         @app.task
-        def add(x, y):
+        def add(x: int, y: int) -> int:
+            """Compute the arithmetic sum of two integers.
+
+            Args:
+                x (int): First operand.
+                y (int): Second operand.
+
+            Returns:
+                int: Sum of x and y.
+            """
             return x + y
 
         print("--- [MINIMAL WORKER] Dummy task defined.")
