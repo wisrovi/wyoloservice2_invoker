@@ -49,10 +49,12 @@ def test_invoker_serializes_minimal_config_with_style(mock_docker_run, tmp_path)
 
     mock_docker_run.side_effect = simulate_executor_run
 
-    rt = RunTraining({
-        "yaml_path": yaml_dest,
-        "results_dir": results_dest,
-    })
+    rt = RunTraining(
+        {
+            "yaml_path": yaml_dest,
+            "results_dir": results_dest,
+        }
+    )
 
     minimal_config = {
         "model": "yolo11n.pt",
