@@ -9,6 +9,7 @@ import shutil
 import csv
 import json
 
+
 class TrainingReportAnalyzer:
     """
     Generate AI-assisted training analysis using OpenCode with fallback.
@@ -21,10 +22,7 @@ class TrainingReportAnalyzer:
     def _get_model(cls) -> str:
         return os.getenv("LLM_MODEL", cls.DEFAULT_MODEL)
 
-    def analyze(
-        self,
-        results_file: str | Path
-    ) -> str:
+    def analyze(self, results_file: str | Path) -> str:
         """
         Generate a professional training report.
 
@@ -38,9 +36,7 @@ class TrainingReportAnalyzer:
         results_file = Path(results_file)
 
         if not results_file.exists():
-            raise FileNotFoundError(
-                f"Results file not found: {results_file}"
-            )
+            raise FileNotFoundError(f"Results file not found: {results_file}")
 
         # Try OpenCode first with timeout
         try:
@@ -90,18 +86,10 @@ class TrainingReportAnalyzer:
         model = self._get_model()
 
         result = subprocess.run(
-            [
-                self.OPENCODE_BIN,
-                "run",
-                "--model",
-                model,
-                prompt,
-                "-f",
-                str(results_file)
-            ],
+            [self.OPENCODE_BIN, "run", "--model", model, prompt, "-f", str(results_file)],
             capture_output=True,
             text=True,
-            timeout=180
+            timeout=180,
         )
 
         print("PATH:", os.environ.get("PATH"))
@@ -117,9 +105,7 @@ class TrainingReportAnalyzer:
         print(result.returncode)
 
         if result.returncode != 0:
-            raise RuntimeError(
-                f"OpenCode error:\n{result.stderr}"
-            )
+            raise RuntimeError(f"OpenCode error:\n{result.stderr}")
 
         output = result.stdout.strip()
         if not output or len(output) < 50:
@@ -130,7 +116,7 @@ class TrainingReportAnalyzer:
     def _generate_fallback_report(self, results_file: Path) -> str:
         """Generate a basic report from CSV data when OpenCode fails."""
         try:
-            with open(results_file, 'r') as f:
+            with open(results_file, "r") as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
         except Exception as exc:
@@ -144,18 +130,18 @@ class TrainingReportAnalyzer:
         last_row = rows[-1]
 
         # Extract metrics (handle different column names)
-        train_loss = last_row.get('train/loss', last_row.get('train_loss', 'N/A'))
-        val_loss = last_row.get('val/loss', last_row.get('val_loss', 'N/A'))
-        precision = last_row.get('metrics/precision', last_row.get('precision', 'N/A'))
-        recall = last_row.get('metrics/recall', last_row.get('recall', 'N/A'))
-        mAP50 = last_row.get('metrics/mAP50(B)', last_row.get('mAP50', 'N/A'))
-        mAP50_95 = last_row.get('metrics/mAP50-95(B)', last_row.get('mAP50-95', 'N/A'))
-        accuracy = last_row.get('metrics/accuracy_top1', last_row.get('accuracy', 'N/A'))
+        train_loss = last_row.get("train/loss", last_row.get("train_loss", "N/A"))
+        val_loss = last_row.get("val/loss", last_row.get("val_loss", "N/A"))
+        precision = last_row.get("metrics/precision", last_row.get("precision", "N/A"))
+        recall = last_row.get("metrics/recall", last_row.get("recall", "N/A"))
+        mAP50 = last_row.get("metrics/mAP50(B)", last_row.get("mAP50", "N/A"))
+        mAP50_95 = last_row.get("metrics/mAP50-95(B)", last_row.get("mAP50-95", "N/A"))
+        accuracy = last_row.get("metrics/accuracy_top1", last_row.get("accuracy", "N/A"))
 
         # Check for overfitting
-        train_loss_first = rows[0].get('train/loss', rows[0].get('train_loss', '0'))
+        train_loss_first = rows[0].get("train/loss", rows[0].get("train_loss", "0"))
         train_loss_last = train_loss
-        val_loss_first = rows[0].get('val/loss', rows[0].get('val_loss', '0'))
+        val_loss_first = rows[0].get("val/loss", rows[0].get("val_loss", "0"))
         val_loss_last = val_loss
 
         overfitting_risk = "Low"
@@ -181,7 +167,7 @@ class TrainingReportAnalyzer:
             "CONCLUSION",
             f"Model trained for {epochs} epochs with final accuracy {accuracy}.",
             f"Overfitting risk assessed as {overfitting_risk}. Consider regularization or early stopping if risk is high.",
-            "Review confusion matrix and per-class metrics for detailed performance breakdown."
+            "Review confusion matrix and per-class metrics for detailed performance breakdown.",
         ]
 
         return "\n".join(report_lines)
