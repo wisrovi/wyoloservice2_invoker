@@ -38,12 +38,10 @@ def build_layout() -> gr.Blocks:
         gr.Markdown(celery_client.check_redis_connection)
 
         with gr.Tabs() as tabs:
-
             # ============================================================
             # TRAINING TAB
             # ============================================================
             with gr.Tab("🚀 Training", id="training_tab"):
-
                 gr.Markdown(
                     "**1.** Choose an example, upload your YAML, or load a saved template  \n"
                     "**2.** Click **🚀 Train**  \n"
@@ -68,9 +66,13 @@ def build_layout() -> gr.Blocks:
                         with gr.Row():
                             gr.Markdown("### 📄 YAML Configuration")
                             with gr.Row(elem_id="quick-templates-bar"):
-                                btn_cls = gr.Button("🟢 Classification", size="sm", variant="secondary")
+                                btn_cls = gr.Button(
+                                    "🟢 Classification", size="sm", variant="secondary"
+                                )
                                 btn_det = gr.Button("🔵 Detection", size="sm", variant="secondary")
-                                btn_seg = gr.Button("🔴 Segmentation", size="sm", variant="secondary")
+                                btn_seg = gr.Button(
+                                    "🔴 Segmentation", size="sm", variant="secondary"
+                                )
 
                         yaml_editor = gr.Code(
                             value=templates.load_template,
@@ -110,7 +112,7 @@ def build_layout() -> gr.Blocks:
                 with gr.Column(visible=False) as saved_col:
                     with gr.Group(elem_classes=["mode-card"]):
                         gr.Markdown("### 📚 My Templates")
-                        
+
                         # Load section
                         with gr.Group(elem_classes=["template-section"]):
                             gr.Markdown("#### Load Template")
@@ -127,7 +129,7 @@ def build_layout() -> gr.Blocks:
                                 refresh_saved_btn = gr.Button(
                                     "🔄 Refresh", variant="secondary", size="lg"
                                 )
-                        
+
                         # Save section
                         with gr.Group(elem_classes=["template-section"]):
                             gr.Markdown("#### Save Current YAML as New Template")
@@ -143,7 +145,7 @@ def build_layout() -> gr.Blocks:
                                     size="lg",
                                     elem_id="save-btn",
                                 )
-                        
+
                         gr.Markdown(
                             "*💡 **Load** opens the template in the editor for review or launch. "
                             "**Save** persists the YAML you are editing under a new name.*"
@@ -165,7 +167,6 @@ def build_layout() -> gr.Blocks:
             # MONITORING TAB
             # ============================================================
             with gr.Tab("📊 Monitoring", id="monitoring_tab"):
-
                 gr.Markdown(
                     "Everything updates **automatically** every 2 seconds: task status, "
                     "CPU/RAM/GPU usage, and training plots. "
@@ -220,9 +221,7 @@ def build_layout() -> gr.Blocks:
                         )
                         refresh_studies_btn = gr.Button("🔄 Reload list", scale=0)
 
-                    study_history_output = gr.Markdown(
-                        "Select a study above to load its history."
-                    )
+                    study_history_output = gr.Markdown("Select a study above to load its history.")
                     refresh_history_btn = gr.Button("🔄 Refresh history")
 
         # ── Event wiring ──────────────────────────────────────────────
@@ -277,9 +276,7 @@ def build_layout() -> gr.Blocks:
         )
 
         # Dry run / Smoke test (hidden until needed — keep for ops)
-        dry_run_btn = gr.Button(
-            "🧪 Smoke test", size="sm", visible=False, elem_id="dry-run-btn"
-        )
+        dry_run_btn = gr.Button("🧪 Smoke test", size="sm", visible=False, elem_id="dry-run-btn")
         dry_run_btn.click(
             fn=celery_client.launch_dry_run,
             outputs=[output_msg],
@@ -323,16 +320,12 @@ def build_layout() -> gr.Blocks:
         )
 
         btn_det.click(
-            fn=lambda: templates.get_template_from_redis(
-                "detection", templates._TEMPLATE_DET
-            ),
+            fn=lambda: templates.get_template_from_redis("detection", templates._TEMPLATE_DET),
             outputs=[yaml_editor],
         )
 
         btn_seg.click(
-            fn=lambda: templates.get_template_from_redis(
-                "segmentation", templates._TEMPLATE_SEG
-            ),
+            fn=lambda: templates.get_template_from_redis("segmentation", templates._TEMPLATE_SEG),
             outputs=[yaml_editor],
         )
 
