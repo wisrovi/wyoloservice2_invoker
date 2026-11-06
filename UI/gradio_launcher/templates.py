@@ -103,6 +103,7 @@ metadata:
   documentation: "Este modelo fue entrenado con datos de marzo 2025."
 """
 
+
 def get_template_from_redis(template_type: str, default_content: str) -> str:
     """Fetch template from central Redis, or initialize it with default if it doesn't exist."""
     hm = _get_hm()
@@ -120,6 +121,7 @@ def get_template_from_redis(template_type: str, default_content: str) -> str:
         return str(raw)
     except Exception:
         return default_content
+
 
 def load_template() -> str:
     """Load the last saved template from the Redis hash.
