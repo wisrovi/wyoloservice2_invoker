@@ -6,7 +6,7 @@ First off, thank you for considering contributing to this project! It's people l
 
 By contributing to this repository, you agree to adhere to the following rules established by the core architecture team:
 
-1. **Language**: 
+1. **Language**:
    - All code (variables, functions, classes), comments, and documentation MUST be written in **English**.
    - Git commit messages MUST be written in perfect **English**.
 
