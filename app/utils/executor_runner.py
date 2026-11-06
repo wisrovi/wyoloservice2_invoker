@@ -5,8 +5,10 @@ import os
 import shutil
 import tempfile
 import time
-from typing import Any, Dict, Optional, Tuple
-import yaml
+from typing import Any
+
+import yaml  # type: ignore # pylint: disable=import-error
+
 from .env_loader import load_env_file
 from .orchestrator import get_orchestrator
 from .training_resources import apply_redis_dynamic_resources, parse_memory_to_bytes
@@ -14,8 +16,8 @@ from .training_timeouts import resolve_training_timeouts
 
 
 def prepare_executor_environment(
-    config: Dict[str, Any], current_config: Dict[str, Any], invoker_name: str
-) -> Tuple[Dict[str, str], int, int, float]:
+    config: dict[str, Any], current_config: dict[str, Any], invoker_name: str
+) -> tuple[dict[str, str], int, int, float]:
     """Prepare environment variables and calculate resource limits for executor container.
 
     Args:
@@ -40,10 +42,14 @@ def prepare_executor_environment(
 
     apply_redis_dynamic_resources(environments, config, invoker_name)
 
-    raw_device = current_config.get("train", {}).get("device") if isinstance(current_config.get("train"), dict) else None
+    raw_device = (
+        current_config.get("train", {}).get("device") if isinstance(current_config.get("train"), dict) else None
+    )
     if raw_device is None:
         raw_device = current_config.get("device")
-    target_gpu = current_config.get("train", {}).get("gpu_id") if isinstance(current_config.get("train"), dict) else None
+    target_gpu = (
+        current_config.get("train", {}).get("gpu_id") if isinstance(current_config.get("train"), dict) else None
+    )
     if target_gpu is None:
         target_gpu = raw_device if raw_device is not None else "0"
     environments["GPU_DEVICE_ID"] = str(target_gpu)
@@ -59,12 +65,12 @@ def prepare_executor_environment(
 
 
 def execute_container_and_wait(
-    config: Dict[str, Any],
+    config: dict[str, Any],
     image_name: str,
     executor_name: str,
-    study_id: Optional[str],
-    task_id: Optional[str],
-    current_config: Dict[str, Any],
+    study_id: str | None,
+    task_id: str | None,
+    current_config: dict[str, Any],
     invoker_name: str,
 ) -> int:
     """Spawn executor container via orchestrator and block until completion.
@@ -89,9 +95,22 @@ def execute_container_and_wait(
     environments["TASK_ID"] = str(task_id or "")
     environments["RESULTS_DIR"] = results_dir
 
-    volumes = {results_dir: {"bind": "/wyolo/worker/train_service_results", "mode": "rw"}}
+    yaml_path = config.get("yaml_path", "/wyolo/worker/request/train.yaml")
+    volumes = {
+        results_dir: {"bind": "/wyolo/worker/train_service_results", "mode": "rw"},
+        "/home/wyolo/events": {"bind": "/wyolo/worker/events", "mode": "rw"},
+        "/home/wyolo/request": {"bind": "/wyolo/worker/request", "mode": "rw"},
+    }
     orchestrator = get_orchestrator(config)
-    cmd = config.get("command", "python3 /app/main.py")
+    default_cmd = (
+        f"bash -c '(command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi || true) && "
+        f'echo "[EXECUTOR] Starting mount..." && /usr/local/bin/mount-cifs.sh && '
+        f'echo "[EXECUTOR] Mount OK. Starting training with developer-friendly background priority..." && '
+        f"(nice -n 19 ionice -c 3 python main.py --file {yaml_path} 2>/dev/null || "
+        f"nice -n 19 python main.py --file {yaml_path} || "
+        f"python main.py --file {yaml_path})'"
+    )
+    cmd = config.get("command", default_cmd)
 
     return orchestrator.start_executor(
         image_name=image_name,
