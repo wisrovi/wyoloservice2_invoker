@@ -185,7 +185,13 @@ class KubernetesOrchestrator(BaseOrchestrator):
             gpu_str,
         )
         url = f"{self.base_url}/api/v1/namespaces/{self.namespace}/pods"
-        requests.post(url, headers=self.headers, json=manifest, verify=self.ca_cert, timeout=15)
+        resp = requests.post(url, headers=self.headers, json=manifest, verify=self.ca_cert, timeout=15)
+        if resp.status_code not in (200, 201):
+            print(
+                f"[INVOKER] ERROR: Failed to create executor Pod {pod_name} ({resp.status_code}): {resp.text}",
+                flush=True,
+            )
+            return 1
         return wait_for_k8s_pod_completion(
             self.base_url,
             self.namespace,
