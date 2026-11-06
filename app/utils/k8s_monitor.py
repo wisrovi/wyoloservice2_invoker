@@ -1,13 +1,16 @@
 """Kubernetes Pod monitoring, wait polling, and deletion utilities."""
 
 import time
-from typing import Any, Dict
-import requests
+from typing import Any
+
+import requests  # pylint: disable=import-error
+
 from .orchestrator_base import get_gpu_utilization
 from .orchestrator_monitoring import check_cancellation_signal, write_telemetry_snapshot
 
 
-def delete_k8s_pod_safely(base_url: str, namespace: str, pod_name: str, headers: Dict[str, str], ca_cert: Any) -> None:
+# pylint: disable=broad-exception-caught
+def delete_k8s_pod_safely(base_url: str, namespace: str, pod_name: str, headers: dict[str, str], ca_cert: Any) -> None:
     """Safely delete any pre-existing pod with the specified name.
 
     Args:
@@ -24,6 +27,7 @@ def delete_k8s_pod_safely(base_url: str, namespace: str, pod_name: str, headers:
         pass
 
 
+# pylint: disable=too-many-arguments,too-many-locals,broad-exception-caught
 def wait_for_k8s_pod_completion(
     base_url: str,
     namespace: str,
@@ -31,9 +35,9 @@ def wait_for_k8s_pod_completion(
     executor_name: str,
     results_dir: str,
     timeout_seconds: int,
-    environments: Dict[str, str],
+    environments: dict[str, str],
     redis_client: Any,
-    headers: Dict[str, str],
+    headers: dict[str, str],
     ca_cert: Any,
 ) -> int:
     """Poll Kubernetes Pod phase until Succeeded, Failed, cancelled, or timed out.
@@ -76,6 +80,12 @@ def wait_for_k8s_pod_completion(
                     delete_k8s_pod_safely(base_url, namespace, pod_name, headers, ca_cert)
                     return 0
                 if phase == "Failed":
+                    try:
+                        log_url = f"{url}/log"
+                        pod_log = requests.get(log_url, headers=headers, verify=ca_cert, timeout=10).text
+                        print(f"[INVOKER] Pod {pod_name} FAILED! Logs:\n{pod_log}", flush=True)
+                    except Exception as log_err:
+                        print(f"[INVOKER] Could not fetch failed pod logs: {log_err}", flush=True)
                     delete_k8s_pod_safely(base_url, namespace, pod_name, headers, ca_cert)
                     return 1
         except Exception:
