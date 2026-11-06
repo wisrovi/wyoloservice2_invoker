@@ -53,9 +53,10 @@ def build_k8s_pod_manifest(
     requests: dict[str, Any] = {"memory": "2Gi", "cpu": "1000m"}
     if cpu_limit > 0:
         limits["cpu"] = str(cpu_limit)
-    if gpu_str != "0":
-        limits["nvidia.com/gpu"] = gpu_str
-        requests["nvidia.com/gpu"] = gpu_str
+    clean_gpu = str(gpu_str).strip("\"'")
+    if clean_gpu != "0":
+        limits["nvidia.com/gpu"] = clean_gpu
+        requests["nvidia.com/gpu"] = clean_gpu
 
     return {
         "apiVersion": "v1",
