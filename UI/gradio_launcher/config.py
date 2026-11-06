@@ -1,7 +1,9 @@
 import os
+
 import yaml
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.yaml")
+
 
 def load_ui_config() -> dict:
     """Loads configuration options from config.yaml."""
@@ -13,7 +15,7 @@ def load_ui_config() -> dict:
             "show_normalized_confusion_matrix": True,
         }
     try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(CONFIG_PATH, encoding="utf-8") as f:
             data = yaml.safe_load(f)
             if isinstance(data, dict):
                 return data
@@ -26,12 +28,11 @@ def load_ui_config() -> dict:
         "show_normalized_confusion_matrix": True,
     }
 
+
 # Load options on module load
 _options = load_ui_config()
 
 RUN_FULL_PIPELINE = bool(_options.get("run_full_pipeline", True))
 THEME_NAME = str(_options.get("theme", "soft"))
 DEFAULT_TASK_TYPE = str(_options.get("default_task_type", "classification"))
-SHOW_NORMALIZED_CONFUSION_MATRIX = bool(
-    _options.get("show_normalized_confusion_matrix", True)
-)
+SHOW_NORMALIZED_CONFUSION_MATRIX = bool(_options.get("show_normalized_confusion_matrix", True))
