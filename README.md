@@ -3,7 +3,7 @@
   <a href="https://wisrovi.dev"><img src="https://img.shields.io/badge/Author-wisrovi.dev-111827?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Portal" /></a>
   <a href="https://orcid.org/0009-0005-0710-1861"><img src="https://img.shields.io/badge/ORCID-0009--0005--0710--1861-A6CE39?style=for-the-badge&logo=orcid&logoColor=white" alt="ORCID" /></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v2.3.6-blue.svg?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v2.3.7-blue.svg?style=for-the-badge" alt="Version" />
 </p>
 
 # GPU Invoker (Hive Worker)
@@ -330,6 +330,7 @@ If you use this project in academic research, you are required to cite this repo
 
 
 ## Changelog
+- **v2.3.7 (2026-11-06)**: Guaranteed unique ephemeral pod naming (`{pod_base}-{unique_id}`) in Kubernetes orchestrator preventing HTTP 409 Conflict with terminating pods, enabled complete pod log capture on both Succeeded and Failed execution states before pod deletion, and simplified container launch commands to transparent background priority.
 - **v2.3.6 (2026-11-03)**: Added support for minimal YAML configuration delivery, allowing omitted batch sizes to resolve cleanly to AutoBatch and preserving vision task styles across Docker volume configurations.
 - **v2.3.5 (2026-10-29)**: Enhanced node hardware capacity detection to extract and register true physical RAM (`physical_ram_total`) and SWAP (`physical_swap_total`) into Redis metadata rather than default allocated limits, enabling accurate cluster administration telemetry and unconstrained shared memory allocation backed by swap.
 - **v2.3.4 (2026-10-29)**: Established baseline natural restrictions (30% GPU, 6GB RAM, 2 cores, 8GB SHM) so all unconfigured or newly joined invokers run safely without starving developer desktops.
