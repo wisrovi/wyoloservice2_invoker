@@ -6,4 +6,3 @@ wredis>=0.9.6
 optuna>=3.5.0
 psycopg2-binary>=2.9.9
 SQLAlchemy>=2.0.0
-
