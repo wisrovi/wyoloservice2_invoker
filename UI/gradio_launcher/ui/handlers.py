@@ -9,12 +9,14 @@ from templates import list_user_templates, load_template, load_user_template, sa
 
 _TASK_ID_RE = re.compile(r"Task ID:.*?`([^`]+)`")
 
+
 def _save_with_feedback(content: str) -> str:
     """Wrap save_template with a user-facing status message."""
     err = save_template(content)
     if err:
         return err
     return f"🟢 Template saved → `{_HASH_KEY}`"
+
 
 def save_named_template_with_feedback(name: str, content: str) -> tuple[str, dict]:
     """Save the YAML under a user-chosen name and refresh the saved-templates list.
@@ -29,9 +31,11 @@ def save_named_template_with_feedback(name: str, content: str) -> tuple[str, dic
         gr.update(choices=list_user_templates(), value=name),
     )
 
+
 def load_selected_template(name: str) -> str:
     """Load a user-saved template by name into the YAML editor."""
     return load_user_template(name)
+
 
 def parse_yaml_file(file: gr.File | None) -> str:
     """Read an uploaded YAML file, validate, persist to Redis, return content."""
@@ -46,10 +50,12 @@ def parse_yaml_file(file: gr.File | None) -> str:
     except Exception as exc:
         return f"Error reading YAML: {exc}"
 
+
 def _validate_and_update_btn(yaml_content: str) -> tuple[str, dict]:
     """Validate config and return (message, button-update)."""
     valid, msg = validate_min_config(yaml_content)
     return msg, gr.update(interactive=valid)
+
 
 def toggle_mode(mode: str) -> tuple[dict, dict, dict]:
     """Switch visibility between the example, upload and saved-template columns."""
@@ -58,6 +64,7 @@ def toggle_mode(mode: str) -> tuple[dict, dict, dict]:
         gr.update(visible=(mode == "upload")),
         gr.update(visible=(mode == "saved")),
     )
+
 
 def handle_upload(file: gr.File | None) -> tuple[str, str, dict]:
     """Process uploaded config files and return (validated_content, validation_msg, btn_state)."""
@@ -68,6 +75,7 @@ def handle_upload(file: gr.File | None) -> tuple[str, str, dict]:
         return "", f"❌ {content}", gr.update(interactive=False)
     valid, msg = validate_min_config(content)
     return content, msg, gr.update(interactive=valid)
+
 
 def handle_train_click(yaml_content: str) -> tuple[str, str, dict]:
     """
