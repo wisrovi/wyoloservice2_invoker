@@ -14,3 +14,4 @@ seaborn==0.13.2
 wpipe==2.4.0
 docker==7.2.0
 rich==15.0.0
+pydantic==2.10.6
