@@ -1,6 +1,7 @@
-import customtkinter as ctk
-import subprocess
 import os
+import subprocess
+
+import customtkinter as ctk
 
 if os.path.exists("control_host.env") or os.path.exists("config/control_host.env"):
     print("No need to set environment variables, because they are already set.")
@@ -10,10 +11,11 @@ if os.path.exists("control_host.env") or os.path.exists("config/control_host.env
 def obtener_usuario():
     """Obtiene el nombre de usuario usando 'whoami'."""
     try:
-        resultado = subprocess.run(['whoami'], capture_output=True, text=True, check=True)
+        resultado = subprocess.run(["whoami"], capture_output=True, text=True, check=True)
         return resultado.stdout.strip()
     except subprocess.CalledProcessError:
         return "usuario_desconocido"
+
 
 def crear_archivo():
     control_host = entry_control_host.get()
@@ -37,6 +39,7 @@ def crear_archivo():
     else:
         label_error.configure(text="Por favor, completa todos los campos.")
 
+
 def toggle_opciones_avanzadas():
     global opciones_avanzadas_visible
     opciones_avanzadas_visible = not opciones_avanzadas_visible
@@ -52,6 +55,7 @@ def toggle_opciones_avanzadas():
         entry_num_current_train.grid_forget()
         label_max_gpu.grid_forget()
         entry_max_gpu.grid_forget()
+
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
