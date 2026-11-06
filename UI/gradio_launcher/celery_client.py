@@ -31,6 +31,7 @@ RUN_FULL_PIPELINE: bool = bool(load_ui_config().get("run_full_pipeline", True))
 
 _hm = None
 
+
 def _get_hm() -> RedisHashManager | None:
     """Lazy-init and return the RedisHashManager singleton."""
     global _hm
@@ -40,6 +41,7 @@ def _get_hm() -> RedisHashManager | None:
         except Exception:
             return None
     return _hm
+
 
 def check_redis_connection() -> str:
     """Check connection to central Redis container."""
@@ -51,6 +53,7 @@ def check_redis_connection() -> str:
         return "🟢 Redis OK"
     except Exception:
         return "🔴 Redis ERROR — offline"
+
 
 def get_local_worker_status() -> str:
     """Query Celery active tasks and status of the local worker node.
@@ -132,6 +135,7 @@ def get_local_worker_status() -> str:
     except Exception as e:
         return f"⚠️ **Error querying Celery worker:** `{str(e)}`"
 
+
 def validate_min_config(yaml_content: str) -> tuple[bool, str]:
     """Basic structural validation of the training config before Celery submission."""
     if not yaml_content.strip():
@@ -162,6 +166,7 @@ def validate_min_config(yaml_content: str) -> tuple[bool, str]:
             return False, "❌ train.data cannot be empty"
 
     return True, "✅ Configuración mínima válida"
+
 
 def validate_and_launch(yaml_content: str) -> str:
     """Validate YAML, persist it locally, and send the corresponding Celery task.
