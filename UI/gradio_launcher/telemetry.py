@@ -4,8 +4,6 @@ import os
 import socket
 import zipfile
 
-import gradio as gr
-
 from celery.result import AsyncResult
 
 from celery_client import _CONTROL_HOST, _PRIVATE_QUEUE, _celery_app  # noqa: F401
@@ -44,6 +42,7 @@ def get_host_ip() -> str:
 
 
 # ── HTML building blocks ─────────────────────────────────────────────
+
 
 def _bar(pct: float, color: str = "#10b981") -> str:
     """HTML progress bar. pct is clamped to [0, 100]."""
@@ -155,7 +154,7 @@ def _idle_status() -> str:
     return (
         '<div class="status-card"><div class="status-pill" style="background:#475569;">⚪</div>'
         '<div class="status-body"><div class="status-title">No active task</div>'
-        "<div class=\"status-desc\">Launch a training from the 🚀 Train tab — "
+        '<div class="status-desc">Launch a training from the 🚀 Train tab — '
         "the Task ID will be tracked here automatically.</div></div></div>"
     )
 
@@ -218,11 +217,11 @@ def _llm_status(state: str, info: dict) -> str:
             return (
                 '<div class="llm-state llm-done">'
                 '<div class="llm-header">'
-                '<span>✅ <b>LLM Analysis Report</b></span>'
-                f'<button class="copy-btn" onclick="copyToClipboard(this, \'{safe_report.replace(chr(39), chr(92)+chr(39))}\')">📋 Copy</button>'
-                '</div>'
+                "<span>✅ <b>LLM Analysis Report</b></span>"
+                f'<button class="copy-btn" onclick="copyToClipboard(this, \'{safe_report.replace(chr(39), chr(92) + chr(39))}\')">📋 Copy</button>'
+                "</div>"
                 f'<div class="llm-report">{safe_report}</div>'
-                '</div>'
+                "</div>"
             )
         return (
             '<div class="llm-state llm-done">✅ <b>Training completed.</b><br>'
@@ -259,6 +258,7 @@ def check_task_status(task_id: str | None) -> tuple[str, str]:
 
 
 # ── Results download ─────────────────────────────────────────────────
+
 
 def results_available() -> bool:
     """True when the executor has written any results artifacts."""
