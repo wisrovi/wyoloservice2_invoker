@@ -224,6 +224,9 @@ make stop-all
 *   **EDA Python command fix:** Resolved syntax error in docker command by changing container command structure to a clean argv list.
 *   **Version Update to v1.7.5:** Bumped version to `v1.7.5`.
 
+#### Gradio UI Launcher Updates (v1.1.1) - 2026-11-10
+*   **Celery Redis-py Dependency Compatibility:** Updated `redis` requirement from `>=5.0.3` to `>=6.1.0,<7` in `UI/gradio_launcher/requirements.txt` to eliminate Kombu transport incompatibility.
+
 #### Gradio UI Launcher Updates (v1.1.0) - 2026-08-04
 *   **Shared Redis Templates Store:** Moved Classification, Detection, and Segmentation templates to the centralized `invoker:shared_templates` hash in Redis.
 *   **Local Saved Template Path:** Local configs saved via "Save Template" are persisted under `invoker:<ip>:template_invoker` to avoid conflicts.
