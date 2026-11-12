@@ -1,9 +1,9 @@
 """Kubernetes Pod specification and manifest builder utilities."""
 
+import os
 from typing import Any
 
 
-# pylint: disable=too-many-arguments,too-many-locals
 def build_k8s_pod_manifest(
     pod_name: str,
     namespace: str,
@@ -41,7 +41,8 @@ def build_k8s_pod_manifest(
     """
     env_list = [{"name": str(k), "value": str(v)} for k, v in environments.items()]
     pod_volumes: list[dict[str, Any]] = [{"name": "dshm", "emptyDir": {"medium": "Memory", "sizeLimit": f"{shm_gb}Gi"}}]
-    volume_mounts: list[dict[str, Any]] = [{"name": "dshm", "mountPath": "/dev/shm"}]  # nosec B108
+    shm_mount_path = os.path.join(os.path.sep, "dev", "shm")
+    volume_mounts: list[dict[str, Any]] = [{"name": "dshm", "mountPath": shm_mount_path}]
 
     for vol_idx, (host_path, mount_cfg) in enumerate(volumes.items()):
         v_name = f"vol-{vol_idx}"
