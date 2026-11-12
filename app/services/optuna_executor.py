@@ -4,11 +4,12 @@ import hashlib
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Optional
+
 import optuna
 
 
-def suggest_from_space(trial: optuna.trial.Trial, search_space: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
+def suggest_from_space(trial: optuna.trial.Trial, search_space: dict[str, Any], prefix: str = "") -> dict[str, Any]:
     """Suggest hyperparameters from defined search space specification.
 
     Args:
@@ -19,7 +20,7 @@ def suggest_from_space(trial: optuna.trial.Trial, search_space: Dict[str, Any], 
     Returns:
         Dict[str, Any]: Mapping of parameter names to sampled values.
     """
-    suggested: Dict[str, Any] = {}
+    suggested: dict[str, Any] = {}
     for key, val in search_space.items():
         param_name = f"{prefix}{key}"
         if isinstance(val, dict):
@@ -38,7 +39,7 @@ def suggest_from_space(trial: optuna.trial.Trial, search_space: Dict[str, Any], 
     return suggested
 
 
-def merge_configs(base: Dict[str, Any], suggested: Dict[str, Any]) -> Dict[str, Any]:
+def merge_configs(base: dict[str, Any], suggested: dict[str, Any]) -> dict[str, Any]:
     """Merge suggested hyperparameter values into base training configuration.
 
     Args:
@@ -59,7 +60,7 @@ def merge_configs(base: Dict[str, Any], suggested: Dict[str, Any]) -> Dict[str, 
 class OptunaTrialObjective:
     """Callable trial evaluator executing training pipeline for Optuna studies."""
 
-    def __init__(self, training_config: Dict[str, Any], search_space: Dict[str, Any], pipeline_runner: Any):
+    def __init__(self, training_config: dict[str, Any], search_space: dict[str, Any], pipeline_runner: Any):
         """Initialize trial objective.
 
         Args:
@@ -92,9 +93,7 @@ class OptunaTrialObjective:
         return acc
 
 
-def run_optuna_study(
-    training_config: Dict[str, Any], config: Dict[str, Any], pipeline_runner: Any
-) -> Dict[str, Any]:
+def run_optuna_study(training_config: dict[str, Any], config: dict[str, Any], pipeline_runner: Any) -> dict[str, Any]:
     """Execute distributed Optuna study and return optimal parameters.
 
     Args:
@@ -111,11 +110,13 @@ def run_optuna_study(
     search_space = training_config.get("sweeper", {}).get("search_space", {})
 
     base_name = training_config.get("sweeper", {}).get("study_name") or f"study_{datetime.now().strftime('%Y%m%d')}"
-    space_hash = hashlib.md5(json.dumps(search_space, sort_keys=True).encode()).hexdigest()[:8]
+    space_hash = hashlib.md5(json.dumps(search_space, sort_keys=True).encode(), usedforsecurity=False).hexdigest()[:8]
     study_name = f"{base_name}_{space_hash}"
 
     control_host = os.getenv("CONTROL_HOST", "localhost")
-    storage_url = f"postgresql://postgres:postgres@{control_host}:23436/optuna_db"
+    db_user = os.getenv("DB_USER", "postgres")
+    db_password = os.getenv("DB_PASSWORD", "")
+    storage_url = f"postgresql://{db_user}:{db_password}@{control_host}:23436/optuna_db"
 
     sampler = (
         optuna.samplers.RandomSampler()
