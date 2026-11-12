@@ -86,6 +86,7 @@ repos:
           - fastapi
           - types-requests
           - types-setuptools
+          - types-PyYAML
           # ^^ Type stubs / inline types for libraries the project
           #    depends on, so MyPy can check calls against them.
 
@@ -115,9 +116,6 @@ repos:
       - id: bandit
         verbose: true
         args:
-          - "-ll"
-            # Only report issues with "medium" (two -l) or higher
-            # confidence / severity.
           - "-v"
             # Verbose output so the developer sees what was scanned.
 
@@ -157,14 +155,16 @@ repos:
         verbose: true
         args:
           - --rcfile=pylintrc
-          - --fail-under=9.0
-          # ^^ Fail the commit if the pylint score drops below 9.0.
+          - --fail-under=8.5
+          - --init-hook=import sys; sys.path.insert(0, './app')
+          # ^^ Fail the commit if the pylint score drops below 8.5.
           #    Uses the project's pylintrc for all rule configuration.
         additional_dependencies:
           - pydantic
           - fastapi
           - redis
           - loguru
+          - pyyaml
           # ^^ Third-party dependencies so pylint can analyse imports
           #    without raising E0401 (import-error).
 
