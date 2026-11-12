@@ -1,11 +1,12 @@
 """RunTraining State Step Module for Invoker WPipe Pipeline."""
 
+import contextlib
 import json
 import os
 import shutil
 import tempfile
 import time
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 import yaml
 from dto.training_context import TrainingContext
@@ -99,8 +100,7 @@ class RunTraining:
             print(f"--- [INVOKER:{invoker_name}] DRY RUN MODE ENABLED. Simulating training... ---")
             return {"status": "done", "accuracy": 0.95, "invoker": invoker_name, "dry_run": True}
 
-        temp_dir = tempfile.mkdtemp(prefix="trial_", dir="/tmp")
-        os.chmod(temp_dir, 0o777)
+        temp_dir = tempfile.mkdtemp(prefix="trial_")
 
         try:
             os.makedirs(os.path.dirname(self.yaml_path), exist_ok=True)
@@ -113,10 +113,8 @@ class RunTraining:
             results_dir = self.config.get("results_dir", "/home/wyolo/train_service_results")
             stale_file = os.path.join(results_dir, "results.json")
             if os.path.exists(stale_file):
-                try:
+                with contextlib.suppress(OSError):
                     os.remove(stale_file)
-                except OSError:
-                    pass
 
             trial_start_time = time.time()
             executor_name = f"wyolo_executor_{invoker_name}"
