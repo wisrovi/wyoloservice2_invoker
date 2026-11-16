@@ -1,5 +1,10 @@
 # Changelog - GPU Invoker (Hive)
 
+## [2.3.8] - 2026-11-16
+### Fixed
+- **Host Results Extras Isolation:** In `RunTraining`, automatically wipe stale host directories in `extras/` within `results_dir` before starting container trials to avoid residual artifacts from prior studies persisting across runs.
+- Bumped Invoker version to `v2.3.8`.
+
 ## [2.3.7] - 2026-11-06
 ### Fixed
 - **Kubernetes Pod Lifecycle & Monitoring:**
