@@ -3,9 +3,10 @@
 Bridges Celery queues to Docker/K8s container execution and WPipe state pipelines.
 """
 
+import contextlib
 import os
 import threading
-from typing import Any, Dict
+from typing import Any
 
 import redis
 import yaml
@@ -24,7 +25,7 @@ from services.gpu_task_executor import (
 from services.optuna_executor import run_optuna_study
 from states.run_training import resolve_training_timeouts
 
-VERSION = "v2.3.7"
+VERSION = "v2.3.8"
 PRIVATE_QUEUE = os.getenv("WORKER_HOST", "unknown")
 
 CONFIG: dict[str, Any] = {}
@@ -106,10 +107,8 @@ def train_on_gpu(self: Task, training_config: dict[str, Any]) -> dict[str, Any]:
         return result
     finally:
         if study_id:
-            try:
+            with contextlib.suppress(Exception):
                 r_cli.delete(f"study:{study_id}:active_trial")
-            except Exception:
-                pass
 
 
 @app.task(name="tasks.train_on_gpu_simple", bind=True)
