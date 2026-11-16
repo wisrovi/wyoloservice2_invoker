@@ -116,6 +116,11 @@ class RunTraining:
                 with contextlib.suppress(OSError):
                     os.remove(stale_file)
 
+            stale_extras = os.path.join(results_dir, "extras")
+            if os.path.exists(stale_extras):
+                with contextlib.suppress(OSError):
+                    shutil.rmtree(stale_extras, ignore_errors=True)
+
             trial_start_time = time.time()
             executor_name = f"wyolo_executor_{invoker_name}"
             study_id = clean_config.get("study_id")
